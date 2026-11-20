@@ -3,346 +3,205 @@ import 'package:flutter/material.dart';
 import '../../../app/atlas_academy_app.dart';
 import '../models/subscription_plan_model.dart';
 import '../services/subscription_plan_service.dart';
+import 'my_subscription_requests_screen.dart';
+import 'subscription_request_screen.dart';
 
-class SubscriptionPlansScreen extends StatefulWidget {
+class SubscriptionPlansScreen extends StatelessWidget {
   const SubscriptionPlansScreen({super.key});
 
   @override
-  State<SubscriptionPlansScreen> createState() =>
-      _SubscriptionPlansScreenState();
-}
-
-class _SubscriptionPlansScreenState
-    extends State<SubscriptionPlansScreen> {
-  final SubscriptionPlanService _service =
-      SubscriptionPlanService();
-
-  String _currencySymbol(String currency) {
-    switch (currency.toUpperCase()) {
-      case 'PKR':
-        return 'Rs ';
-      case 'USD':
-        return '\$';
-      case 'GBP':
-        return '£';
-      case 'EUR':
-        return '€';
-      case 'INR':
-        return '₹';
-      case 'AED':
-        return 'AED ';
-      case 'SAR':
-        return 'SAR ';
-      default:
-        return '$currency ';
-    }
-  }
-
-  String _durationLabel(int days) {
-    if (days == 30) return 'Monthly';
-    if (days == 90) return 'Quarterly';
-    if (days == 180) return 'Half-Yearly';
-    if (days == 365) return 'Yearly';
-
-    return '$days Days';
-  }
-
-  void _showPlanDetails(SubscriptionPlanModel plan) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return Container(
-          padding: const EdgeInsets.fromLTRB(24, 12, 24, 30),
-          decoration: const BoxDecoration(
-            color: AtlasColors.ivory,
-            borderRadius: BorderRadius.vertical(
-              top: Radius.circular(28),
-            ),
-          ),
-          child: SafeArea(
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 42,
-                      height: 5,
-                      decoration: BoxDecoration(
-                        color: AtlasColors.secondaryText.withValues(
-                          alpha: 0.3,
-                        ),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 25),
-                  Text(
-                    plan.name,
-                    style: const TextStyle(
-                      color: AtlasColors.deepTeal,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    plan.description,
-                    style: const TextStyle(
-                      color: AtlasColors.secondaryText,
-                      height: 1.6,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    '${_currencySymbol(plan.currency)}'
-                    '${plan.price.toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      color: AtlasColors.deepTeal,
-                      fontSize: 29,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  Text(
-                    _durationLabel(plan.durationDays),
-                    style: const TextStyle(
-                      color: AtlasColors.secondaryText,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Plan Features',
-                    style: TextStyle(
-                      color: AtlasColors.deepTeal,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  ...plan.features.map(
-                    (feature) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(
-                            Icons.check_circle_rounded,
-                            color: AtlasColors.success,
-                            size: 19,
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              feature,
-                              style: const TextStyle(
-                                fontSize: 13,
-                                height: 1.5,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        Navigator.of(this.context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => SubscriptionRequestPlaceholder(
-                              plan: plan,
-                            ),
-                          ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AtlasColors.deepTeal,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                      ),
-                      child: const Text(
-                        'Choose This Plan',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final service = SubscriptionPlanService();
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: AtlasColors.ivory,
       appBar: AppBar(
         title: const Text('Membership Plans'),
+        backgroundColor: AtlasColors.ivory,
+        foregroundColor: AtlasColors.deepTeal,
+        elevation: 0,
+        actions: [
+          IconButton(
+            tooltip: 'My subscription requests',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) =>
+                      const MySubscriptionRequestsScreen(),
+                ),
+              );
+            },
+            icon: const Icon(Icons.receipt_long_outlined),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: StreamBuilder<List<SubscriptionPlanModel>>(
-        stream: _service.watchActivePlans(),
+        stream: service.watchActivePlans(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
               child: CircularProgressIndicator(
-                color: AtlasColors.deepTeal,
+                color: AtlasColors.oceanTeal,
               ),
             );
           }
 
           if (snapshot.hasError) {
-            return _MessageView(
-              icon: Icons.cloud_off_rounded,
+            return _message(
+              icon: Icons.error_outline,
               title: 'Unable to load plans',
-              message: 'Please check your connection and try again.',
-              action: () => setState(() {}),
+              description: snapshot.error.toString(),
+              action: 'Retry',
+              onPressed: () {},
             );
           }
 
           final plans = snapshot.data ?? [];
 
           if (plans.isEmpty) {
-            return const _MessageView(
-              icon: Icons.card_membership_rounded,
-              title: 'Plans Coming Soon',
-              message: 'The academy has not published any membership '
-                  'plans yet. Please check again later.',
+            return _message(
+              icon: Icons.workspace_premium_outlined,
+              title: 'No Plans Available',
+              description:
+                  'There are currently no active membership plans. '
+                  'Please check again later.',
             );
           }
 
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(20, 18, 20, 30),
-            children: [
-              Container(
-                padding: const EdgeInsets.all(22),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [
-                      AtlasColors.deepTeal,
-                      AtlasColors.oceanTeal,
-                    ],
+          return RefreshIndicator(
+            color: AtlasColors.oceanTeal,
+            onRefresh: () async {
+              await service.watchActivePlans().first;
+            },
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(18, 12, 18, 28),
+              children: [
+                _buildWelcomeHeader(),
+                const SizedBox(height: 22),
+                _buildHistoryButton(context),
+                const SizedBox(height: 24),
+                const Text(
+                  'Choose Your Membership',
+                  style: TextStyle(
+                    color: AtlasColors.deepTeal,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
                   ),
-                  borderRadius: BorderRadius.circular(23),
                 ),
-                child: const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'INVEST IN YOUR FUTURE',
-                      style: TextStyle(
-                        color: AtlasColors.champagne,
-                        fontSize: 11,
-                        letterSpacing: 1.5,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    SizedBox(height: 12),
-                    Text(
-                      'Choose your learning membership',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 23,
-                        height: 1.3,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      'Compare available plans and find the '
-                      'membership that suits your preparation.',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        height: 1.5,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
+                const SizedBox(height: 7),
+                const Text(
+                  'Select a plan to continue your enrollment.',
+                  style: TextStyle(
+                    color: AtlasColors.secondaryText,
+                    fontSize: 13,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 25),
-              Text(
-                '${plans.length} Available Plans',
-                style: const TextStyle(
-                  color: AtlasColors.deepTeal,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
+                const SizedBox(height: 18),
+                ...plans.map(
+                  (plan) => Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: _buildPlanCard(context, plan),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 15),
-              ...plans.map(
-                (plan) => _PlanCard(
-                  plan: plan,
-                  price: '${_currencySymbol(plan.currency)}'
-                      '${plan.price.toStringAsFixed(2)}',
-                  duration: _durationLabel(plan.durationDays),
-                  onTap: () => _showPlanDetails(plan),
-                ),
-              ),
-              const SizedBox(height: 15),
-              const Text(
-                'Membership activation is subject to payment review '
-                'and approval by the academy administration.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: AtlasColors.secondaryText,
-                  fontSize: 11,
-                  height: 1.5,
-                ),
-              ),
-            ],
+                const SizedBox(height: 12),
+                _buildSecurityNote(),
+              ],
+            ),
           );
         },
       ),
     );
   }
-}
 
-class _PlanCard extends StatelessWidget {
-  const _PlanCard({
-    required this.plan,
-    required this.price,
-    required this.duration,
-    required this.onTap,
-  });
-
-  final SubscriptionPlanModel plan;
-  final String price;
-  final String duration;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildWelcomeHeader() {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AtlasColors.deepTeal,
+            AtlasColors.oceanTeal,
+          ],
+        ),
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.school_rounded,
+            color: AtlasColors.champagne,
+            size: 32,
+          ),
+          SizedBox(height: 15),
+          Text(
+            'Invest in Your Medical Future',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(height: 8),
+          Text(
+            'Unlock your learning journey with The Atlas Academy '
+            'membership plans.',
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 13,
+              height: 1.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHistoryButton(BuildContext context) {
+    return OutlinedButton.icon(
+      onPressed: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) =>
+                const MySubscriptionRequestsScreen(),
+          ),
+        );
+      },
+      icon: const Icon(Icons.history_rounded),
+      label: const Text('View My Payment Requests'),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: AtlasColors.deepTeal,
+        side: const BorderSide(
+          color: AtlasColors.oceanTeal,
+        ),
+        minimumSize: const Size(double.infinity, 48),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPlanCard(
+    BuildContext context,
+    SubscriptionPlanModel plan,
+  ) {
+    return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(21),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: AtlasColors.softTeal,
+          color: AtlasColors.oceanTeal.withValues(alpha: 0.18),
         ),
         boxShadow: [
           BoxShadow(
-            color: AtlasColors.deepTeal.withValues(alpha: 0.035),
-            blurRadius: 15,
-            offset: const Offset(0, 6),
+            color: Colors.black.withValues(alpha: 0.035),
+            blurRadius: 14,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
@@ -351,59 +210,66 @@ class _PlanCard extends StatelessWidget {
         children: [
           Row(
             children: [
+              const Icon(
+                Icons.workspace_premium_rounded,
+                color: AtlasColors.gold,
+                size: 25,
+              ),
+              const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   plan.name,
                   style: const TextStyle(
                     color: AtlasColors.deepTeal,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 11,
-                  vertical: 7,
-                ),
-                decoration: BoxDecoration(
-                  color: AtlasColors.softTeal,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  duration,
-                  style: const TextStyle(
-                    color: AtlasColors.deepTeal,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
+                    fontSize: 19,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 13),
-          Text(
-            price,
-            style: const TextStyle(
-              color: AtlasColors.deepTeal,
-              fontSize: 27,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          if (plan.description.isNotEmpty) ...[
-            const SizedBox(height: 8),
+          if (plan.description.trim().isNotEmpty) ...[
+            const SizedBox(height: 10),
             Text(
               plan.description,
               style: const TextStyle(
                 color: AtlasColors.secondaryText,
-                fontSize: 12,
+                fontSize: 13,
                 height: 1.5,
               ),
             ),
           ],
+          const SizedBox(height: 17),
+          Text(
+            '${plan.currency} ${plan.price.toStringAsFixed(2)}',
+            style: const TextStyle(
+              color: AtlasColors.oceanTeal,
+              fontSize: 25,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            '${plan.durationDays} days membership',
+            style: const TextStyle(
+              color: AtlasColors.secondaryText,
+              fontSize: 12,
+            ),
+          ),
           if (plan.features.isNotEmpty) ...[
-            const SizedBox(height: 16),
-            ...plan.features.take(3).map(
+            const SizedBox(height: 17),
+            const Divider(),
+            const SizedBox(height: 10),
+            const Text(
+              'Plan Benefits',
+              style: TextStyle(
+                color: AtlasColors.deepTeal,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
+            ),
+            const SizedBox(height: 10),
+            ...plan.features.map(
               (feature) => Padding(
                 padding: const EdgeInsets.only(bottom: 9),
                 child: Row(
@@ -411,16 +277,16 @@ class _PlanCard extends StatelessWidget {
                   children: [
                     const Icon(
                       Icons.check_circle_rounded,
-                      color: AtlasColors.success,
                       size: 17,
+                      color: AtlasColors.success,
                     ),
                     const SizedBox(width: 9),
                     Expanded(
                       child: Text(
                         feature,
                         style: const TextStyle(
-                          fontSize: 12,
-                          height: 1.4,
+                          color: AtlasColors.charcoal,
+                          fontSize: 13,
                         ),
                       ),
                     ),
@@ -429,25 +295,31 @@ class _PlanCard extends StatelessWidget {
               ),
             ),
           ],
-          const SizedBox(height: 15),
+          const SizedBox(height: 17),
           SizedBox(
             width: double.infinity,
-            height: 47,
-            child: OutlinedButton(
-              onPressed: onTap,
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AtlasColors.deepTeal,
-                side: const BorderSide(
-                  color: AtlasColors.oceanTeal,
-                ),
+            height: 49,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => SubscriptionRequestScreen(
+                      plan: plan,
+                    ),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AtlasColors.deepTeal,
+                foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(13),
+                  borderRadius: BorderRadius.circular(14),
                 ),
               ),
               child: const Text(
-                'View Plan Details',
+                'Choose This Plan',
                 style: TextStyle(
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
@@ -456,46 +328,68 @@ class _PlanCard extends StatelessWidget {
       ),
     );
   }
-}
 
-class _MessageView extends StatelessWidget {
-  const _MessageView({
-    required this.icon,
-    required this.title,
-    required this.message,
-    this.action,
-  });
+  Widget _buildSecurityNote() {
+    return Container(
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: AtlasColors.softTeal,
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: const Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.verified_user_outlined,
+            color: AtlasColors.deepTeal,
+          ),
+          SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Membership access is granted only after '
+              'administrator approval and payment verification.',
+              style: TextStyle(
+                color: AtlasColors.deepTeal,
+                fontSize: 12,
+                height: 1.5,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-  final IconData icon;
-  final String title;
-  final String message;
-  final VoidCallback? action;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _message({
+    required IconData icon,
+    required String title,
+    required String description,
+    String? action,
+    VoidCallback? onPressed,
+  }) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(30),
+        padding: const EdgeInsets.all(28),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               icon,
-              size: 52,
+              size: 48,
               color: AtlasColors.oceanTeal,
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 16),
             Text(
               title,
               style: const TextStyle(
-                fontSize: 19,
-                fontWeight: FontWeight.w900,
                 color: AtlasColors.deepTeal,
+                fontSize: 19,
+                fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 9),
             Text(
-              message,
+              description,
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: AtlasColors.secondaryText,
@@ -505,59 +399,11 @@ class _MessageView extends StatelessWidget {
             if (action != null) ...[
               const SizedBox(height: 18),
               ElevatedButton(
-                onPressed: action,
-                child: const Text('Retry'),
+                onPressed: onPressed,
+                child: Text(action),
               ),
             ],
           ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Temporary destination until the real payment request screen is added.
-class SubscriptionRequestPlaceholder extends StatelessWidget {
-  const SubscriptionRequestPlaceholder({
-    super.key,
-    required this.plan,
-  });
-
-  final SubscriptionPlanModel plan;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Membership Request'),
-      ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(25),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                Icons.receipt_long_rounded,
-                color: AtlasColors.oceanTeal,
-                size: 55,
-              ),
-              const SizedBox(height: 18),
-              Text(
-                plan.name,
-                style: const TextStyle(
-                  fontSize: 23,
-                  color: AtlasColors.deepTeal,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              const SizedBox(height: 10),
-              const Text(
-                'The payment request form will be connected here next.',
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
         ),
       ),
     );
