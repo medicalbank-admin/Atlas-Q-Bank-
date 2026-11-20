@@ -1,3 +1,4 @@
+
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -5,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../models/mcq_model.dart';
 import '../services/mcq_session_service.dart';
+import 'student_mcq_result_screen.dart';
 
 class StudentMcqPracticeScreen extends StatefulWidget {
   const StudentMcqPracticeScreen({super.key});
@@ -53,6 +55,8 @@ class _StudentMcqPracticeScreenState
 
       questions.shuffle(Random());
 
+      if (!mounted) return;
+
       if (questions.isEmpty) {
         setState(() {
           _loading = false;
@@ -66,8 +70,11 @@ class _StudentMcqPracticeScreenState
         _selectedAnswers =
             List<int?>.filled(questions.length, null);
         _loading = false;
+        _startedAt = DateTime.now();
       });
     } catch (e) {
+      if (!mounted) return;
+
       setState(() {
         _loading = false;
         _error = 'Unable to load questions. Please try again.';
@@ -104,7 +111,7 @@ class _StudentMcqPracticeScreenState
     if (unanswered > 0) {
       final confirm = await showDialog<bool>(
         context: context,
-        builder: (context) => AlertDialog(
+        builder: (dialogContext) => AlertDialog(
           title: const Text('Unanswered Questions'),
           content: Text(
             'You still have $unanswered unanswered questions. '
@@ -112,35 +119,45 @@ class _StudentMcqPracticeScreenState
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context, false),
+              onPressed: () =>
+                  Navigator.pop(dialogContext, false),
               child: const Text('Continue Practice'),
             ),
             FilledButton(
-              onPressed: () => Navigator.pop(context, true),
+              onPressed: () =>
+                  Navigator.pop(dialogContext, true),
               child: const Text('Finish'),
             ),
           ],
         ),
       );
 
-      if (confirm != true) return;
+      if (!mounted || confirm != true) return;
     }
 
     setState(() => _saving = true);
 
     try {
+      final selectedAnswers = <String, int?>{
+        for (int i = 0; i < _questions.length; i++)
+          _questions[i].id: _selectedAnswers[i],
+      };
+
       final sessionId = await _sessionService.saveCompletedSession(
         questions: _questions,
-        selectedAnswers: _selectedAnswers,
+        selectedAnswers: selectedAnswers,
         startedAt: _startedAt,
       );
 
       if (!mounted) return;
 
-      Navigator.pushReplacementNamed(
+      Navigator.pushReplacement(
         context,
-        '/student-mcq-result',
-        arguments: sessionId,
+        MaterialPageRoute(
+          builder: (_) => StudentMcqResultScreen(
+            sessionId: sessionId,
+          ),
+        ),
       );
     } catch (e) {
       if (!mounted) return;
@@ -349,7 +366,9 @@ class _StudentMcqPracticeScreenState
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: selected ? teal.withValues(alpha: 0.09) : Colors.white,
+          color: selected
+              ? teal.withValues(alpha: 0.09)
+              : Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: selected ? teal : Colors.black12,
