@@ -1,10 +1,11 @@
 
-import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 
-import 'admin_subscription_requests_screen.dart';
-import 'admin_students_screen.dart';
 import 'admin_academic_screen.dart';
+import 'admin_mcq_bank_screen.dart';
+import 'admin_students_screen.dart';
+import 'admin_subscription_requests_screen.dart';
 
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
@@ -12,7 +13,7 @@ class AdminDashboardScreen extends StatelessWidget {
   static const Color navy = Color(0xFF123F46);
   static const Color teal = Color(0xFF28777B);
   static const Color gold = Color(0xFFD8B66B);
-  static const Color ivory = Color(0xFFF5F7F5);
+  static const Color ivory = Color(0xFFF7F8F5);
 
   Future<bool> _isAuthorizedAdmin() async {
     final user = FirebaseAuth.instance.currentUser;
@@ -60,7 +61,7 @@ class AdminDashboardScreen extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(
-                Icons.lock_outline,
+                Icons.lock_outline_rounded,
                 size: 65,
                 color: Colors.redAccent,
               ),
@@ -115,155 +116,184 @@ class AdminDashboardScreen extends StatelessWidget {
         actions: [
           IconButton(
             tooltip: 'Sign out',
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await FirebaseAuth.instance.signOut();
-            },
+            icon: const Icon(Icons.logout_rounded),
+            onPressed: () => _confirmSignOut(context),
           ),
         ],
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _welcomeBanner(),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isWide = constraints.maxWidth >= 700;
 
-              const SizedBox(height: 28),
+            return SingleChildScrollView(
+              padding: EdgeInsets.all(isWide ? 28 : 18),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    maxWidth: 1100,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _welcomeBanner(),
 
-              const Text(
-                'Management Centre',
-                style: TextStyle(
-                  fontSize: 21,
-                  fontWeight: FontWeight.bold,
-                  color: navy,
+                      const SizedBox(height: 28),
+
+                      const Text(
+                        'Management Centre',
+                        style: TextStyle(
+                          fontSize: 21,
+                          fontWeight: FontWeight.bold,
+                          color: navy,
+                        ),
+                      ),
+
+                      const SizedBox(height: 6),
+
+                      const Text(
+                        'Manage your academy from one place.',
+                        style: TextStyle(
+                          color: Colors.black54,
+                          fontSize: 13,
+                        ),
+                      ),
+
+                      const SizedBox(height: 18),
+
+                      GridView.count(
+                        crossAxisCount: isWide ? 2 : 1,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        mainAxisSpacing: 12,
+                        crossAxisSpacing: 12,
+                        childAspectRatio: isWide ? 3.0 : 3.5,
+                        children: [
+                          _managementTile(
+                            icon: Icons.people_alt_rounded,
+                            title: 'Student Management',
+                            subtitle:
+                                'View and search registered students',
+                            onTap: () => _openPage(
+                              context,
+                              const AdminStudentsScreen(),
+                            ),
+                          ),
+                          _managementTile(
+                            icon: Icons.payments_rounded,
+                            title: 'Subscription Requests',
+                            subtitle:
+                                'Review student payments and requests',
+                            onTap: () => _openPage(
+                              context,
+                              const AdminSubscriptionRequestsScreen(),
+                            ),
+                          ),
+                          _managementTile(
+                            icon: Icons.school_rounded,
+                            title: 'Academic Management',
+                            subtitle:
+                                'Manage academic years, subjects and topics',
+                            onTap: () => _openPage(
+                              context,
+                              const AdminAcademicScreen(),
+                            ),
+                          ),
+                          _managementTile(
+                            icon: Icons.video_library_rounded,
+                            title: 'Learning Resources',
+                            subtitle:
+                                'Manage notes, PDFs and videos through topics',
+                            onTap: () => _openPage(
+                              context,
+                              const AdminAcademicScreen(),
+                            ),
+                          ),
+                          _managementTile(
+                            icon: Icons.quiz_rounded,
+                            title: 'MCQ Question Bank',
+                            subtitle:
+                                'Create, edit, publish and bulk import MCQs',
+                            onTap: () => _openPage(
+                              context,
+                              const AdminMcqBankScreen(),
+                            ),
+                          ),
+                          _managementTile(
+                            icon: Icons.workspace_premium_rounded,
+                            title: 'Subscription Plans',
+                            subtitle:
+                                'Plan administration is not connected yet',
+                            onTap: () => _showComingSoon(
+                              context,
+                              'Subscription Plan Management',
+                            ),
+                          ),
+                          _managementTile(
+                            icon: Icons.notifications_active_rounded,
+                            title: 'Notifications',
+                            subtitle:
+                                'Student announcements and alerts',
+                            onTap: () => _showComingSoon(
+                              context,
+                              'Notifications',
+                            ),
+                          ),
+                          _managementTile(
+                            icon: Icons.analytics_rounded,
+                            title: 'Analytics & Reports',
+                            subtitle:
+                                'Student activity and academy performance',
+                            onTap: () => _showComingSoon(
+                              context,
+                              'Analytics & Reports',
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 30),
+
+                      Center(
+                        child: Column(
+                          children: [
+                            Container(
+                              width: 45,
+                              height: 3,
+                              decoration: BoxDecoration(
+                                color: gold,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            const Text(
+                              'THE ATLAS ACADEMY',
+                              style: TextStyle(
+                                color: navy,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 2,
+                                fontSize: 12,
+                              ),
+                            ),
+                            const SizedBox(height: 5),
+                            const Text(
+                              'Excellence in Medical Education',
+                              style: TextStyle(
+                                color: Colors.black45,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 15),
+                    ],
+                  ),
                 ),
               ),
-
-              const SizedBox(height: 6),
-
-              const Text(
-                'Manage your academy operations.',
-                style: TextStyle(
-                  color: Colors.black54,
-                  fontSize: 13,
-                ),
-              ),
-
-              const SizedBox(height: 18),
-
-              _managementTile(
-                icon: Icons.payments_outlined,
-                title: 'Subscription Requests',
-                subtitle: 'Review student payments and requests',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          const AdminSubscriptionRequestsScreen(),
-                    ),
-                  );
-                },
-              ),
-
-              _managementTile(
-                icon: Icons.people_outline,
-                title: 'Student Management',
-                subtitle: 'View and search registered students',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const AdminStudentsScreen(),
-                    ),
-                  );
-                },
-              ),
-
-              _managementTile(
-                icon: Icons.menu_book_outlined,
-                title: 'Academic Management',
-                subtitle: 'Manage years, subjects and topics',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const AdminAcademicScreen(),
-                    ),
-                  );
-                },
-              ),
-
-              _managementTile(
-                icon: Icons.video_library_outlined,
-                title: 'Learning Resources',
-                subtitle: 'Manage notes, PDFs and video lessons',
-                onTap: () =>
-                    _comingSoon(context, 'Learning Resources'),
-              ),
-
-              _managementTile(
-                icon: Icons.quiz_outlined,
-                title: 'Exams & MCQs',
-                subtitle: 'Manage question banks and examinations',
-                onTap: () => _comingSoon(context, 'Exams & MCQs'),
-              ),
-
-              _managementTile(
-                icon: Icons.card_membership_outlined,
-                title: 'Subscription Plans',
-                subtitle: 'Configure plans and student access',
-                onTap: () =>
-                    _comingSoon(context, 'Subscription Plans'),
-              ),
-
-              _managementTile(
-                icon: Icons.notifications_outlined,
-                title: 'Notifications',
-                subtitle: 'Send announcements to students',
-                onTap: () => _comingSoon(context, 'Notifications'),
-              ),
-
-              const SizedBox(height: 30),
-
-              Center(
-                child: Column(
-                  children: [
-                    Container(
-                      width: 45,
-                      height: 3,
-                      decoration: BoxDecoration(
-                        color: gold,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    const Text(
-                      'THE ATLAS ACADEMY',
-                      style: TextStyle(
-                        color: navy,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 2,
-                        fontSize: 12,
-                      ),
-                    ),
-                    const SizedBox(height: 5),
-                    const Text(
-                      'Excellence in Medical Education',
-                      style: TextStyle(
-                        color: Colors.black45,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 15),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
@@ -298,7 +328,7 @@ class AdminDashboardScreen extends StatelessWidget {
               borderRadius: BorderRadius.circular(15),
             ),
             child: const Icon(
-              Icons.admin_panel_settings_outlined,
+              Icons.admin_panel_settings_rounded,
               color: gold,
               size: 34,
             ),
@@ -324,7 +354,7 @@ class AdminDashboardScreen extends StatelessWidget {
           Row(
             children: [
               const Icon(
-                Icons.verified_user_outlined,
+                Icons.verified_user_rounded,
                 color: gold,
                 size: 16,
               ),
@@ -353,64 +383,115 @@ class AdminDashboardScreen extends StatelessWidget {
     return Card(
       color: Colors.white,
       elevation: 1,
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(18),
         side: BorderSide(
           color: navy.withValues(alpha: 0.045),
         ),
       ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 18,
-          vertical: 11,
-        ),
-        leading: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: const Color(0xFFE5F1EF),
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Icon(
-            icon,
-            color: teal,
-            size: 25,
-          ),
-        ),
-        title: Text(
-          title,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 15,
-            color: navy,
-          ),
-        ),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 5),
-          child: Text(
-            subtitle,
-            style: const TextStyle(
-              fontSize: 12,
-              color: Colors.black54,
-            ),
-          ),
-        ),
-        trailing: const Icon(
-          Icons.arrow_forward_ios,
-          size: 16,
-          color: teal,
-        ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
         onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 15,
+            vertical: 12,
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE5F1EF),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(
+                  icon,
+                  color: teal,
+                  size: 25,
+                ),
+              ),
+              const SizedBox(width: 13),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: navy,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      subtitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: Colors.black54,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 15,
+                color: teal,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 
-  void _comingSoon(BuildContext context, String feature) {
+  void _openPage(BuildContext context, Widget page) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => page),
+    );
+  }
+
+  void _showComingSoon(BuildContext context, String feature) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('$feature will be available soon.'),
+        content: Text('$feature is planned but not implemented yet.'),
         behavior: SnackBarBehavior.floating,
       ),
     );
+  }
+
+  Future<void> _confirmSignOut(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Sign out?'),
+        content: const Text(
+          'Are you sure you want to sign out of the admin workspace?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Sign Out'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await FirebaseAuth.instance.signOut();
+    }
   }
 }
