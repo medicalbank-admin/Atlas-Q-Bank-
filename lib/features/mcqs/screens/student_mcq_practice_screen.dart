@@ -1,4 +1,3 @@
-
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -34,6 +33,12 @@ class _StudentMcqPracticeScreenState
   static const Color teal = Color(0xFF28777B);
   static const Color gold = Color(0xFFD8B66B);
   static const Color ivory = Color(0xFFF7F8F5);
+
+  int get _answeredCount =>
+      _selectedAnswers.where((answer) => answer != null).length;
+
+  int get _unansweredCount =>
+      _questions.length - _answeredCount;
 
   @override
   void initState() {
@@ -72,7 +77,7 @@ class _StudentMcqPracticeScreenState
         _loading = false;
         _startedAt = DateTime.now();
       });
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
 
       setState(() {
@@ -90,32 +95,199 @@ class _StudentMcqPracticeScreenState
     });
   }
 
+  void _goToQuestion(int index) {
+    if (_saving || index < 0 || index >= _questions.length) return;
+
+    setState(() {
+      _currentIndex = index;
+    });
+  }
+
   void _nextQuestion() {
     if (_currentIndex < _questions.length - 1) {
-      setState(() => _currentIndex++);
+      _goToQuestion(_currentIndex + 1);
     }
   }
 
   void _previousQuestion() {
     if (_currentIndex > 0) {
-      setState(() => _currentIndex--);
+      _goToQuestion(_currentIndex - 1);
     }
   }
 
-  Future<void> _finishPractice() async {
+  Future<void> _showQuestionNavigator() async {
     if (_saving) return;
 
-    final unanswered =
-        _selectedAnswers.where((answer) => answer == null).length;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (context, refreshSheet) {
+            return Container(
+              height: MediaQuery.of(context).size.height * 0.65,
+              padding: const EdgeInsets.all(22),
+              decoration: const BoxDecoration(
+                color: ivory,
+                borderRadius: BorderRadius.vertical(
+                  top: Radius.circular(26),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 42,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: Colors.black12,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 22),
+                  const Text(
+                    'Question Navigator',
+                    style: TextStyle(
+                      color: navy,
+                      fontSize: 21,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '$_answeredCount answered • $_unansweredCount remaining',
+                    style: const TextStyle(
+                      color: Colors.black54,
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Wrap(
+                    spacing: 11,
+                    runSpacing: 11,
+                    children: List.generate(_questions.length, (index) {
+                      final answered =
+                          _selectedAnswers[index] != null;
+                      final current = index == _currentIndex;
 
-    if (unanswered > 0) {
+                      return InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: () {
+                          Navigator.pop(sheetContext);
+                          _goToQuestion(index);
+                        },
+                        child: Container(
+                          width: 43,
+                          height: 43,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: current
+                                ? navy
+                                : answered
+                                    ? teal.withValues(alpha: 0.13)
+                                    : Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: current
+                                  ? navy
+                                  : answered
+                                      ? teal
+                                      : Colors.black12,
+                              width: current ? 2 : 1,
+                            ),
+                          ),
+                          child: Text(
+                            '${index + 1}',
+                            style: TextStyle(
+                              color: current
+                                  ? Colors.white
+                                  : answered
+                                      ? teal
+                                      : navy,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                  const Spacer(),
+                  Row(
+                    children: [
+                      _legend(teal, 'Answered'),
+                      const SizedBox(width: 18),
+                      _legend(Colors.white, 'Unanswered'),
+                      const SizedBox(width: 18),
+                      _legend(navy, 'Current'),
+                    ],
+                  ),
+                  const SizedBox(height: 18),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: () => Navigator.pop(sheetContext),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: navy,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: const Text('Continue Practice'),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _legend(Color color, String label) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(3),
+            border: Border.all(color: Colors.black12),
+          ),
+        ),
+        const SizedBox(width: 5),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 10,
+            color: Colors.black54,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _finishPractice() async {
+    if (_saving || _questions.isEmpty) return;
+
+    if (_unansweredCount > 0) {
       final confirm = await showDialog<bool>(
         context: context,
         builder: (dialogContext) => AlertDialog(
-          title: const Text('Unanswered Questions'),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: const Text('Finish Practice?'),
           content: Text(
-            'You still have $unanswered unanswered questions. '
-            'Would you like to finish anyway?',
+            'You have answered $_answeredCount out of '
+            '${_questions.length} questions.\n\n'
+            '$_unansweredCount questions are still unanswered. '
+            'Unanswered questions will not receive marks.\n\n'
+            'Would you like to finish?',
           ),
           actions: [
             TextButton(
@@ -124,9 +296,43 @@ class _StudentMcqPracticeScreenState
               child: const Text('Continue Practice'),
             ),
             FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: navy,
+              ),
               onPressed: () =>
                   Navigator.pop(dialogContext, true),
               child: const Text('Finish'),
+            ),
+          ],
+        ),
+      );
+
+      if (!mounted || confirm != true) return;
+    } else {
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: const Text('Submit Your Practice?'),
+          content: const Text(
+            'You have answered every question. '
+            'Are you ready to submit your practice session?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () =>
+                  Navigator.pop(dialogContext, false),
+              child: const Text('Review Answers'),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: navy,
+              ),
+              onPressed: () =>
+                  Navigator.pop(dialogContext, true),
+              child: const Text('Submit'),
             ),
           ],
         ),
@@ -184,6 +390,14 @@ class _StudentMcqPracticeScreenState
           'MCQ Practice',
           style: TextStyle(fontWeight: FontWeight.w700),
         ),
+        actions: [
+          if (!_loading && _error == null && _questions.isNotEmpty)
+            IconButton(
+              tooltip: 'Question Navigator',
+              onPressed: _saving ? null : _showQuestionNavigator,
+              icon: const Icon(Icons.grid_view_rounded),
+            ),
+        ],
       ),
       body: _loading
           ? const Center(
@@ -273,6 +487,20 @@ class _StudentMcqPracticeScreenState
                       const AlwaysStoppedAnimation<Color>(gold),
                 ),
               ),
+              const SizedBox(height: 13),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _headerStat(
+                    Icons.check_circle_outline,
+                    '$_answeredCount Answered',
+                  ),
+                  _headerStat(
+                    Icons.pending_outlined,
+                    '$_unansweredCount Remaining',
+                  ),
+                ],
+              ),
             ],
           ),
         ),
@@ -325,6 +553,23 @@ class _StudentMcqPracticeScreenState
           ),
         ),
         _buildNavigation(),
+      ],
+    );
+  }
+
+  Widget _headerStat(IconData icon, String label) {
+    return Row(
+      children: [
+        Icon(icon, color: gold, size: 16),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white70,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ],
     );
   }
@@ -439,16 +684,19 @@ class _StudentMcqPracticeScreenState
               Expanded(
                 child: OutlinedButton(
                   onPressed:
-                      _currentIndex == 0 ? null : _previousQuestion,
+                      _currentIndex == 0 || _saving
+                          ? null
+                          : _previousQuestion,
                   child: const Text('Previous'),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: FilledButton(
-                  onPressed: _currentIndex == _questions.length - 1
-                      ? null
-                      : _nextQuestion,
+                  onPressed:
+                      _currentIndex == _questions.length - 1 || _saving
+                          ? null
+                          : _nextQuestion,
                   style: FilledButton.styleFrom(
                     backgroundColor: teal,
                   ),
@@ -458,6 +706,15 @@ class _StudentMcqPracticeScreenState
             ],
           ),
           const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _saving ? null : _showQuestionNavigator,
+              icon: const Icon(Icons.grid_view_rounded),
+              label: const Text('View All Questions'),
+            ),
+          ),
+          const SizedBox(height: 8),
           SizedBox(
             width: double.infinity,
             child: FilledButton(
