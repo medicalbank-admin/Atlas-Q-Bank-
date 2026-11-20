@@ -1,3 +1,4 @@
+
 {
   "indexes": [
     {
@@ -49,6 +50,20 @@
         {
           "fieldPath": "createdAt",
           "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "subscriptionStatus",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "subscriptionExpiryAt",
+          "order": "ASCENDING"
         }
       ]
     }
