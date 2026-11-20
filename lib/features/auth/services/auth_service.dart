@@ -1,8 +1,8 @@
+
 import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 
 class StudentRegistrationData {
   const StudentRegistrationData({
@@ -27,8 +27,12 @@ class StudentRegistrationData {
   final String password;
   final String countryOfStudy;
   final String university;
+
+  // Kept for the registration form.
+  // Image uploading will be activated when Storage is available.
   final Uint8List profileImageBytes;
   final String profileImageFileName;
+
   final bool termsAccepted;
 }
 
@@ -36,14 +40,11 @@ class AuthService {
   AuthService({
     FirebaseAuth? auth,
     FirebaseFirestore? firestore,
-    FirebaseStorage? storage,
   })  : _auth = auth ?? FirebaseAuth.instance,
-        _firestore = firestore ?? FirebaseFirestore.instance,
-        _storage = storage ?? FirebaseStorage.instance;
+        _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
-  final FirebaseStorage _storage;
 
   Future<UserCredential> registerStudent(
     StudentRegistrationData data,
@@ -57,7 +58,9 @@ class AuthService {
         email.isEmpty ||
         data.countryOfStudy.trim().isEmpty ||
         data.university.trim().isEmpty) {
-      throw ArgumentError('Please complete all required fields.');
+      throw ArgumentError(
+        'Please complete all required fields.',
+      );
     }
 
     if (!data.termsAccepted) {
@@ -67,7 +70,9 @@ class AuthService {
     }
 
     if (data.profileImageBytes.isEmpty) {
-      throw ArgumentError('Please select a profile picture.');
+      throw ArgumentError(
+        'Please select a profile picture.',
+      );
     }
 
     if (data.password.length < 8) {
@@ -77,8 +82,6 @@ class AuthService {
     }
 
     UserCredential? credential;
-    String? uploadedImagePath;
-    DocumentReference<Map<String, dynamic>>? userDocument;
 
     try {
       // 1. Create the Firebase Authentication account.
@@ -99,42 +102,16 @@ class AuthService {
       final uid = user.uid;
 
       // 2. Set the student's display name.
-      await user.updateDisplayName(data.fullName.trim());
-
-      // 3. Upload the profile picture.
-      final extension = data.profileImageFileName
-          .split('.')
-          .last
-          .toLowerCase();
-
-      final contentType = switch (extension) {
-        'png' => 'image/png',
-        'webp' => 'image/webp',
-        'gif' => 'image/gif',
-        _ => 'image/jpeg',
-      };
-
-      uploadedImagePath = 'student_profiles/$uid/profile.$extension';
-
-      final imageReference = _storage.ref().child(uploadedImagePath);
-
-      await imageReference.putData(
-        data.profileImageBytes,
-        SettableMetadata(
-          contentType: contentType,
-          customMetadata: {
-            'studentUid': uid,
-          },
-        ),
+      await user.updateDisplayName(
+        data.fullName.trim(),
       );
 
-      final profileImageUrl =
-          await imageReference.getDownloadURL();
+      // 3. Send email verification.
+      await user.sendEmailVerification();
 
-      // 4. Save the student's profile in Firestore.
-      userDocument = _firestore.collection('users').doc(uid);
-
-      await userDocument.set({
+      // 4. Save the student profile in Firestore.
+      // Profile image uploading is temporarily disabled.
+      await _firestore.collection('users').doc(uid).set({
         'uid': uid,
         'fullName': data.fullName.trim(),
         'fatherName': data.fatherName.trim(),
@@ -143,10 +120,11 @@ class AuthService {
         'email': email,
         'countryOfStudy': data.countryOfStudy.trim(),
         'university': data.university.trim(),
-        'profileImageUrl': profileImageUrl,
-        'profileImagePath': uploadedImagePath,
 
-        // New accounts require administrator approval.
+        'profileImageUrl': null,
+        'profileImagePath': null,
+
+        // New accounts always start with restricted access.
         'role': 'student',
         'accountStatus': 'pending',
         'subscriptionStatus': 'inactive',
@@ -155,39 +133,23 @@ class AuthService {
         // Registration information.
         'emailVerified': false,
         'termsAccepted': true,
+
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
-      // 5. Send email verification.
-      await user.sendEmailVerification();
-
       return credential;
     } catch (error) {
-      // Attempt to clean up partially created registration data.
-      if (userDocument != null) {
-        try {
-          await userDocument.delete();
-        } catch (_) {
-          // Preserve the original registration error.
-        }
-      }
-
-      if (uploadedImagePath != null) {
-        try {
-          await _storage.ref().child(uploadedImagePath).delete();
-        } catch (_) {
-          // The image may not have finished uploading.
-        }
-      }
-
+      // The profile is written only after verification email
+      // dispatch succeeds. If profile creation fails, attempt
+      // to remove the newly created Authentication account.
       final user = credential?.user;
 
       if (user != null) {
         try {
           await user.delete();
         } catch (_) {
-          // Preserve the original registration error.
+          // Preserve the original error.
         }
       }
 
@@ -195,7 +157,6 @@ class AuthService {
     }
   }
 
-  // Refresh the current user's Firebase email verification status.
   Future<bool> refreshEmailVerification() async {
     final user = _auth.currentUser;
 
@@ -210,7 +171,6 @@ class AuthService {
     return refreshedUser?.emailVerified ?? false;
   }
 
-  // Send another verification email when required.
   Future<void> resendVerificationEmail() async {
     final user = _auth.currentUser;
 
@@ -242,7 +202,6 @@ class AuthService {
     await refreshedUser.sendEmailVerification();
   }
 
-  // Sign out the current student.
   Future<void> signOut() async {
     await _auth.signOut();
   }
