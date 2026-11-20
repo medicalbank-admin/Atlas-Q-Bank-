@@ -4,66 +4,104 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../models/mcq_model.dart';
 
 class McqSessionService {
+  final FirebaseFirestore _firestore;
+  final FirebaseAuth _auth;
+
   McqSessionService({
     FirebaseFirestore? firestore,
     FirebaseAuth? auth,
   })  : _firestore = firestore ?? FirebaseFirestore.instance,
         _auth = auth ?? FirebaseAuth.instance;
 
-  final FirebaseFirestore _firestore;
-  final FirebaseAuth _auth;
-
-  /// Saves a completed practice session with a snapshot of every question
-  /// and answer. This supports detailed result review later.
+  /// Saves a completed MCQ practice session.
+  ///
+  /// Unanswered questions are allowed and saved with:
+  /// selectedAnswer: null
+  /// isAnswered: false
+  /// isCorrect: false
+  ///
+  /// The percentage is calculated against ALL questions.
   Future<String> saveCompletedSession({
     required List<McqModel> questions,
-    required List<int?> selectedAnswers,
+    required Map<String, int?> selectedAnswers,
     required DateTime startedAt,
   }) async {
     final user = _auth.currentUser;
 
     if (user == null) {
-      throw Exception('Please sign in to save your practice result.');
+      throw Exception('Please log in before saving your MCQ result.');
     }
 
     if (questions.isEmpty) {
-      throw Exception('There are no questions in this session.');
+      throw Exception('There are no questions in this practice session.');
     }
 
-    if (questions.length != selectedAnswers.length) {
-      throw Exception('The answer list does not match the questions.');
-    }
+    final questionIds = <String>{};
 
-    if (selectedAnswers.any((answer) => answer == null)) {
-      throw Exception('Please answer every question before finishing.');
-    }
-
-    var correctAnswers = 0;
+    int correctAnswers = 0;
+    int incorrectAnswers = 0;
+    int unansweredQuestions = 0;
 
     final answerSnapshots = <Map<String, dynamic>>[];
 
-    for (var i = 0; i < questions.length; i++) {
-      final question = questions[i];
-      final selectedIndex = selectedAnswers[i]!;
-
-      if (selectedIndex < 0 ||
-          selectedIndex >= question.options.length) {
-        throw Exception('An answer is invalid.');
+    for (final question in questions) {
+      if (question.id.isEmpty) {
+        throw Exception('A question has an invalid ID.');
       }
 
-      final selectedLetter = String.fromCharCode(65 + selectedIndex);
-      final isCorrect = selectedLetter == question.correctAnswer;
+      if (!questionIds.add(question.id)) {
+        throw Exception('Duplicate questions were found in this session.');
+      }
 
-      if (isCorrect) {
+      if (question.options.length < 4 ||
+          question.options.length > 5) {
+        throw Exception(
+          'Question "${question.id}" has an invalid number of options.',
+        );
+      }
+
+      if (!question.hasValidAnswer) {
+        throw Exception(
+          'Question "${question.id}" has an invalid correct answer.',
+        );
+      }
+
+      final selectedIndex = selectedAnswers[question.id];
+
+      if (selectedIndex != null &&
+          (selectedIndex < 0 ||
+              selectedIndex >= question.options.length)) {
+        throw Exception(
+          'An invalid answer was selected for question "${question.id}".',
+        );
+      }
+
+      final isAnswered = selectedIndex != null;
+      final isCorrect =
+          isAnswered && selectedIndex == question.correctAnswer;
+
+      if (!isAnswered) {
+        unansweredQuestions++;
+      } else if (isCorrect) {
         correctAnswers++;
+      } else {
+        incorrectAnswers++;
       }
+
+      final correctLetter =
+          String.fromCharCode(65 + question.correctAnswer);
+
+      final selectedLetter = selectedIndex == null
+          ? null
+          : String.fromCharCode(65 + selectedIndex);
 
       answerSnapshots.add({
         'questionId': question.id,
         'question': question.question,
         'options': question.options,
         'selectedAnswer': selectedLetter,
-        'correctAnswer': question.correctAnswer,
+        'correctAnswer': correctLetter,
+        'isAnswered': isAnswered,
         'isCorrect': isCorrect,
         'explanation': question.explanation,
         'subject': question.subject,
@@ -74,9 +112,9 @@ class McqSessionService {
     }
 
     final totalQuestions = questions.length;
-    final incorrectAnswers = totalQuestions - correctAnswers;
+
     final percentage =
-        (correctAnswers / totalQuestions * 100).round();
+        (correctAnswers / totalQuestions) * 100;
 
     final subjects = questions
         .map((question) => question.subject.trim())
@@ -90,33 +128,40 @@ class McqSessionService {
         .toSet()
         .toList();
 
-    final document = await _firestore
-        .collection('mcq_attempts')
-        .add({
+    final sessionData = <String, dynamic>{
       'userId': user.uid,
       'type': 'practice',
       'totalQuestions': totalQuestions,
       'correctAnswers': correctAnswers,
       'incorrectAnswers': incorrectAnswers,
+      'unansweredQuestions': unansweredQuestions,
       'percentage': percentage,
       'questionIds': questions.map((question) => question.id).toList(),
       'answers': answerSnapshots,
-      'subject': subjects.length == 1 ? subjects.first : 'Mixed subjects',
-      'topic': topics.length == 1 ? topics.first : 'Mixed topics',
+      'subject': subjects.join(', '),
+      'topic': topics.join(', '),
+      'subjects': subjects,
+      'topics': topics,
       'startedAt': Timestamp.fromDate(startedAt),
       'completedAt': FieldValue.serverTimestamp(),
       'createdAt': FieldValue.serverTimestamp(),
-    });
+    };
+
+    final document = await _firestore
+        .collection('mcq_attempts')
+        .add(sessionData);
 
     return document.id;
   }
 
-  /// Retrieves one practice result belonging to the current student.
-  Future<Map<String, dynamic>> getMySession(String sessionId) async {
+  /// Retrieves one practice session belonging to the signed-in student.
+  Future<Map<String, dynamic>?> getMySession(
+    String sessionId,
+  ) async {
     final user = _auth.currentUser;
 
     if (user == null) {
-      throw Exception('Please sign in to view your result.');
+      throw Exception('Please log in to view your MCQ result.');
     }
 
     final document = await _firestore
@@ -125,15 +170,18 @@ class McqSessionService {
         .get();
 
     if (!document.exists) {
-      throw Exception('Practice result not found.');
+      return null;
     }
 
-    final data = document.data()!;
+    final data = document.data();
 
-    if (data['userId'] != user.uid) {
-      throw Exception('You cannot access another student’s result.');
+    if (data == null || data['userId'] != user.uid) {
+      return null;
     }
 
-    return data;
+    return {
+      ...data,
+      'id': document.id,
+    };
   }
 }
