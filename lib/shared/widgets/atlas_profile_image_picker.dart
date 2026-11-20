@@ -1,22 +1,20 @@
-import 'dart:io';
+
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../app/atlas_academy_app.dart';
-import '../../theme/atlas_spacing.dart';
 
 class AtlasProfileImagePicker extends StatefulWidget {
   const AtlasProfileImagePicker({
     super.key,
-    this.onImageSelected,
-    this.initialImage,
-    this.size = 124,
+    required this.onImageSelected,
+    this.initialImageUrl,
   });
 
-  final ValueChanged<File?>? onImageSelected;
-  final String? initialImage;
-  final double size;
+  final ValueChanged<XFile?> onImageSelected;
+  final String? initialImageUrl;
 
   @override
   State<AtlasProfileImagePicker> createState() =>
@@ -27,46 +25,44 @@ class _AtlasProfileImagePickerState
     extends State<AtlasProfileImagePicker> {
   final ImagePicker _picker = ImagePicker();
 
-  File? _selectedImage;
+  XFile? _selectedImage;
+  Uint8List? _imageBytes;
   bool _isPicking = false;
 
-  Future<void> _pickImage(ImageSource source) async {
-    if (_isPicking) return;
-
-    setState(() {
-      _isPicking = true;
-    });
-
+  Future<void> _chooseImage(ImageSource source) async {
     try {
-      final XFile? image = await _picker.pickImage(
+      setState(() => _isPicking = true);
+
+      final image = await _picker.pickImage(
         source: source,
         imageQuality: 85,
         maxWidth: 1200,
         maxHeight: 1200,
       );
 
-      if (image == null || !mounted) return;
+      if (image == null) return;
 
-      final file = File(image.path);
+      final bytes = await image.readAsBytes();
+
+      if (!mounted) return;
 
       setState(() {
-        _selectedImage = file;
+        _selectedImage = image;
+        _imageBytes = bytes;
       });
 
-      widget.onImageSelected?.call(file);
+      widget.onImageSelected(image);
     } catch (error) {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Unable to select image. Please try again.'),
+          content: Text('Unable to select this image. Please try again.'),
         ),
       );
     } finally {
       if (mounted) {
-        setState(() {
-          _isPicking = false;
-        });
+        setState(() => _isPicking = false);
       }
     }
   }
@@ -77,77 +73,62 @@ class _AtlasProfileImagePickerState
       backgroundColor: Theme.of(context).cardTheme.color,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
-          top: Radius.circular(26),
+          top: Radius.circular(24),
         ),
       ),
-      builder: (sheetContext) {
+      builder: (context) {
         return SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(22),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  width: 42,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AtlasColors.secondaryText.withValues(
-                      alpha: 0.3,
-                    ),
-                    borderRadius: BorderRadius.circular(20),
+                const Text(
+                  'Choose Profile Picture',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
-                const SizedBox(height: 22),
-                Text(
-                  'Choose Profile Picture',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleLarge
-                      ?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
-                ),
-                const SizedBox(height: 22),
-                _optionTile(
-                  context: sheetContext,
-                  icon: Icons.photo_library_rounded,
-                  title: 'Choose from Gallery',
-                  subtitle: 'Select an existing photo',
+                const SizedBox(height: 18),
+                ListTile(
+                  leading: const Icon(
+                    Icons.camera_alt_rounded,
+                    color: AtlasColors.oceanTeal,
+                  ),
+                  title: const Text('Take a Photo'),
                   onTap: () {
-                    Navigator.pop(sheetContext);
-                    _pickImage(ImageSource.gallery);
+                    Navigator.pop(context);
+                    _chooseImage(ImageSource.camera);
                   },
                 ),
-                const SizedBox(height: 12),
-                _optionTile(
-                  context: sheetContext,
-                  icon: Icons.camera_alt_rounded,
-                  title: 'Take a Photo',
-                  subtitle: 'Use your device camera',
+                ListTile(
+                  leading: const Icon(
+                    Icons.photo_library_rounded,
+                    color: AtlasColors.oceanTeal,
+                  ),
+                  title: const Text('Choose from Gallery'),
                   onTap: () {
-                    Navigator.pop(sheetContext);
-                    _pickImage(ImageSource.camera);
+                    Navigator.pop(context);
+                    _chooseImage(ImageSource.gallery);
                   },
                 ),
-                if (_selectedImage != null) ...[
-                  const SizedBox(height: 12),
-                  _optionTile(
-                    context: sheetContext,
-                    icon: Icons.delete_outline_rounded,
-                    title: 'Remove Picture',
-                    subtitle: 'Choose another photo later',
-                    color: AtlasColors.error,
+                if (_selectedImage != null)
+                  ListTile(
+                    leading: const Icon(
+                      Icons.delete_outline_rounded,
+                      color: Colors.red,
+                    ),
+                    title: const Text('Remove Selected Picture'),
                     onTap: () {
-                      Navigator.pop(sheetContext);
-
+                      Navigator.pop(context);
                       setState(() {
                         _selectedImage = null;
+                        _imageBytes = null;
                       });
-
-                      widget.onImageSelected?.call(null);
+                      widget.onImageSelected(null);
                     },
                   ),
-                ],
               ],
             ),
           ),
@@ -156,32 +137,40 @@ class _AtlasProfileImagePickerState
     );
   }
 
-  Widget _optionTile({
-    required BuildContext context,
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-    Color? color,
-  }) {
-    final accent = color ?? AtlasColors.oceanTeal;
+  Widget _buildPreview() {
+    if (_imageBytes != null) {
+      return Image.memory(
+        _imageBytes!,
+        fit: BoxFit.cover,
+        width: 112,
+        height: 112,
+      );
+    }
 
-    return ListTile(
-      onTap: onTap,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+    if (widget.initialImageUrl != null &&
+        widget.initialImageUrl!.isNotEmpty) {
+      return Image.network(
+        widget.initialImageUrl!,
+        fit: BoxFit.cover,
+        width: 112,
+        height: 112,
+        errorBuilder: (_, __, ___) => _placeholder(),
+      );
+    }
+
+    return _placeholder();
+  }
+
+  Widget _placeholder() {
+    return Container(
+      width: 112,
+      height: 112,
+      color: AtlasColors.softTeal,
+      child: const Icon(
+        Icons.person_rounded,
+        size: 52,
+        color: AtlasColors.oceanTeal,
       ),
-      tileColor: accent.withValues(alpha: 0.07),
-      leading: CircleAvatar(
-        backgroundColor: accent.withValues(alpha: 0.13),
-        child: Icon(icon, color: accent),
-      ),
-      title: Text(
-        title,
-        style: const TextStyle(fontWeight: FontWeight.w700),
-      ),
-      subtitle: Text(subtitle),
-      trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 15),
     );
   }
 
@@ -189,81 +178,51 @@ class _AtlasProfileImagePickerState
   Widget build(BuildContext context) {
     return Column(
       children: [
-        GestureDetector(
-          onTap: _isPicking ? null : _showImageOptions,
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Container(
-                width: widget.size,
-                height: widget.size,
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: const LinearGradient(
-                    colors: [
-                      AtlasColors.champagne,
-                      AtlasColors.oceanTeal,
-                    ],
-                  ),
-                  boxShadow: AtlasShadows.medium,
-                ),
-                child: CircleAvatar(
-                  backgroundColor: AtlasColors.softTeal,
-                  backgroundImage: _selectedImage != null
-                      ? FileImage(_selectedImage!)
-                      : widget.initialImage != null
-                          ? NetworkImage(widget.initialImage!)
-                          : null,
-                  child: _isPicking
-                      ? const CircularProgressIndicator()
-                      : _selectedImage == null &&
-                              widget.initialImage == null
-                          ? const Icon(
-                              Icons.person_rounded,
-                              size: 55,
-                              color: AtlasColors.oceanTeal,
-                            )
-                          : null,
+        Stack(
+          alignment: Alignment.bottomRight,
+          children: [
+            Container(
+              width: 120,
+              height: 120,
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: AtlasColors.champagne,
+                  width: 2,
                 ),
               ),
-              Positioned(
-                right: 2,
-                bottom: 5,
-                child: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: AtlasColors.deepTeal,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.white,
-                      width: 2,
-                    ),
-                  ),
-                  child: const Icon(
-                    Icons.camera_alt_rounded,
-                    color: Colors.white,
-                    size: 17,
-                  ),
-                ),
+              child: ClipOval(child: _buildPreview()),
+            ),
+            Container(
+              width: 36,
+              height: 36,
+              decoration: const BoxDecoration(
+                color: AtlasColors.deepTeal,
+                shape: BoxShape.circle,
               ),
-            ],
+              child: const Icon(
+                Icons.camera_alt_rounded,
+                color: Colors.white,
+                size: 18,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        TextButton(
+          onPressed: _isPicking ? null : _showImageOptions,
+          child: Text(
+            _isPicking
+                ? 'Selecting image...'
+                : _selectedImage == null
+                    ? 'Upload Profile Picture *'
+                    : 'Change Profile Picture',
+            style: const TextStyle(
+              color: AtlasColors.oceanTeal,
+              fontWeight: FontWeight.w700,
+            ),
           ),
-        ),
-        const SizedBox(height: 13),
-        Text(
-          'Upload Profile Picture',
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          'Choose a clear photo of yourself',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AtlasColors.secondaryText,
-              ),
         ),
       ],
     );
