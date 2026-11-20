@@ -1,4 +1,3 @@
-
 rules_version = '2';
 
 service cloud.firestore {
@@ -25,6 +24,11 @@ service cloud.firestore {
       return value is string &&
         value.size() > 0 &&
         value.size() <= maxLength;
+    }
+
+    function validOptionalImage(value, maxLength) {
+      return value == null ||
+        validString(value, maxLength);
     }
 
     function hasActiveAccess() {
@@ -105,8 +109,8 @@ service cloud.firestore {
         request.resource.data.email == request.auth.token.email &&
         validString(request.resource.data.countryOfStudy, 100) &&
         validString(request.resource.data.university, 200) &&
-        validString(request.resource.data.profileImageUrl, 2048) &&
-        validString(request.resource.data.profileImagePath, 500) &&
+        validOptionalImage(request.resource.data.profileImageUrl, 2048) &&
+        validOptionalImage(request.resource.data.profileImagePath, 500) &&
         request.resource.data.role == 'student' &&
         request.resource.data.accountStatus == 'pending' &&
         request.resource.data.subscriptionStatus == 'inactive' &&
@@ -118,8 +122,8 @@ service cloud.firestore {
 
       allow read: if isOwner(uid) || isAdmin();
 
-      // Student approval, subscription and access fields
-      // cannot be changed by the student.
+      // Students cannot modify their own account status,
+      // subscription, or access permissions.
       allow update, delete: if isAdmin();
     }
 
@@ -238,8 +242,7 @@ service cloud.firestore {
           isAdmin()
         );
 
-      // Approval and rejection must go through trusted
-      // Cloud Functions, not direct client writes.
+      // Only trusted backend functions can approve or reject.
       allow update, delete: if false;
     }
 
@@ -331,7 +334,6 @@ service cloud.firestore {
           isAdmin()
         );
 
-      // Completed student results are immutable.
       allow update, delete: if isAdmin();
     }
 
