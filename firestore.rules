@@ -4,6 +4,10 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // --------------------------------------------------
+    // AUTHENTICATION AND PERMISSIONS
+    // --------------------------------------------------
+
     function signedIn() {
       return request.auth != null;
     }
@@ -22,6 +26,24 @@ service cloud.firestore {
         value.size() <= maxLength;
     }
 
+    function resourcePublished(data) {
+      return data.isPublished == true;
+    }
+
+    // Active subscription and access must both be enabled.
+    function hasActiveAccess() {
+      return signedIn() &&
+        exists(
+          /databases/$(database)/documents/users/$(request.auth.uid)
+        ) &&
+        get(
+          /databases/$(database)/documents/users/$(request.auth.uid)
+        ).data.accessEnabled == true &&
+        get(
+          /databases/$(database)/documents/users/$(request.auth.uid)
+        ).data.subscriptionStatus == 'active';
+    }
+
     // --------------------------------------------------
     // STUDENT PROFILES
     // --------------------------------------------------
@@ -37,9 +59,9 @@ service cloud.firestore {
 
       allow read: if isOwner(uid) || isAdmin();
 
-      allow update: if isAdmin();
-
-      allow delete: if isAdmin();
+      // Students cannot modify their own approval,
+      // subscription or access permissions.
+      allow update, delete: if isAdmin();
     }
 
     // --------------------------------------------------
@@ -52,7 +74,7 @@ service cloud.firestore {
     }
 
     // --------------------------------------------------
-    // SUBJECTS
+    // ACADEMIC SUBJECTS
     // --------------------------------------------------
 
     match /academic_subjects/{subjectId} {
@@ -61,7 +83,7 @@ service cloud.firestore {
     }
 
     // --------------------------------------------------
-    // TOPICS
+    // ACADEMIC TOPICS
     // --------------------------------------------------
 
     match /academic_topics/{topicId} {
@@ -74,17 +96,14 @@ service cloud.firestore {
     // --------------------------------------------------
 
     match /learning_resources/{resourceId} {
-      allow read: if signedIn() &&
+
+      allow read: if isAdmin() ||
         (
-          isAdmin() ||
-          resourcePublished()
+          hasActiveAccess() &&
+          resourcePublished(resource.data)
         );
 
       allow create, update, delete: if isAdmin();
-
-      function resourcePublished() {
-        return resource.data.isPublished == true;
-      }
     }
 
     // --------------------------------------------------
@@ -123,15 +142,12 @@ service cloud.firestore {
 
     match /mcqs/{mcqId} {
 
-      // Students can only read published questions.
-      // Administrators can read the complete bank.
       allow read: if isAdmin() ||
         (
-          signedIn() &&
+          hasActiveAccess() &&
           resource.data.isPublished == true
         );
 
-      // Only administrators can manage questions.
       allow create, update, delete: if isAdmin();
     }
 
@@ -141,28 +157,47 @@ service cloud.firestore {
 
     match /mcq_attempts/{attemptId} {
 
-      // Students can save their own practice results.
-      allow create: if signedIn() &&
+      allow create: if hasActiveAccess() &&
         request.resource.data.userId == request.auth.uid &&
         request.resource.data.type == 'practice' &&
+
         request.resource.data.totalQuestions is int &&
         request.resource.data.totalQuestions > 0 &&
+
         request.resource.data.correctAnswers is int &&
         request.resource.data.correctAnswers >= 0 &&
-        request.resource.data.correctAnswers <=
-          request.resource.data.totalQuestions &&
+
+        request.resource.data.incorrectAnswers is int &&
+        request.resource.data.incorrectAnswers >= 0 &&
+
+        request.resource.data.unansweredQuestions is int &&
+        request.resource.data.unansweredQuestions >= 0 &&
+
+        (
+          request.resource.data.correctAnswers +
+          request.resource.data.incorrectAnswers +
+          request.resource.data.unansweredQuestions
+        ) == request.resource.data.totalQuestions &&
+
+        request.resource.data.percentage is number &&
+        request.resource.data.percentage >= 0 &&
+        request.resource.data.percentage <= 100 &&
+
         request.resource.data.questionIds is list &&
         request.resource.data.questionIds.size() ==
+          request.resource.data.totalQuestions &&
+
+        request.resource.data.answers is list &&
+        request.resource.data.answers.size() ==
           request.resource.data.totalQuestions;
 
-      // Only the owner or an administrator can read.
       allow read: if signedIn() &&
         (
           resource.data.userId == request.auth.uid ||
           isAdmin()
         );
 
-      // Completed attempts cannot be modified by students.
+      // Students cannot change completed results.
       allow update, delete: if isAdmin();
     }
 
@@ -171,6 +206,7 @@ service cloud.firestore {
     // --------------------------------------------------
 
     match /notifications/{notificationId} {
+
       allow read: if isAdmin() ||
         (
           signedIn() &&
@@ -181,21 +217,27 @@ service cloud.firestore {
     }
 
     // --------------------------------------------------
-    // EXAM COLLECTIONS
+    // EXAMS
     // --------------------------------------------------
 
     match /exams/{examId} {
+
       allow read: if isAdmin() ||
         (
-          signedIn() &&
+          hasActiveAccess() &&
           resource.data.isPublished == true
         );
 
       allow create, update, delete: if isAdmin();
     }
 
+    // --------------------------------------------------
+    // EXAM ATTEMPTS
+    // --------------------------------------------------
+
     match /exam_attempts/{attemptId} {
-      allow create: if signedIn() &&
+
+      allow create: if hasActiveAccess() &&
         request.resource.data.userId == request.auth.uid;
 
       allow read: if signedIn() &&
