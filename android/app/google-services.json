@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "299084089644",
+    "project_id": "the-atlas-academy-3fae0",
+    "storage_bucket": "the-atlas-academy-3fae0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:299084089644:android:c23f3d77d528dcda8f0489",
+        "android_client_info": {
+          "package_name": "com.atlasacademy.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDtoC3vxQmf1p6HCSbzy_dlAXDHM-UGAew"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
