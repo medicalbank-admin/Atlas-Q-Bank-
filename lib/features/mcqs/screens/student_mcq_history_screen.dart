@@ -1,16 +1,21 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+
 import 'student_mcq_result_screen.dart';
+
 class StudentMcqHistoryScreen extends StatelessWidget {
   const StudentMcqHistoryScreen({super.key});
+
   static const Color navy = Color(0xFF123F46);
   static const Color teal = Color(0xFF28777B);
   static const Color gold = Color(0xFFD8B66B);
   static const Color ivory = Color(0xFFF7F8F5);
+
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
+
     return Scaffold(
       backgroundColor: ivory,
       appBar: AppBar(
@@ -31,21 +36,26 @@ class StudentMcqHistoryScreen extends StatelessWidget {
                   .limit(50)
                   .snapshots(),
               builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
+                if (snapshot.connectionState ==
+                    ConnectionState.waiting) {
                   return const Center(
                     child: CircularProgressIndicator(color: teal),
                   );
                 }
+
                 if (snapshot.hasError) {
                   return _message(
                     'Unable to load your practice history. '
                     'Please try again later.',
                   );
                 }
+
                 final documents = snapshot.data?.docs ?? [];
+
                 if (documents.isEmpty) {
                   return _emptyHistory(context);
                 }
+
                 return ListView(
                   padding: const EdgeInsets.all(18),
                   children: [
@@ -83,6 +93,7 @@ class StudentMcqHistoryScreen extends StatelessWidget {
             ),
     );
   }
+
   Widget _summaryBanner(int count) {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -137,40 +148,51 @@ class StudentMcqHistoryScreen extends StatelessWidget {
       ),
     );
   }
+
   Widget _historyCard(
     BuildContext context,
-    String sessionId,
+    String attemptId,
     Map<String, dynamic> data,
   ) {
     final total = _number(data['totalQuestions']);
     final correct = _number(data['correctAnswers']);
+
     final unanswered = data['unansweredQuestions'] == null
         ? 0
         : _number(data['unansweredQuestions']);
+
     final incorrect = data['incorrectAnswers'] == null
         ? (total - correct - unanswered).clamp(0, total)
         : _number(data['incorrectAnswers']);
+
     final percentage = _decimal(data['percentage']);
+
     final subject = data['subject']?.toString().trim().isNotEmpty == true
         ? data['subject'].toString()
         : 'Mixed subjects';
+
     final color = percentage >= 70
         ? const Color(0xFF23865B)
         : percentage >= 40
             ? const Color(0xFFB18425)
             : const Color(0xFFC44B4B);
+
     final completedAt = data['completedAt'];
+
     DateTime? date;
+
     if (completedAt is Timestamp) {
       date = completedAt.toDate();
     } else if (completedAt is DateTime) {
       date = completedAt;
     }
+
     final dateLabel = date == null
         ? 'Date unavailable'
         : '${date.day.toString().padLeft(2, '0')}/'
             '${date.month.toString().padLeft(2, '0')}/'
             '${date.year}';
+
     return Container(
       margin: const EdgeInsets.only(bottom: 13),
       decoration: BoxDecoration(
@@ -191,7 +213,7 @@ class StudentMcqHistoryScreen extends StatelessWidget {
             context,
             MaterialPageRoute(
               builder: (_) => StudentMcqResultScreen(
-                sessionId: sessionId,
+                attemptId: attemptId,
               ),
             ),
           );
@@ -250,11 +272,7 @@ class StudentMcqHistoryScreen extends StatelessWidget {
               const SizedBox(height: 17),
               Row(
                 children: [
-                  _metric(
-                    'Questions',
-                    total.toString(),
-                    navy,
-                  ),
+                  _metric('Questions', total.toString(), navy),
                   _metric(
                     'Correct',
                     correct.toString(),
@@ -308,6 +326,7 @@ class StudentMcqHistoryScreen extends StatelessWidget {
       ),
     );
   }
+
   Widget _metric(
     String label,
     String value,
@@ -337,6 +356,7 @@ class StudentMcqHistoryScreen extends StatelessWidget {
       ),
     );
   }
+
   Widget _emptyHistory(BuildContext context) {
     return Center(
       child: Padding(
@@ -381,6 +401,7 @@ class StudentMcqHistoryScreen extends StatelessWidget {
       ),
     );
   }
+
   Widget _message(String message) {
     return Center(
       child: Padding(
@@ -396,10 +417,12 @@ class StudentMcqHistoryScreen extends StatelessWidget {
       ),
     );
   }
+
   int _number(dynamic value) {
     if (value is num) return value.toInt();
     return int.tryParse(value?.toString() ?? '') ?? 0;
   }
+
   double _decimal(dynamic value) {
     if (value is num) return value.toDouble();
     return double.tryParse(value?.toString() ?? '') ?? 0;
