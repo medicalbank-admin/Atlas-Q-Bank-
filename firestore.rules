@@ -4,9 +4,9 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --------------------------------------------------
-    // AUTHENTICATION AND PERMISSIONS
-    // --------------------------------------------------
+    // ==================================================
+    // AUTHENTICATION AND COMMON HELPERS
+    // ==================================================
 
     function signedIn() {
       return request.auth != null;
@@ -23,14 +23,10 @@ service cloud.firestore {
 
     function validString(value, maxLength) {
       return value is string &&
+        value.size() > 0 &&
         value.size() <= maxLength;
     }
 
-    function resourcePublished(data) {
-      return data.isPublished == true;
-    }
-
-    // Active subscription and access must both be enabled.
     function hasActiveAccess() {
       return signedIn() &&
         exists(
@@ -44,101 +40,212 @@ service cloud.firestore {
         ).data.subscriptionStatus == 'active';
     }
 
-    // --------------------------------------------------
+    function validSubscriptionPlan(planId) {
+      return exists(
+        /databases/$(database)/documents/subscription_plans/$(planId)
+      ) &&
+      get(
+        /databases/$(database)/documents/subscription_plans/$(planId)
+      ).data.isActive == true;
+    }
+
+    // ==================================================
     // STUDENT PROFILES
-    // --------------------------------------------------
+    // ==================================================
 
     match /users/{uid} {
 
       allow create: if isOwner(uid) &&
+        request.resource.data.keys().hasAll([
+          'uid',
+          'fullName',
+          'fatherName',
+          'nationalId',
+          'whatsappNumber',
+          'email',
+          'countryOfStudy',
+          'university',
+          'profileImageUrl',
+          'profileImagePath',
+          'role',
+          'accountStatus',
+          'subscriptionStatus',
+          'accessEnabled',
+          'emailVerified',
+          'termsAccepted',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        request.resource.data.keys().hasOnly([
+          'uid',
+          'fullName',
+          'fatherName',
+          'nationalId',
+          'whatsappNumber',
+          'email',
+          'countryOfStudy',
+          'university',
+          'profileImageUrl',
+          'profileImagePath',
+          'role',
+          'accountStatus',
+          'subscriptionStatus',
+          'accessEnabled',
+          'emailVerified',
+          'termsAccepted',
+          'createdAt',
+          'updatedAt'
+        ]) &&
         request.resource.data.uid == uid &&
+        validString(request.resource.data.fullName, 120) &&
+        validString(request.resource.data.fatherName, 120) &&
+        validString(request.resource.data.nationalId, 50) &&
+        validString(request.resource.data.whatsappNumber, 30) &&
+        validString(request.resource.data.email, 254) &&
+        request.resource.data.email == request.auth.token.email &&
+        validString(request.resource.data.countryOfStudy, 100) &&
+        validString(request.resource.data.university, 200) &&
+        validString(request.resource.data.profileImageUrl, 2048) &&
+        validString(request.resource.data.profileImagePath, 500) &&
         request.resource.data.role == 'student' &&
         request.resource.data.accountStatus == 'pending' &&
         request.resource.data.subscriptionStatus == 'inactive' &&
-        request.resource.data.accessEnabled == false;
+        request.resource.data.accessEnabled == false &&
+        request.resource.data.emailVerified == false &&
+        request.resource.data.termsAccepted == true &&
+        request.resource.data.createdAt is timestamp &&
+        request.resource.data.updatedAt is timestamp;
 
       allow read: if isOwner(uid) || isAdmin();
 
-      // Students cannot modify their own approval,
-      // subscription or access permissions.
+      // Student approval, subscription and access fields
+      // cannot be changed by the student.
       allow update, delete: if isAdmin();
     }
 
-    // --------------------------------------------------
+    // ==================================================
     // ACADEMIC YEARS
-    // --------------------------------------------------
+    // ==================================================
 
     match /academic_years/{yearId} {
       allow read: if signedIn();
       allow create, update, delete: if isAdmin();
     }
 
-    // --------------------------------------------------
+    // ==================================================
     // ACADEMIC SUBJECTS
-    // --------------------------------------------------
+    // ==================================================
 
     match /academic_subjects/{subjectId} {
       allow read: if signedIn();
       allow create, update, delete: if isAdmin();
     }
 
-    // --------------------------------------------------
+    // ==================================================
     // ACADEMIC TOPICS
-    // --------------------------------------------------
+    // ==================================================
 
     match /academic_topics/{topicId} {
       allow read: if signedIn();
       allow create, update, delete: if isAdmin();
     }
 
-    // --------------------------------------------------
+    // ==================================================
     // LEARNING RESOURCES
-    // --------------------------------------------------
+    // ==================================================
 
     match /learning_resources/{resourceId} {
 
       allow read: if isAdmin() ||
         (
           hasActiveAccess() &&
-          resourcePublished(resource.data)
+          resource.data.isPublished == true
         );
 
       allow create, update, delete: if isAdmin();
     }
 
-    // --------------------------------------------------
+    // ==================================================
     // SUBSCRIPTION PLANS
-    // --------------------------------------------------
+    // ==================================================
 
     match /subscription_plans/{planId} {
       allow read: if signedIn();
       allow create, update, delete: if isAdmin();
     }
 
-    // --------------------------------------------------
+    // ==================================================
     // SUBSCRIPTION REQUESTS
-    // --------------------------------------------------
+    // ==================================================
 
     match /subscription_requests/{requestId} {
 
       allow create: if signedIn() &&
-        request.resource.data.userId == request.auth.uid &&
+        request.auth.token.email_verified == true &&
+        request.resource.data.keys().hasAll([
+          'studentUid',
+          'studentName',
+          'studentEmail',
+          'planId',
+          'planName',
+          'durationDays',
+          'amount',
+          'currency',
+          'paymentMethod',
+          'transactionReference',
+          'proofImageUrl',
+          'proofImagePath',
+          'status',
+          'adminNote',
+          'reviewedBy',
+          'createdAt',
+          'reviewedAt'
+        ]) &&
+        request.resource.data.studentUid == request.auth.uid &&
+        validString(request.resource.data.studentName, 120) &&
+        request.resource.data.studentEmail == request.auth.token.email &&
+        validString(request.resource.data.planId, 150) &&
+        validString(request.resource.data.planName, 150) &&
+        validSubscriptionPlan(request.resource.data.planId) &&
+        request.resource.data.durationDays ==
+          get(
+            /databases/$(database)/documents/subscription_plans/$(request.resource.data.planId)
+          ).data.durationDays &&
+        request.resource.data.amount is number &&
+        request.resource.data.amount ==
+          get(
+            /databases/$(database)/documents/subscription_plans/$(request.resource.data.planId)
+          ).data.price &&
+        request.resource.data.currency ==
+          get(
+            /databases/$(database)/documents/subscription_plans/$(request.resource.data.planId)
+          ).data.currency &&
+        request.resource.data.durationDays > 0 &&
+        validString(request.resource.data.currency, 10) &&
+        validString(request.resource.data.paymentMethod, 80) &&
+        validString(request.resource.data.transactionReference, 200) &&
+        request.resource.data.proofImageUrl == null &&
+        request.resource.data.proofImagePath == null &&
         request.resource.data.status == 'pending' &&
+        request.resource.data.adminNote == null &&
         request.resource.data.reviewedBy == null &&
+        request.resource.data.createdAt is timestamp &&
         request.resource.data.reviewedAt == null;
 
       allow read: if signedIn() &&
         (
-          resource.data.userId == request.auth.uid ||
+          resource.data.studentUid == request.auth.uid ||
           isAdmin()
         );
 
-      allow update, delete: if isAdmin();
+      // Approval and rejection must go through trusted
+      // Cloud Functions, not direct client writes.
+      allow update, delete: if false;
     }
 
-    // --------------------------------------------------
+    // ==================================================
     // MCQ QUESTION BANK
-    // --------------------------------------------------
+    // ==================================================
 
     match /mcqs/{mcqId} {
 
@@ -151,13 +258,31 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
-    // --------------------------------------------------
+    // ==================================================
     // MCQ PRACTICE ATTEMPTS
-    // --------------------------------------------------
+    // ==================================================
 
     match /mcq_attempts/{attemptId} {
 
       allow create: if hasActiveAccess() &&
+        request.resource.data.keys().hasAll([
+          'userId',
+          'type',
+          'totalQuestions',
+          'correctAnswers',
+          'incorrectAnswers',
+          'unansweredQuestions',
+          'percentage',
+          'questionIds',
+          'answers',
+          'subject',
+          'topic',
+          'subjects',
+          'topics',
+          'startedAt',
+          'completedAt',
+          'createdAt'
+        ]) &&
         request.resource.data.userId == request.auth.uid &&
         request.resource.data.type == 'practice' &&
 
@@ -189,7 +314,16 @@ service cloud.firestore {
 
         request.resource.data.answers is list &&
         request.resource.data.answers.size() ==
-          request.resource.data.totalQuestions;
+          request.resource.data.totalQuestions &&
+
+        request.resource.data.subject is string &&
+        request.resource.data.topic is string &&
+        request.resource.data.subjects is list &&
+        request.resource.data.topics is list &&
+
+        request.resource.data.startedAt is timestamp &&
+        request.resource.data.completedAt is timestamp &&
+        request.resource.data.createdAt is timestamp;
 
       allow read: if signedIn() &&
         (
@@ -197,13 +331,13 @@ service cloud.firestore {
           isAdmin()
         );
 
-      // Students cannot change completed results.
+      // Completed student results are immutable.
       allow update, delete: if isAdmin();
     }
 
-    // --------------------------------------------------
+    // ==================================================
     // NOTIFICATIONS
-    // --------------------------------------------------
+    // ==================================================
 
     match /notifications/{notificationId} {
 
@@ -216,9 +350,9 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
-    // --------------------------------------------------
+    // ==================================================
     // EXAMS
-    // --------------------------------------------------
+    // ==================================================
 
     match /exams/{examId} {
 
@@ -231,9 +365,9 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
-    // --------------------------------------------------
+    // ==================================================
     // EXAM ATTEMPTS
-    // --------------------------------------------------
+    // ==================================================
 
     match /exam_attempts/{attemptId} {
 
@@ -249,9 +383,9 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
-    // --------------------------------------------------
+    // ==================================================
     // DEFAULT DENY
-    // --------------------------------------------------
+    // ==================================================
 
     match /{document=**} {
       allow read, write: if false;
