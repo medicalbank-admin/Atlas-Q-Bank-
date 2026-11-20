@@ -1,161 +1,216 @@
+
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Only trusted Firebase custom claims grant admin access.
-    function isSignedIn() {
+    function signedIn() {
       return request.auth != null;
     }
 
-    function isAdmin() {
-      return isSignedIn()
-        && request.auth.token.admin == true;
-    }
-
     function isOwner(uid) {
-      return isSignedIn()
-        && request.auth.uid == uid;
+      return signedIn() && request.auth.uid == uid;
     }
 
-    // -----------------------------------------
+    function isAdmin() {
+      return signedIn() &&
+        request.auth.token.admin == true;
+    }
+
+    function validString(value, maxLength) {
+      return value is string &&
+        value.size() <= maxLength;
+    }
+
+    // --------------------------------------------------
     // STUDENT PROFILES
-    // -----------------------------------------
+    // --------------------------------------------------
 
     match /users/{uid} {
 
+      allow create: if isOwner(uid) &&
+        request.resource.data.uid == uid &&
+        request.resource.data.role == 'student' &&
+        request.resource.data.accountStatus == 'pending' &&
+        request.resource.data.subscriptionStatus == 'inactive' &&
+        request.resource.data.accessEnabled == false;
+
       allow read: if isOwner(uid) || isAdmin();
 
-      // Students may create only their own initial
-      // pending student profile.
-      allow create: if isOwner(uid)
-        && request.resource.data.keys().hasAll([
-          'uid',
-          'fullName',
-          'fatherName',
-          'nationalId',
-          'whatsappNumber',
-          'email',
-          'countryOfStudy',
-          'university',
-          'profileImageUrl',
-          'profileImagePath',
-          'role',
-          'accountStatus',
-          'subscriptionStatus',
-          'accessEnabled',
-          'emailVerified',
-          'termsAccepted',
-          'createdAt',
-          'updatedAt'
-        ])
-        && request.resource.data.uid == uid
-        && request.resource.data.role == 'student'
-        && request.resource.data.accountStatus == 'pending'
-        && request.resource.data.subscriptionStatus == 'inactive'
-        && request.resource.data.accessEnabled == false
-        && request.resource.data.emailVerified == false
-        && request.resource.data.termsAccepted == true
-        && request.resource.data.fullName is string
-        && request.resource.data.fatherName is string
-        && request.resource.data.nationalId is string
-        && request.resource.data.whatsappNumber is string
-        && request.resource.data.email is string
-        && request.resource.data.countryOfStudy is string
-        && request.resource.data.university is string
-        && request.resource.data.profileImageUrl is string
-        && request.resource.data.profileImagePath is string
-        && request.resource.data.createdAt is timestamp
-        && request.resource.data.updatedAt is timestamp;
+      allow update: if isAdmin();
 
-      // Student clients cannot modify their profiles
-      // directly. Admin SDK backend operations bypass rules.
-      allow update, delete: if isAdmin();
+      allow delete: if isAdmin();
     }
 
-    // -----------------------------------------
-    // SUBSCRIPTION PLANS
-    // -----------------------------------------
+    // --------------------------------------------------
+    // ACADEMIC YEARS
+    // --------------------------------------------------
 
-    match /subscription_plans/{planId} {
-
-      // Students can read active plans.
-      // Admins can read all plans.
-      allow read: if isAdmin()
-        || (
-          isSignedIn()
-          && resource.data.isActive == true
-        );
-
-      // Only trusted administrators can manage plans.
+    match /academic_years/{yearId} {
+      allow read: if signedIn();
       allow create, update, delete: if isAdmin();
     }
 
-    // -----------------------------------------
-    // STUDENT SUBSCRIPTION REQUESTS
-    // -----------------------------------------
+    // --------------------------------------------------
+    // SUBJECTS
+    // --------------------------------------------------
+
+    match /academic_subjects/{subjectId} {
+      allow read: if signedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // --------------------------------------------------
+    // TOPICS
+    // --------------------------------------------------
+
+    match /academic_topics/{topicId} {
+      allow read: if signedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // --------------------------------------------------
+    // LEARNING RESOURCES
+    // --------------------------------------------------
+
+    match /learning_resources/{resourceId} {
+      allow read: if signedIn() &&
+        (
+          isAdmin() ||
+          resourcePublished()
+        );
+
+      allow create, update, delete: if isAdmin();
+
+      function resourcePublished() {
+        return resource.data.isPublished == true;
+      }
+    }
+
+    // --------------------------------------------------
+    // SUBSCRIPTION PLANS
+    // --------------------------------------------------
+
+    match /subscription_plans/{planId} {
+      allow read: if signedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // --------------------------------------------------
+    // SUBSCRIPTION REQUESTS
+    // --------------------------------------------------
 
     match /subscription_requests/{requestId} {
 
-      // Students can read only their own requests.
-      // Admins can read every request.
-      allow read: if isAdmin()
-        || (
-          isSignedIn()
-          && resource.data.studentUid == request.auth.uid
+      allow create: if signedIn() &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.status == 'pending' &&
+        request.resource.data.reviewedBy == null &&
+        request.resource.data.reviewedAt == null;
+
+      allow read: if signedIn() &&
+        (
+          resource.data.userId == request.auth.uid ||
+          isAdmin()
         );
 
-      // A student can submit a request for themselves.
-      allow create: if isSignedIn()
-        && request.resource.data.studentUid == request.auth.uid
-        && request.resource.data.status == 'pending'
-        && request.resource.data.reviewedBy == null
-        && request.resource.data.reviewedAt == null
-        && request.resource.data.keys().hasAll([
-          'studentUid',
-          'studentName',
-          'studentEmail',
-          'planId',
-          'planName',
-          'durationDays',
-          'amount',
-          'currency',
-          'paymentMethod',
-          'transactionReference',
-          'proofImageUrl',
-          'proofImagePath',
-          'status',
-          'adminNote',
-          'reviewedBy',
-          'createdAt',
-          'reviewedAt'
-        ])
-        && request.resource.data.studentName is string
-        && request.resource.data.studentEmail is string
-        && request.resource.data.planId is string
-        && request.resource.data.planName is string
-        && request.resource.data.durationDays is int
-        && request.resource.data.amount is number
-        && request.resource.data.currency is string
-        && request.resource.data.paymentMethod is string
-        && request.resource.data.transactionReference is string
-        && request.resource.data.proofImageUrl is string
-        && request.resource.data.proofImagePath is string
-        && request.resource.data.status == 'pending'
-        && request.resource.data.adminNote == ''
-        && request.resource.data.createdAt is timestamp;
-
-      // All reviews and changes must happen through
-      // trusted backend functions or an administrator.
       allow update, delete: if isAdmin();
     }
 
-    // -----------------------------------------
-    // DEFAULT DENY
-    // -----------------------------------------
+    // --------------------------------------------------
+    // MCQ QUESTION BANK
+    // --------------------------------------------------
 
-    // Any collection not explicitly listed above
-    // is inaccessible until its rules are designed.
+    match /mcqs/{mcqId} {
+
+      // Students can only read published questions.
+      // Administrators can read the complete bank.
+      allow read: if isAdmin() ||
+        (
+          signedIn() &&
+          resource.data.isPublished == true
+        );
+
+      // Only administrators can manage questions.
+      allow create, update, delete: if isAdmin();
+    }
+
+    // --------------------------------------------------
+    // MCQ PRACTICE ATTEMPTS
+    // --------------------------------------------------
+
+    match /mcq_attempts/{attemptId} {
+
+      // Students can save their own practice results.
+      allow create: if signedIn() &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.type == 'practice' &&
+        request.resource.data.totalQuestions is int &&
+        request.resource.data.totalQuestions > 0 &&
+        request.resource.data.correctAnswers is int &&
+        request.resource.data.correctAnswers >= 0 &&
+        request.resource.data.correctAnswers <=
+          request.resource.data.totalQuestions &&
+        request.resource.data.questionIds is list &&
+        request.resource.data.questionIds.size() ==
+          request.resource.data.totalQuestions;
+
+      // Only the owner or an administrator can read.
+      allow read: if signedIn() &&
+        (
+          resource.data.userId == request.auth.uid ||
+          isAdmin()
+        );
+
+      // Completed attempts cannot be modified by students.
+      allow update, delete: if isAdmin();
+    }
+
+    // --------------------------------------------------
+    // NOTIFICATIONS
+    // --------------------------------------------------
+
+    match /notifications/{notificationId} {
+      allow read: if isAdmin() ||
+        (
+          signedIn() &&
+          resource.data.userId == request.auth.uid
+        );
+
+      allow create, update, delete: if isAdmin();
+    }
+
+    // --------------------------------------------------
+    // EXAM COLLECTIONS
+    // --------------------------------------------------
+
+    match /exams/{examId} {
+      allow read: if isAdmin() ||
+        (
+          signedIn() &&
+          resource.data.isPublished == true
+        );
+
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /exam_attempts/{attemptId} {
+      allow create: if signedIn() &&
+        request.resource.data.userId == request.auth.uid;
+
+      allow read: if signedIn() &&
+        (
+          resource.data.userId == request.auth.uid ||
+          isAdmin()
+        );
+
+      allow update, delete: if isAdmin();
+    }
+
+    // --------------------------------------------------
+    // DEFAULT DENY
+    // --------------------------------------------------
+
     match /{document=**} {
       allow read, write: if false;
     }
