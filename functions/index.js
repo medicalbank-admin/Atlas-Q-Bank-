@@ -1,3 +1,4 @@
+
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { onSchedule } = require("firebase-functions/v2/scheduler");
 const admin = require("firebase-admin");
@@ -58,6 +59,65 @@ function cleanAdminNote(note) {
   return note.trim().slice(0, 1000);
 }
 
+function validatePaymentDetails(requestData, plan) {
+  const requestedAmount = Number(requestData.amount);
+  const planPrice = Number(plan.price);
+
+  if (
+    !Number.isFinite(requestedAmount) ||
+    !Number.isFinite(planPrice) ||
+    requestedAmount <= 0 ||
+    planPrice <= 0 ||
+    Math.abs(requestedAmount - planPrice) > 0.001
+  ) {
+    throw new HttpsError(
+      "failed-precondition",
+      "The requested payment amount does not match the subscription plan."
+    );
+  }
+
+  const requestedCurrency =
+    typeof requestData.currency === "string"
+      ? requestData.currency.trim().toUpperCase()
+      : "";
+
+  const planCurrency =
+    typeof plan.currency === "string"
+      ? plan.currency.trim().toUpperCase()
+      : "";
+
+  if (!requestedCurrency || requestedCurrency !== planCurrency) {
+    throw new HttpsError(
+      "failed-precondition",
+      "The payment currency does not match the subscription plan."
+    );
+  }
+
+  if (
+    typeof requestData.transactionReference !== "string" ||
+    requestData.transactionReference.trim().length < 3
+  ) {
+    throw new HttpsError(
+      "failed-precondition",
+      "The payment transaction reference is missing or invalid."
+    );
+  }
+
+  const requestedDuration = Number(requestData.durationDays);
+  const planDuration = Number(plan.durationDays);
+
+  if (
+    !Number.isInteger(requestedDuration) ||
+    !Number.isInteger(planDuration) ||
+    requestedDuration !== planDuration
+  ) {
+    throw new HttpsError(
+      "failed-precondition",
+      "The requested subscription duration does not match the plan."
+    );
+  }
+}
+
 // ---------------------------------------------
 // APPROVE SUBSCRIPTION REQUEST
 // ---------------------------------------------
@@ -97,9 +157,9 @@ exports.approveSubscriptionRequest = onCall(async (request) => {
 
       if (
         typeof studentUid !== "string" ||
-        !studentUid ||
+        !studentUid.trim() ||
         typeof planId !== "string" ||
-        !planId
+        !planId.trim()
       ) {
         throw new HttpsError(
           "failed-precondition",
@@ -110,7 +170,7 @@ exports.approveSubscriptionRequest = onCall(async (request) => {
       const studentRef = db.collection("users").doc(studentUid);
       const planRef = db.collection("subscription_plans").doc(planId);
 
-      // Read all documents before writing.
+      // Read every required document before writing.
       const studentSnapshot = await transaction.get(studentRef);
       const planSnapshot = await transaction.get(planRef);
 
@@ -129,6 +189,7 @@ exports.approveSubscriptionRequest = onCall(async (request) => {
       }
 
       const plan = planSnapshot.data();
+      const student = studentSnapshot.data();
 
       if (plan.isActive !== true) {
         throw new HttpsError(
@@ -136,6 +197,8 @@ exports.approveSubscriptionRequest = onCall(async (request) => {
           "This subscription plan is no longer active."
         );
       }
+
+      validatePaymentDetails(requestData, plan);
 
       const durationDays = Number(plan.durationDays);
       const permissions = plan.accessPermissions;
@@ -162,9 +225,37 @@ exports.approveSubscriptionRequest = onCall(async (request) => {
         );
       }
 
-      const startDate = new Date();
+      const nowDate = new Date();
+
+      // If the student already has an active subscription,
+      // extend it instead of discarding the remaining days.
+      let subscriptionStartDate = nowDate;
+      let expiryBaseDate = nowDate;
+
+      const existingExpiry = student.subscriptionExpiryAt;
+
+      if (
+        student.subscriptionStatus === "active" &&
+        existingExpiry &&
+        typeof existingExpiry.toDate === "function"
+      ) {
+        const existingExpiryDate = existingExpiry.toDate();
+
+        if (existingExpiryDate > nowDate) {
+          expiryBaseDate = existingExpiryDate;
+
+          if (
+            student.subscriptionStartedAt &&
+            typeof student.subscriptionStartedAt.toDate === "function"
+          ) {
+            subscriptionStartDate =
+              student.subscriptionStartedAt.toDate();
+          }
+        }
+      }
+
       const expiryDate = new Date(
-        startDate.getTime() +
+        expiryBaseDate.getTime() +
         durationDays * 24 * 60 * 60 * 1000
       );
 
@@ -186,7 +277,8 @@ exports.approveSubscriptionRequest = onCall(async (request) => {
         subscriptionPlanName: plan.name || "Subscription",
         subscriptionDurationDays: durationDays,
         subscriptionAccessPermissions: permissions,
-        subscriptionStartedAt: Timestamp.fromDate(startDate),
+        subscriptionStartedAt:
+          Timestamp.fromDate(subscriptionStartDate),
         subscriptionExpiryAt: Timestamp.fromDate(expiryDate),
         updatedAt: now,
       });
@@ -254,12 +346,14 @@ exports.rejectSubscriptionRequest = onCall(async (request) => {
         );
       }
 
+      const now = FieldValue.serverTimestamp();
+
       transaction.update(requestRef, {
         status: "rejected",
         adminNote,
         reviewedBy: request.auth.uid,
-        reviewedAt: FieldValue.serverTimestamp(),
-        updatedAt: FieldValue.serverTimestamp(),
+        reviewedAt: now,
+        updatedAt: now,
       });
     });
 
