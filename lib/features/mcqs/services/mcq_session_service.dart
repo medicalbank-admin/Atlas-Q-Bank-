@@ -13,14 +13,19 @@ class McqSessionService {
   })  : _firestore = firestore ?? FirebaseFirestore.instance,
         _auth = auth ?? FirebaseAuth.instance;
 
+  /// Converts the correct answer letter into its option index.
+  ///
+  /// A = 0, B = 1, C = 2, D = 3, E = 4.
+  int _correctAnswerIndex(McqModel question) {
+    return 'ABCDE'.indexOf(
+      question.correctAnswer.trim().toUpperCase(),
+    );
+  }
+
   /// Saves a completed MCQ practice session.
   ///
-  /// Unanswered questions are allowed and saved with:
-  /// selectedAnswer: null
-  /// isAnswered: false
-  /// isCorrect: false
-  ///
-  /// The percentage is calculated against ALL questions.
+  /// Unanswered questions are allowed.
+  /// The final percentage is calculated against all questions.
   Future<String> saveCompletedSession({
     required List<McqModel> questions,
     required Map<String, int?> selectedAnswers,
@@ -29,11 +34,21 @@ class McqSessionService {
     final user = _auth.currentUser;
 
     if (user == null) {
-      throw Exception('Please log in before saving your MCQ result.');
+      throw Exception(
+        'Please log in before saving your MCQ result.',
+      );
     }
 
     if (questions.isEmpty) {
-      throw Exception('There are no questions in this practice session.');
+      throw Exception(
+        'There are no questions in this practice session.',
+      );
+    }
+
+    if (startedAt.isAfter(DateTime.now())) {
+      throw Exception(
+        'The practice session start time is invalid.',
+      );
     }
 
     final questionIds = <String>{};
@@ -45,22 +60,37 @@ class McqSessionService {
     final answerSnapshots = <Map<String, dynamic>>[];
 
     for (final question in questions) {
-      if (question.id.isEmpty) {
-        throw Exception('A question has an invalid ID.');
+      if (question.id.trim().isEmpty) {
+        throw Exception(
+          'A question has an invalid ID.',
+        );
       }
 
       if (!questionIds.add(question.id)) {
-        throw Exception('Duplicate questions were found in this session.');
+        throw Exception(
+          'Duplicate questions were found in this session.',
+        );
       }
 
       if (question.options.length < 4 ||
           question.options.length > 5) {
         throw Exception(
-          'Question "${question.id}" has an invalid number of options.',
+          'Question "${question.id}" must have four or five options.',
         );
       }
 
-      if (!question.hasValidAnswer) {
+      if (question.options.any(
+        (option) => option.trim().isEmpty,
+      )) {
+        throw Exception(
+          'Question "${question.id}" contains an empty option.',
+        );
+      }
+
+      final correctIndex = _correctAnswerIndex(question);
+
+      if (correctIndex < 0 ||
+          correctIndex >= question.options.length) {
         throw Exception(
           'Question "${question.id}" has an invalid correct answer.',
         );
@@ -77,8 +107,12 @@ class McqSessionService {
       }
 
       final isAnswered = selectedIndex != null;
+
+      // IMPORTANT:
+      // Compare the selected option index with the correct
+      // answer index, not with the answer letter.
       final isCorrect =
-          isAnswered && selectedIndex == question.correctAnswer;
+          isAnswered && selectedIndex == correctIndex;
 
       if (!isAnswered) {
         unansweredQuestions++;
@@ -89,7 +123,7 @@ class McqSessionService {
       }
 
       final correctLetter =
-          String.fromCharCode(65 + question.correctAnswer);
+          String.fromCharCode(65 + correctIndex);
 
       final selectedLetter = selectedIndex == null
           ? null
@@ -131,17 +165,24 @@ class McqSessionService {
     final sessionData = <String, dynamic>{
       'userId': user.uid,
       'type': 'practice',
+
       'totalQuestions': totalQuestions,
       'correctAnswers': correctAnswers,
       'incorrectAnswers': incorrectAnswers,
       'unansweredQuestions': unansweredQuestions,
       'percentage': percentage,
-      'questionIds': questions.map((question) => question.id).toList(),
+
+      'questionIds': questions
+          .map((question) => question.id)
+          .toList(),
+
       'answers': answerSnapshots,
+
       'subject': subjects.join(', '),
       'topic': topics.join(', '),
       'subjects': subjects,
       'topics': topics,
+
       'startedAt': Timestamp.fromDate(startedAt),
       'completedAt': FieldValue.serverTimestamp(),
       'createdAt': FieldValue.serverTimestamp(),
@@ -161,7 +202,15 @@ class McqSessionService {
     final user = _auth.currentUser;
 
     if (user == null) {
-      throw Exception('Please log in to view your MCQ result.');
+      throw Exception(
+        'Please log in to view your MCQ result.',
+      );
+    }
+
+    if (sessionId.trim().isEmpty) {
+      throw Exception(
+        'Invalid practice session ID.',
+      );
     }
 
     final document = await _firestore
