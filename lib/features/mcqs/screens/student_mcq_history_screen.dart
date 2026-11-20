@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
-import '../services/mcq_attempt_service.dart';
+import 'student_mcq_result_screen.dart';
 
 class StudentMcqHistoryScreen extends StatelessWidget {
   const StudentMcqHistoryScreen({super.key});
@@ -12,383 +12,372 @@ class StudentMcqHistoryScreen extends StatelessWidget {
   static const Color gold = Color(0xFFD8B66B);
   static const Color ivory = Color(0xFFF7F8F5);
 
-  Widget _statCard({
-    required String title,
-    required String value,
-    required IconData icon,
-  }) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(15),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: teal, size: 22),
-            const SizedBox(height: 10),
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: navy,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 11,
-                color: Colors.grey,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _attemptCard(
-    BuildContext context,
-    QueryDocumentSnapshot<Map<String, dynamic>> document,
-  ) {
-    final data = document.data();
-
-    final total = (data['totalQuestions'] as num?)?.toInt() ?? 0;
-    final correct = (data['correctAnswers'] as num?)?.toInt() ?? 0;
-    final incorrect = (data['incorrectAnswers'] as num?)?.toInt() ??
-        (total - correct);
-    final percentage = (data['percentage'] as num?)?.toInt() ?? 0;
-
-    final subject = data['subject']?.toString() ?? '';
-    final topic = data['topic']?.toString() ?? '';
-
-    final completedAt = data['completedAt'];
-    DateTime? date;
-
-    if (completedAt is Timestamp) {
-      date = completedAt.toDate();
-    }
-
-    final scoreColor = percentage >= 80
-        ? Colors.green
-        : percentage >= 50
-            ? Colors.orange
-            : Colors.red;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 13),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(17),
-        boxShadow: [
-          BoxShadow(
-            color: navy.withValues(alpha: 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  subject.isEmpty ? 'General Practice' : subject,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: navy,
-                  ),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 11,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: scoreColor.withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  '$percentage%',
-                  style: TextStyle(
-                    color: scoreColor,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          if (topic.isNotEmpty) ...[
-            const SizedBox(height: 5),
-            Text(
-              topic,
-              style: const TextStyle(
-                color: Colors.grey,
-                fontSize: 12,
-              ),
-            ),
-          ],
-          const SizedBox(height: 14),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: LinearProgressIndicator(
-              value: total == 0 ? 0 : correct / total,
-              minHeight: 7,
-              backgroundColor: Colors.grey.shade200,
-              color: scoreColor,
-            ),
-          ),
-          const SizedBox(height: 13),
-          Row(
-            children: [
-              _resultValue('Total', '$total'),
-              _resultValue('Correct', '$correct'),
-              _resultValue('Incorrect', '$incorrect'),
-            ],
-          ),
-          const Divider(height: 24),
-          Row(
-            children: [
-              const Icon(
-                Icons.calendar_today_outlined,
-                size: 15,
-                color: teal,
-              ),
-              const SizedBox(width: 7),
-              Expanded(
-                child: Text(
-                  date == null
-                      ? 'Completion date unavailable'
-                      : DateFormat('dd MMM yyyy, hh:mm a').format(date),
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: Colors.grey,
-                  ),
-                ),
-              ),
-              const Icon(
-                Icons.check_circle_outline,
-                size: 17,
-                color: teal,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _resultValue(String label, String value) {
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.bold,
-              color: navy,
-            ),
-          ),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 11,
-              color: Colors.grey,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final service = McqAttemptService();
+    final user = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
       backgroundColor: ivory,
       appBar: AppBar(
-        title: const Text('Practice History'),
         backgroundColor: navy,
         foregroundColor: Colors.white,
+        title: const Text(
+          'Practice History',
+          style: TextStyle(fontWeight: FontWeight.w800),
+        ),
       ),
-      body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream: service.watchMyAttempts(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(
-                  'Unable to load your practice history.\n'
-                  '${snapshot.error}',
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            );
-          }
+      body: user == null
+          ? _message('Please sign in to view your practice history.')
+          : StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+              stream: FirebaseFirestore.instance
+                  .collection('mcq_attempts')
+                  .where('userId', isEqualTo: user.uid)
+                  .orderBy('completedAt', descending: true)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                    child: CircularProgressIndicator(color: teal),
+                  );
+                }
 
-          if (!snapshot.hasData) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
+                if (snapshot.hasError) {
+                  return _message(
+                    'Unable to load your practice history. '
+                    'Please try again later.',
+                  );
+                }
 
-          final documents = snapshot.data!.docs;
+                final documents = snapshot.data?.docs ?? [];
 
-          if (documents.isEmpty) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(28),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
+                if (documents.isEmpty) {
+                  return _emptyHistory(context);
+                }
+
+                return ListView(
+                  padding: const EdgeInsets.all(18),
                   children: [
-                    Container(
-                      height: 90,
-                      width: 90,
-                      decoration: BoxDecoration(
-                        color: gold.withValues(alpha: 0.15),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.history,
-                        size: 45,
-                        color: teal,
-                      ),
-                    ),
+                    _summaryBanner(documents.length),
                     const SizedBox(height: 20),
                     const Text(
-                      'No Practice History Yet',
+                      'Previous Sessions',
                       style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
                         color: navy,
+                        fontSize: 19,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Your completed MCQ practice sessions '
-                      'will appear here.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                    const SizedBox(height: 18),
-                    FilledButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: teal,
+                    const SizedBox(height: 13),
+                    ...documents.map(
+                      (document) => _historyCard(
+                        context,
+                        document.id,
+                        document.data(),
                       ),
-                      child: const Text('Back'),
                     ),
                   ],
-                ),
-              ),
-            );
-          }
+                );
+              },
+            ),
+    );
+  }
 
-          final totalAttempts = documents.length;
-
-          final totalQuestions = documents.fold<int>(
-            0,
-            (sum, doc) =>
-                sum + ((doc.data()['totalQuestions'] as num?)?.toInt() ?? 0),
-          );
-
-          final totalCorrect = documents.fold<int>(
-            0,
-            (sum, doc) =>
-                sum + ((doc.data()['correctAnswers'] as num?)?.toInt() ?? 0),
-          );
-
-          final overallPercentage = totalQuestions == 0
-              ? 0
-              : (totalCorrect / totalQuestions * 100).round();
-
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [navy, teal],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+  Widget _summaryBanner(int count) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [navy, teal],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(21),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.13),
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: const Icon(
+              Icons.history_rounded,
+              color: gold,
+              size: 28,
+            ),
+          ),
+          const SizedBox(width: 15),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Your Learning Journey',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 16,
                   ),
-                  borderRadius: BorderRadius.circular(20),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Your Learning Progress',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 7),
-                    const Text(
-                      'Keep practising to strengthen your medical knowledge.',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 12,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
+                const SizedBox(height: 5),
+                Text(
+                  '$count completed practice sessions',
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _historyCard(
+    BuildContext context,
+    String sessionId,
+    Map<String, dynamic> data,
+  ) {
+    final total = _number(data['totalQuestions']);
+    final correct = _number(data['correctAnswers']);
+    final percentage = _number(data['percentage']);
+
+    final subject = data['subject']?.toString() ?? 'Mixed subjects';
+
+    final color = percentage >= 70
+        ? const Color(0xFF23865B)
+        : percentage >= 40
+            ? const Color(0xFFB18425)
+            : const Color(0xFFC44B4B);
+
+    final completedAt = data['completedAt'];
+
+    DateTime? date;
+    if (completedAt is Timestamp) {
+      date = completedAt.toDate();
+    } else if (completedAt is DateTime) {
+      date = completedAt;
+    }
+
+    final dateLabel = date == null
+        ? 'Date unavailable'
+        : '${date.day.toString().padLeft(2, '0')}/'
+            '${date.month.toString().padLeft(2, '0')}/'
+            '${date.year}';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 13),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.035),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => StudentMcqResultScreen(
+                sessionId: sessionId,
+              ),
+            ),
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(17),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _statCard(
-                          title: 'Sessions',
-                          value: '$totalAttempts',
-                          icon: Icons.assignment_outlined,
+                        Text(
+                          subject,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: navy,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
-                        const SizedBox(width: 10),
-                        _statCard(
-                          title: 'Questions',
-                          value: '$totalQuestions',
-                          icon: Icons.quiz_outlined,
-                        ),
-                        const SizedBox(width: 10),
-                        _statCard(
-                          title: 'Accuracy',
-                          value: '$overallPercentage%',
-                          icon: Icons.trending_up,
+                        const SizedBox(height: 5),
+                        Text(
+                          dateLabel,
+                          style: const TextStyle(
+                            color: Colors.black45,
+                            fontSize: 11,
+                          ),
                         ),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 13,
+                      vertical: 9,
+                    ),
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(13),
+                    ),
+                    child: Text(
+                      '$percentage%',
+                      style: TextStyle(
+                        color: color,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 23),
-              const Text(
-                'Previous Practice Sessions',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: navy,
-                ),
+              const SizedBox(height: 17),
+              Row(
+                children: [
+                  _metric('Questions', total.toString()),
+                  _metric('Correct', correct.toString()),
+                  _metric('Incorrect', (total - correct).toString()),
+                ],
               ),
               const SizedBox(height: 14),
-              ...documents.map(
-                (document) => _attemptCard(context, document),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: LinearProgressIndicator(
+                  value: (percentage.clamp(0, 100)) / 100,
+                  minHeight: 6,
+                  backgroundColor: ivory,
+                  valueColor: AlwaysStoppedAnimation<Color>(color),
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Text(
+                    'Review Answers',
+                    style: TextStyle(
+                      color: teal,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  SizedBox(width: 5),
+                  Icon(
+                    Icons.arrow_forward_rounded,
+                    color: teal,
+                    size: 16,
+                  ),
+                ],
               ),
             ],
-          );
-        },
+          ),
+        ),
       ),
     );
+  }
+
+  Widget _metric(String label, String value) {
+    return Expanded(
+      child: Column(
+        children: [
+          Text(
+            value,
+            style: const TextStyle(
+              color: navy,
+              fontSize: 17,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.black45,
+              fontSize: 10,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _emptyHistory(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.history_rounded,
+              size: 62,
+              color: teal,
+            ),
+            const SizedBox(height: 17),
+            const Text(
+              'No Practice History Yet',
+              style: TextStyle(
+                color: navy,
+                fontSize: 19,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Complete your first MCQ practice session '
+              'and your results will appear here.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.black54,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 20),
+            FilledButton(
+              onPressed: () => Navigator.pop(context),
+              style: FilledButton.styleFrom(
+                backgroundColor: teal,
+              ),
+              child: const Text('Go Back'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _message(String message) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(25),
+        child: Text(
+          message,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: navy,
+            fontSize: 15,
+          ),
+        ),
+      ),
+    );
+  }
+
+  int _number(dynamic value) {
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString() ?? '') ?? 0;
   }
 }
