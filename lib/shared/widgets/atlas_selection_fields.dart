@@ -1,6 +1,9 @@
+
 import 'package:flutter/material.dart';
 
 import '../../app/atlas_academy_app.dart';
+
+const String _otherCountryOption = 'Other — Enter Country Manually';
 
 class AtlasSelectionField extends StatelessWidget {
   const AtlasSelectionField({
@@ -24,7 +27,10 @@ class AtlasSelectionField extends StatelessWidget {
   final String? Function(String?)? validator;
   final bool searchable;
 
-  Future<void> _openSelector(BuildContext context) async {
+  Future<void> _openSelector(
+    BuildContext context,
+    FormFieldState<String> field,
+  ) async {
     final selected = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
@@ -45,6 +51,7 @@ class AtlasSelectionField extends StatelessWidget {
     );
 
     if (selected != null) {
+      field.didChange(selected);
       onChanged(selected);
     }
   }
@@ -52,42 +59,39 @@ class AtlasSelectionField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FormField<String>(
+      key: ValueKey<String?>('$label-$value'),
       initialValue: value,
       validator: validator,
       builder: (field) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            InkWell(
-              onTap: () => _openSelector(context),
-              borderRadius: BorderRadius.circular(16),
-              child: InputDecorator(
-                decoration: InputDecoration(
-                  labelText: label,
-                  errorText: field.errorText,
-                  prefixIcon: prefixIcon == null
-                      ? null
-                      : Icon(
-                          prefixIcon,
-                          color: AtlasColors.oceanTeal,
-                        ),
-                  suffixIcon: const Icon(
-                    Icons.keyboard_arrow_down_rounded,
-                  ),
-                ),
-                child: Text(
-                  value ?? hint,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: value == null
-                        ? Theme.of(context).hintColor
-                        : Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
+        return InkWell(
+          onTap: () => _openSelector(context, field),
+          borderRadius: BorderRadius.circular(16),
+          child: InputDecorator(
+            isEmpty: value == null,
+            decoration: InputDecoration(
+              labelText: label,
+              errorText: field.errorText,
+              prefixIcon: prefixIcon == null
+                  ? null
+                  : Icon(
+                      prefixIcon,
+                      color: AtlasColors.oceanTeal,
+                    ),
+              suffixIcon: const Icon(
+                Icons.keyboard_arrow_down_rounded,
               ),
             ),
-          ],
+            child: Text(
+              value ?? hint,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: value == null
+                    ? Theme.of(context).hintColor
+                    : Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+          ),
         );
       },
     );
@@ -122,13 +126,11 @@ class _AtlasSelectionSheetState
   List<String> get filteredItems {
     if (_query.trim().isEmpty) return widget.items;
 
-    return widget.items
-        .where(
-          (item) => item.toLowerCase().contains(
-                _query.toLowerCase().trim(),
-              ),
-        )
-        .toList();
+    return widget.items.where((item) {
+      return item.toLowerCase().contains(
+            _query.trim().toLowerCase(),
+          );
+    }).toList();
   }
 
   @override
@@ -150,7 +152,7 @@ class _AtlasSelectionSheetState
           bottom: MediaQuery.of(context).viewInsets.bottom + 22,
         ),
         child: SizedBox(
-          height: MediaQuery.of(context).size.height * 0.68,
+          height: MediaQuery.of(context).size.height * 0.75,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -170,9 +172,7 @@ class _AtlasSelectionSheetState
                 style: Theme.of(context)
                     .textTheme
                     .titleLarge
-                    ?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                    ?.copyWith(fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: 18),
               if (widget.searchable)
@@ -184,7 +184,7 @@ class _AtlasSelectionSheetState
                     });
                   },
                   decoration: const InputDecoration(
-                    hintText: 'Search...',
+                    hintText: 'Search countries or universities...',
                     prefixIcon: Icon(Icons.search_rounded),
                   ),
                 ),
@@ -247,41 +247,311 @@ class AtlasCountryField extends StatelessWidget {
 
   static const List<String> countries = [
     'Afghanistan',
+    'Albania',
+    'Algeria',
+    'Andorra',
+    'Angola',
+    'Antigua and Barbuda',
+    'Argentina',
+    'Armenia',
     'Australia',
+    'Austria',
+    'Azerbaijan',
+    'Bahamas',
+    'Bahrain',
     'Bangladesh',
+    'Barbados',
+    'Belarus',
+    'Belgium',
+    'Belize',
+    'Benin',
+    'Bhutan',
+    'Bolivia',
+    'Bosnia and Herzegovina',
+    'Botswana',
+    'Brazil',
+    'Brunei',
+    'Bulgaria',
+    'Burkina Faso',
+    'Burundi',
+    'Cabo Verde',
+    'Cambodia',
+    'Cameroon',
     'Canada',
+    'Central African Republic',
+    'Chad',
+    'Chile',
     'China',
+    'Colombia',
+    'Comoros',
+    'Congo',
+    'Costa Rica',
+    'Croatia',
+    'Cuba',
+    'Cyprus',
+    'Czechia',
+    'Democratic Republic of the Congo',
+    'Denmark',
+    'Djibouti',
+    'Dominica',
+    'Dominican Republic',
+    'Ecuador',
     'Egypt',
+    'El Salvador',
+    'Equatorial Guinea',
+    'Eritrea',
+    'Estonia',
+    'Eswatini',
+    'Ethiopia',
+    'Fiji',
+    'Finland',
+    'France',
+    'Gabon',
+    'Gambia',
+    'Georgia',
     'Germany',
+    'Ghana',
+    'Greece',
+    'Grenada',
+    'Guatemala',
+    'Guinea',
+    'Guinea-Bissau',
+    'Guyana',
+    'Haiti',
+    'Honduras',
+    'Hungary',
+    'Iceland',
     'India',
-    'Iran', 
+    'Indonesia',
+    'Iran',
+    'Iraq',
     'Ireland',
-    'Malaysia',
-    'Nepal',
-    'Pakistan',
-    'Russia',
-    'Saudi Arabia',
-    'South Africa',
-    'Turkey',
-    'Tajiskestan',
-    'Uzbekistan', 
+    'Israel',
+    'Italy',
+    'Ivory Coast',
+    'Jamaica',
+    'Japan',
+    'Jordan',
+    'Kazakhstan',
+    'Kenya',
+    'Kiribati',
+    'Kuwait',
     'Kyrgyzstan',
+    'Laos',
+    'Latvia',
+    'Lebanon',
+    'Lesotho',
+    'Liberia',
+    'Libya',
+    'Liechtenstein',
+    'Lithuania',
+    'Luxembourg',
+    'Madagascar',
+    'Malawi',
+    'Malaysia',
+    'Maldives',
+    'Mali',
+    'Malta',
+    'Marshall Islands',
+    'Mauritania',
+    'Mauritius',
+    'Mexico',
+    'Micronesia',
+    'Moldova',
+    'Monaco',
+    'Mongolia',
+    'Montenegro',
+    'Morocco',
+    'Mozambique',
+    'Myanmar',
+    'Namibia',
+    'Nauru',
+    'Nepal',
+    'Netherlands',
+    'New Zealand',
+    'Nicaragua',
+    'Niger',
+    'Nigeria',
+    'North Korea',
+    'North Macedonia',
+    'Norway',
+    'Oman',
+    'Pakistan',
+    'Palau',
+    'Palestine',
+    'Panama',
+    'Papua New Guinea',
+    'Paraguay',
+    'Peru',
+    'Philippines',
+    'Poland',
+    'Portugal',
+    'Qatar',
+    'Romania',
+    'Russia',
+    'Rwanda',
+    'Saint Kitts and Nevis',
+    'Saint Lucia',
+    'Saint Vincent and the Grenadines',
+    'Samoa',
+    'San Marino',
+    'Sao Tome and Principe',
+    'Saudi Arabia',
+    'Senegal',
+    'Serbia',
+    'Seychelles',
+    'Sierra Leone',
+    'Singapore',
+    'Slovakia',
+    'Slovenia',
+    'Solomon Islands',
+    'Somalia',
+    'South Africa',
+    'South Korea',
+    'South Sudan',
+    'Spain',
+    'Sri Lanka',
+    'Sudan',
+    'Suriname',
+    'Sweden',
+    'Switzerland',
+    'Syria',
+    'Tajikistan',
+    'Tanzania',
+    'Thailand',
+    'Timor-Leste',
+    'Togo',
+    'Tonga',
+    'Trinidad and Tobago',
+    'Tunisia',
+    'Turkey',
+    'Turkmenistan',
+    'Tuvalu',
+    'Uganda',
+    'Ukraine',
     'United Arab Emirates',
     'United Kingdom',
     'United States',
-    
+    'Uruguay',
+    'Uzbekistan',
+    'Vanuatu',
+    'Vatican City (Holy See)',
+    'Venezuela',
+    'Vietnam',
+    'Yemen',
+    'Zambia',
+    'Zimbabwe',
   ];
+
+  Future<void> _selectCountry(BuildContext context) async {
+    final selected = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Theme.of(context).cardTheme.color,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(26),
+        ),
+      ),
+      builder: (context) {
+        return _AtlasSelectionSheet(
+          title: 'Country of Study',
+          items: [...countries, _otherCountryOption],
+          selectedValue: value,
+          searchable: true,
+        );
+      },
+    );
+
+    if (selected == null) return;
+
+    if (selected == _otherCountryOption) {
+      final controller = TextEditingController();
+
+      final customCountry = await showDialog<String>(
+        context: context,
+        builder: (dialogContext) {
+          return AlertDialog(
+            title: const Text('Enter Your Country'),
+            content: TextField(
+              controller: controller,
+              autofocus: true,
+              textCapitalization: TextCapitalization.words,
+              decoration: const InputDecoration(
+                labelText: 'Country name',
+                hintText: 'Enter your country',
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(dialogContext);
+                },
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  final country = controller.text.trim();
+
+                  if (country.isNotEmpty) {
+                    Navigator.pop(dialogContext, country);
+                  }
+                },
+                child: const Text('Save Country'),
+              ),
+            ],
+          );
+        },
+      );
+
+      controller.dispose();
+
+      if (customCountry == null || customCountry.trim().isEmpty) {
+        return;
+      }
+
+      onChanged(customCountry.trim());
+    } else {
+      onChanged(selected);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return AtlasSelectionField(
-      label: 'Country of Study',
-      hint: 'Select your country',
-      value: value,
-      items: countries,
-      onChanged: onChanged,
+    return FormField<String>(
+      key: ValueKey<String?>('country-$value'),
+      initialValue: value,
       validator: validator,
-      prefixIcon: Icons.public_rounded,
+      builder: (field) {
+        return InkWell(
+          onTap: () => _selectCountry(context),
+          borderRadius: BorderRadius.circular(16),
+          child: InputDecorator(
+            isEmpty: value == null,
+            decoration: InputDecoration(
+              labelText: 'Country of Study *',
+              errorText: field.errorText,
+              prefixIcon: const Icon(
+                Icons.public_rounded,
+                color: AtlasColors.oceanTeal,
+              ),
+              suffixIcon: const Icon(
+                Icons.keyboard_arrow_down_rounded,
+              ),
+            ),
+            child: Text(
+              value ?? 'Search and select your country',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: value == null
+                    ? Theme.of(context).hintColor
+                    : Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -303,10 +573,13 @@ class AtlasUniversityField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AtlasSelectionField(
-      label: 'University',
-      hint: 'Select your university',
+      label: 'University *',
+      hint: 'Search and select your university',
       value: value,
-      items: universities,
+      items: [
+        ...universities,
+        'Other — Enter University Manually',
+      ],
       onChanged: onChanged,
       validator: validator,
       prefixIcon: Icons.account_balance_rounded,
