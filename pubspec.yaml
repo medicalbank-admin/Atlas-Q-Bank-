@@ -1,0 +1,52 @@
+name: atlas_academy
+description: The Atlas Academy - Prepare Smarter, Perform Better. 
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.13.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Firebase
+  firebase_core: ^5.1.0
+  firebase_auth: ^7.0.1
+  cloud_firestore: ^7.1.0
+  firebase_storage: ^14.0.1
+  firebase_messaging: ^17.0.1
+  cloud_functions: ^7.0.1
+
+  # State management
+  flutter_riverpod: ^3.5.0
+
+  # Navigation
+  go_router: ^18.1.4
+
+  # Premium UI and typography
+  google_fonts: ^9.0.0
+  flutter_svg: ^2.2.1
+  cupertino_icons: ^1.0.8
+
+  # Utilities
+  intl: ^0.20.2
+  cached_network_image: ^3.4.1
+  shared_preferences: ^2.5.3
+  url_launcher: ^6.3.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/logo/
+    
