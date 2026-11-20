@@ -1,0 +1,75 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn()
+        && request.auth.token.admin == true;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn()
+        && request.auth.uid == uid;
+    }
+
+    function isValidImage() {
+      return request.resource != null
+        && request.resource.contentType.matches(
+          'image/(jpeg|jpg|png|webp)'
+        )
+        && request.resource.size < 10 * 1024 * 1024;
+    }
+
+    // -----------------------------------------
+    // STUDENT PROFILE PICTURES
+    // Path: student_profiles/{uid}/profile.jpg
+    // -----------------------------------------
+
+    match /student_profiles/{uid}/{fileName} {
+
+      allow read: if isOwner(uid) || isAdmin();
+
+      // Students can upload an image only to their own folder.
+      allow create: if isOwner(uid)
+        && fileName.matches('profile\\.(jpg|jpeg|png|webp)')
+        && isValidImage();
+
+      // Only administrators can replace or delete files.
+      allow update, delete: if isAdmin();
+    }
+
+    // -----------------------------------------
+    // SUBSCRIPTION PAYMENT PROOFS
+    // Path: subscription_payment_proofs/{uid}/{file}
+    // -----------------------------------------
+
+    match /subscription_payment_proofs/{uid}/{fileName} {
+
+      allow read: if isOwner(uid) || isAdmin();
+
+      // Students can upload payment proof only to their own folder.
+      allow create: if isOwner(uid)
+        && fileName.matches(
+          '[A-Za-z0-9_-]+\\.(jpg|jpeg|png|webp)'
+        )
+        && isValidImage();
+
+      // Uploaded payment proofs cannot be replaced or deleted
+      // by students.
+      allow update, delete: if isAdmin();
+    }
+
+    // -----------------------------------------
+    // DEFAULT DENY
+    // -----------------------------------------
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
