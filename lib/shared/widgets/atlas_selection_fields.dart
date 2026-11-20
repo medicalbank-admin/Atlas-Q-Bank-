@@ -254,6 +254,7 @@ class AtlasCountryField extends StatelessWidget {
     'Egypt',
     'Germany',
     'India',
+    'Iran', 
     'Ireland',
     'Malaysia',
     'Nepal',
@@ -262,9 +263,13 @@ class AtlasCountryField extends StatelessWidget {
     'Saudi Arabia',
     'South Africa',
     'Turkey',
+    'Tajiskestan',
+    'Uzbekistan', 
+    'Kyrgyzstan',
     'United Arab Emirates',
     'United Kingdom',
     'United States',
+    
   ];
 
   @override
