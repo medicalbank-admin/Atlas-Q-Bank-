@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import '../services/mcq_session_service.dart';
 
 class StudentMcqResultScreen extends StatefulWidget {
-  final String sessionId;
+  final String attemptId;
 
   const StudentMcqResultScreen({
     super.key,
-    required this.sessionId,
+    required this.attemptId,
   });
 
   @override
@@ -29,7 +29,7 @@ class _StudentMcqResultScreenState
   @override
   void initState() {
     super.initState();
-    _resultFuture = _service.getMySession(widget.sessionId);
+    _resultFuture = _service.getMySession(widget.attemptId);
   }
 
   Color _resultColor(double percentage) {
@@ -95,6 +95,7 @@ class _StudentMcqResultScreenState
     final total = (data['totalQuestions'] as num?)?.toInt() ?? 0;
     final correct = (data['correctAnswers'] as num?)?.toInt() ?? 0;
     final incorrect = (data['incorrectAnswers'] as num?)?.toInt() ?? 0;
+
     final unanswered =
         (data['unansweredQuestions'] as num?)?.toInt() ??
         (total - correct - incorrect).clamp(0, total);
@@ -155,7 +156,9 @@ class _StudentMcqResultScreenState
               ClipRRect(
                 borderRadius: BorderRadius.circular(20),
                 child: LinearProgressIndicator(
-                  value: total == 0 ? 0 : correct / total,
+                  value: total == 0
+                      ? 0
+                      : (correct / total).clamp(0.0, 1.0),
                   minHeight: 9,
                   backgroundColor: Colors.white24,
                   valueColor:
@@ -308,7 +311,9 @@ class _StudentMcqResultScreenState
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(17),
-        border: Border.all(color: color.withValues(alpha: 0.18)),
+        border: Border.all(
+          color: color.withValues(alpha: 0.18),
+        ),
       ),
       child: Column(
         children: [
@@ -341,20 +346,15 @@ class _StudentMcqResultScreenState
     Map<String, dynamic> answer,
     int index,
   ) {
-    final question =
-        answer['question']?.toString() ?? '';
+    final question = answer['question']?.toString() ?? '';
 
-    final options =
-        (answer['options'] as List<dynamic>?) ?? [];
+    final options = (answer['options'] as List<dynamic>?) ?? [];
 
-    final selected =
-        answer['selectedAnswer']?.toString();
+    final selected = answer['selectedAnswer']?.toString();
 
-    final correct =
-        answer['correctAnswer']?.toString() ?? '';
+    final correct = answer['correctAnswer']?.toString() ?? '';
 
-    final explanation =
-        answer['explanation']?.toString() ?? '';
+    final explanation = answer['explanation']?.toString() ?? '';
 
     final isAnswered =
         answer['isAnswered'] == true || selected != null;
@@ -434,9 +434,7 @@ class _StudentMcqResultScreenState
           const SizedBox(height: 13),
 
           ...List.generate(options.length, (optionIndex) {
-            final letter =
-                String.fromCharCode(65 + optionIndex);
-
+            final letter = String.fromCharCode(65 + optionIndex);
             final option = options[optionIndex].toString();
 
             final isCorrectOption = letter == correct;
