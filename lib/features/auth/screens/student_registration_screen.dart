@@ -1,7 +1,7 @@
-import ‘dart:typed_data’;
+import 'dart:typed_data';
 
-import ‘package:flutter/material.dart’;
-import ‘package:image_picker/image_picker.dart’;
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import ‘../../../app/atlas_academy_app.dart’;
 import ‘../../../shared/widgets/atlas_buttons.dart’;
@@ -747,7 +747,7 @@ extends State<_UniversitySelectionSheet> {
 final TextEditingController _searchController =
 TextEditingController();
 
-String _query = ‘’;
+String _query = '';
 
 @override
 void dispose() {
