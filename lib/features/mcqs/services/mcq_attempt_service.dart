@@ -11,10 +11,10 @@ class McqAttemptService {
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
 
-  /// Saves a completed MCQ practice session.
+  /// Saves a legacy summary-only practice attempt.
   ///
-  /// [questionIds] contains the IDs of the questions attempted.
-  /// [startedAt] is the time the practice session began.
+  /// New practice sessions should use McqSessionService,
+  /// which also saves the detailed question review.
   Future<String> savePracticeSession({
     required int totalQuestions,
     required int correctAnswers,
@@ -26,40 +26,79 @@ class McqAttemptService {
     final user = _auth.currentUser;
 
     if (user == null) {
-      throw Exception('You must be logged in to save your results.');
+      throw Exception(
+        'You must be logged in to save your results.',
+      );
     }
 
     if (totalQuestions <= 0) {
-      throw Exception('The practice session contains no questions.');
+      throw Exception(
+        'The practice session contains no questions.',
+      );
     }
 
-    if (correctAnswers < 0 || correctAnswers > totalQuestions) {
+    if (correctAnswers < 0 ||
+        correctAnswers > totalQuestions) {
       throw Exception('The practice score is invalid.');
     }
 
-    if (questionIds.length != totalQuestions) {
-      throw Exception('The question list does not match the session total.');
+    if (questionIds.length != totalQuestions ||
+        questionIds.any((id) => id.trim().isEmpty) ||
+        questionIds.toSet().length != questionIds.length) {
+      throw Exception(
+        'The question list is invalid or contains duplicates.',
+      );
     }
 
-    final incorrectAnswers = totalQuestions - correctAnswers;
-    final percentage =
-        (correctAnswers / totalQuestions * 100).round();
+    if (startedAt.isAfter(DateTime.now())) {
+      throw Exception('The session start time is invalid.');
+    }
 
-    final now = DateTime.now();
+    final incorrectAnswers =
+        totalQuestions - correctAnswers;
+
+    final percentage =
+        (correctAnswers / totalQuestions) * 100;
+
+    final cleanSubject = subject?.trim() ?? '';
+    final cleanTopic = topic?.trim() ?? '';
+
+    final answers = questionIds.map((id) {
+      return <String, dynamic>{
+        'questionId': id,
+        'question': '',
+        'options': <String>[],
+        'selectedAnswer': null,
+        'correctAnswer': '',
+        'isAnswered': true,
+        'isCorrect': false,
+        'explanation': '',
+        'subject': cleanSubject,
+        'topic': cleanTopic,
+      };
+    }).toList();
 
     final result = <String, dynamic>{
       'userId': user.uid,
+      'type': 'practice',
       'totalQuestions': totalQuestions,
       'correctAnswers': correctAnswers,
       'incorrectAnswers': incorrectAnswers,
+      'unansweredQuestions': 0,
       'percentage': percentage,
       'questionIds': questionIds,
-      'subject': subject ?? '',
-      'topic': topic ?? '',
+      'answers': answers,
+      'subject': cleanSubject,
+      'topic': cleanTopic,
+      'subjects': cleanSubject.isEmpty
+          ? <String>[]
+          : <String>[cleanSubject],
+      'topics': cleanTopic.isEmpty
+          ? <String>[]
+          : <String>[cleanTopic],
       'startedAt': Timestamp.fromDate(startedAt),
-      'completedAt': Timestamp.fromDate(now),
+      'completedAt': FieldValue.serverTimestamp(),
       'createdAt': FieldValue.serverTimestamp(),
-      'type': 'practice',
     };
 
     final document = await _firestore
@@ -69,14 +108,20 @@ class McqAttemptService {
     return document.id;
   }
 
-  /// Loads the signed-in student's previous practice sessions.
+  /// Watches the signed-in student's practice history.
   Stream<QuerySnapshot<Map<String, dynamic>>> watchMyAttempts({
     int limit = 50,
   }) {
     final user = _auth.currentUser;
 
     if (user == null) {
-      throw Exception('You must be logged in to view your results.');
+      throw Exception(
+        'You must be logged in to view your results.',
+      );
+    }
+
+    if (limit < 1 || limit > 100) {
+      throw Exception('The history limit must be between 1 and 100.');
     }
 
     return _firestore
@@ -87,14 +132,20 @@ class McqAttemptService {
         .snapshots();
   }
 
-  /// Loads one saved attempt belonging to the signed-in student.
+  /// Loads one attempt belonging to the signed-in student.
   Future<DocumentSnapshot<Map<String, dynamic>>> getMyAttempt(
     String attemptId,
   ) async {
     final user = _auth.currentUser;
 
     if (user == null) {
-      throw Exception('You must be logged in to view your results.');
+      throw Exception(
+        'You must be logged in to view your results.',
+      );
+    }
+
+    if (attemptId.trim().isEmpty) {
+      throw Exception('Invalid practice result ID.');
     }
 
     final document = await _firestore
@@ -107,7 +158,9 @@ class McqAttemptService {
     }
 
     if (document.data()?['userId'] != user.uid) {
-      throw Exception('You are not allowed to view this result.');
+      throw Exception(
+        'You are not allowed to view this result.',
+      );
     }
 
     return document;
