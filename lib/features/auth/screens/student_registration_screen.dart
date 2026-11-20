@@ -1,4 +1,3 @@
-
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -191,7 +190,7 @@ class _StudentRegistrationScreenState
     if (_selectedCountry == null) {
       AtlasFeedback.showWarning(
         context,
-        'Please select your country first.',
+        message: 'Please select your country first.',
       );
       return;
     }
@@ -282,7 +281,7 @@ class _StudentRegistrationScreenState
     if (_profileImage == null) {
       AtlasFeedback.showWarning(
         context,
-        'Please upload your profile picture.',
+        message: 'Please upload your profile picture.',
       );
       return;
     }
@@ -291,7 +290,7 @@ class _StudentRegistrationScreenState
         _selectedCountry!.trim().isEmpty) {
       AtlasFeedback.showWarning(
         context,
-        'Please select your country of study.',
+        message: 'Please select your country of study.',
       );
       return;
     }
@@ -300,7 +299,7 @@ class _StudentRegistrationScreenState
         _selectedUniversity!.trim().isEmpty) {
       AtlasFeedback.showWarning(
         context,
-        'Please select or enter your university.',
+        message: 'Please select or enter your university.',
       );
       return;
     }
@@ -308,7 +307,7 @@ class _StudentRegistrationScreenState
     if (!_acceptedTerms) {
       AtlasFeedback.showWarning(
         context,
-        'Please accept the Terms and Privacy Policy.',
+        message: 'Please accept the Terms and Privacy Policy.',
       );
       return;
     }
@@ -372,7 +371,7 @@ class _StudentRegistrationScreenState
 
       AtlasFeedback.showError(
         context,
-        _friendlyError(error),
+        message: _friendlyError(error),
       );
     } finally {
       if (mounted) {
@@ -652,7 +651,7 @@ class _StudentRegistrationScreenState
                                 fontSize: 11,
                                 color: AtlasColors.secondaryText,
                               ),
-                              ),
+                            ),
                           ),
                       ],
                     ),
@@ -717,7 +716,7 @@ class _StudentRegistrationScreenState
                                   : Icons.visibility_off_outlined,
                             ),
                           ),
-                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -749,12 +748,13 @@ class _StudentRegistrationScreenState
                   const SizedBox(height: 24),
 
                   AtlasPrimaryButton(
-                    text: 'Create Student Account',
+                    label: 'Create Student Account',
                     isLoading: _isSubmitting,
                     onPressed: _isSubmitting
                         ? null
                         : _submitRegistration,
                   ),
+
                   const SizedBox(height: 18),
 
                   TextButton(
@@ -789,8 +789,8 @@ class _UniversitySelectionSheet extends StatefulWidget {
 
   final List<String> universities;
   final String? selectedUniversity;
-  
-     @override
+
+  @override
   State<_UniversitySelectionSheet> createState() =>
       _UniversitySelectionSheetState();
 }
@@ -829,7 +829,7 @@ class _UniversitySelectionSheetState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(  
+              Text(
                 'Select University',
                 style: Theme.of(context)
                     .textTheme
