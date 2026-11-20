@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import 'admin_subscription_requests_screen.dart';
 import 'admin_students_screen.dart';
+import 'admin_academic_screen.dart';
 
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
@@ -128,6 +129,7 @@ class AdminDashboardScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _welcomeBanner(),
+
               const SizedBox(height: 28),
 
               const Text(
@@ -138,7 +140,9 @@ class AdminDashboardScreen extends StatelessWidget {
                   color: navy,
                 ),
               ),
+
               const SizedBox(height: 6),
+
               const Text(
                 'Manage your academy operations.',
                 style: TextStyle(
@@ -146,6 +150,7 @@ class AdminDashboardScreen extends StatelessWidget {
                   fontSize: 13,
                 ),
               ),
+
               const SizedBox(height: 18),
 
               _managementTile(
@@ -181,8 +186,14 @@ class AdminDashboardScreen extends StatelessWidget {
                 icon: Icons.menu_book_outlined,
                 title: 'Academic Management',
                 subtitle: 'Manage years, subjects and topics',
-                onTap: () =>
-                    _comingSoon(context, 'Academic Management'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const AdminAcademicScreen(),
+                    ),
+                  );
+                },
               ),
 
               _managementTile(
@@ -249,6 +260,7 @@ class AdminDashboardScreen extends StatelessWidget {
                   ],
                 ),
               ),
+
               const SizedBox(height: 15),
             ],
           ),
