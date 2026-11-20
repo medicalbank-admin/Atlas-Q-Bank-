@@ -1,4 +1,5 @@
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
+const { onSchedule } = require("firebase-functions/v2/scheduler");
 const admin = require("firebase-admin");
 
 admin.initializeApp();
@@ -6,6 +7,10 @@ admin.initializeApp();
 const db = admin.firestore();
 const FieldValue = admin.firestore.FieldValue;
 const Timestamp = admin.firestore.Timestamp;
+
+// ---------------------------------------------
+// SECURITY HELPERS
+// ---------------------------------------------
 
 function verifyAdmin(request) {
   if (!request.auth) {
@@ -18,7 +23,7 @@ function verifyAdmin(request) {
   if (request.auth.token.admin !== true) {
     throw new HttpsError(
       "permission-denied",
-      "Only authorized administrators can review subscription requests."
+      "Only authorized administrators can perform this action."
     );
   }
 }
@@ -53,20 +58,19 @@ function cleanAdminNote(note) {
   return note.trim().slice(0, 1000);
 }
 
-/**
- * Approves a student's subscription request.
- *
- * All important subscription values are read from the
- * administrator-controlled subscription plan document.
- * The student cannot choose their own access permissions.
- */
+// ---------------------------------------------
+// APPROVE SUBSCRIPTION REQUEST
+// ---------------------------------------------
+
 exports.approveSubscriptionRequest = onCall(async (request) => {
   verifyAdmin(request);
 
   const requestId = validateRequestId(request.data);
   const adminNote = cleanAdminNote(request.data?.adminNote);
 
-  const requestRef = db.collection("subscription_requests").doc(requestId);
+  const requestRef = db
+    .collection("subscription_requests")
+    .doc(requestId);
 
   try {
     const result = await db.runTransaction(async (transaction) => {
@@ -93,20 +97,20 @@ exports.approveSubscriptionRequest = onCall(async (request) => {
 
       if (
         typeof studentUid !== "string" ||
-        studentUid.length === 0 ||
+        !studentUid ||
         typeof planId !== "string" ||
-        planId.length === 0
+        !planId
       ) {
         throw new HttpsError(
           "failed-precondition",
-          "The request is missing its student or plan information."
+          "The request is missing student or plan information."
         );
       }
 
       const studentRef = db.collection("users").doc(studentUid);
       const planRef = db.collection("subscription_plans").doc(planId);
 
-      // Complete all transaction reads before writing.
+      // Read all documents before writing.
       const studentSnapshot = await transaction.get(studentRef);
       const planSnapshot = await transaction.get(planRef);
 
@@ -134,6 +138,7 @@ exports.approveSubscriptionRequest = onCall(async (request) => {
       }
 
       const durationDays = Number(plan.durationDays);
+      const permissions = plan.accessPermissions;
 
       if (
         !Number.isInteger(durationDays) ||
@@ -145,8 +150,6 @@ exports.approveSubscriptionRequest = onCall(async (request) => {
           "The subscription plan has an invalid duration."
         );
       }
-
-      const permissions = plan.accessPermissions;
 
       if (
         permissions === null ||
@@ -161,7 +164,8 @@ exports.approveSubscriptionRequest = onCall(async (request) => {
 
       const startDate = new Date();
       const expiryDate = new Date(
-        startDate.getTime() + durationDays * 24 * 60 * 60 * 1000
+        startDate.getTime() +
+        durationDays * 24 * 60 * 60 * 1000
       );
 
       const now = FieldValue.serverTimestamp();
@@ -178,15 +182,12 @@ exports.approveSubscriptionRequest = onCall(async (request) => {
         accountStatus: "approved",
         subscriptionStatus: "active",
         accessEnabled: true,
-
         subscriptionPlanId: planId,
         subscriptionPlanName: plan.name || "Subscription",
         subscriptionDurationDays: durationDays,
         subscriptionAccessPermissions: permissions,
-
         subscriptionStartedAt: Timestamp.fromDate(startDate),
         subscriptionExpiryAt: Timestamp.fromDate(expiryDate),
-
         updatedAt: now,
       });
 
@@ -214,10 +215,10 @@ exports.approveSubscriptionRequest = onCall(async (request) => {
   }
 });
 
-/**
- * Rejects a student's subscription request.
- * Rejection does not grant or change subscription access.
- */
+// ---------------------------------------------
+// REJECT SUBSCRIPTION REQUEST
+// ---------------------------------------------
+
 exports.rejectSubscriptionRequest = onCall(async (request) => {
   verifyAdmin(request);
 
@@ -231,7 +232,9 @@ exports.rejectSubscriptionRequest = onCall(async (request) => {
     );
   }
 
-  const requestRef = db.collection("subscription_requests").doc(requestId);
+  const requestRef = db
+    .collection("subscription_requests")
+    .doc(requestId);
 
   try {
     await db.runTransaction(async (transaction) => {
@@ -244,23 +247,19 @@ exports.rejectSubscriptionRequest = onCall(async (request) => {
         );
       }
 
-      const requestData = requestSnapshot.data();
-
-      if (requestData.status !== "pending") {
+      if (requestSnapshot.data().status !== "pending") {
         throw new HttpsError(
           "failed-precondition",
           "This request has already been reviewed."
         );
       }
 
-      const now = FieldValue.serverTimestamp();
-
       transaction.update(requestRef, {
         status: "rejected",
         adminNote,
         reviewedBy: request.auth.uid,
-        reviewedAt: now,
-        updatedAt: now,
+        reviewedAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
       });
     });
 
@@ -279,4 +278,61 @@ exports.rejectSubscriptionRequest = onCall(async (request) => {
     );
   }
 });
-      
+
+// ---------------------------------------------
+// AUTOMATIC SUBSCRIPTION EXPIRY
+// Runs every day at 12:15 AM Pakistan time.
+// ---------------------------------------------
+
+exports.expireSubscriptions = onSchedule(
+  {
+    schedule: "every day 00:15",
+    timeZone: "Asia/Karachi",
+    region: "asia-south1",
+  },
+  async () => {
+    const now = Timestamp.now();
+    let totalExpired = 0;
+
+    while (true) {
+      const expiredStudents = await db
+        .collection("users")
+        .where("subscriptionStatus", "==", "active")
+        .where("subscriptionExpiryAt", "<=", now)
+        .limit(400)
+        .get();
+
+      if (expiredStudents.empty) {
+        break;
+      }
+
+      const batch = db.batch();
+
+      for (const student of expiredStudents.docs) {
+        batch.update(student.ref, {
+          subscriptionStatus: "expired",
+          accessEnabled: false,
+          updatedAt: FieldValue.serverTimestamp(),
+        });
+      }
+
+      await batch.commit();
+
+      totalExpired += expiredStudents.size;
+
+      if (expiredStudents.size < 400) {
+        break;
+      }
+    }
+
+    console.log(
+      `Subscription expiry check completed. Expired: ${totalExpired}`
+    );
+
+    return {
+      success: true,
+      expiredCount: totalExpired,
+    };
+  }
+);
+        
