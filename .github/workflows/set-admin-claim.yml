@@ -1,0 +1,82 @@
+name: Set Atlas Academy Administrator
+
+on:
+  workflow_dispatch:
+    inputs:
+      admin_uid:
+        description: "Firebase UID of the administrator"
+        required: true
+        type: string
+      confirmation:
+        description: "Type CONFIRM to authorize this administrator"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  set-admin:
+    name: Assign Trusted Admin Claim
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check confirmation
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+          ADMIN_UID: ${{ inputs.admin_uid }}
+        run: |
+          if [ "$CONFIRMATION" != "CONFIRM" ]; then
+            echo "Confirmation failed."
+            exit 1
+          fi
+
+          if [ -z "$ADMIN_UID" ]; then
+            echo "Administrator UID is required."
+            exit 1
+          fi
+
+      - name: Set Firebase custom claim
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          ADMIN_UID: ${{ inputs.admin_uid }}
+        run: |
+          cat > service-account.json <<'EOF'
+          ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          EOF
+
+          npm install firebase-admin
+
+          node <<'NODE'
+          const admin = require('firebase-admin');
+
+          const credentials = require('./service-account.json');
+
+          admin.initializeApp({
+            credential: admin.credential.cert(credentials)
+          });
+
+          async function main() {
+            const uid = process.env.ADMIN_UID.trim();
+
+            const user = await admin.auth().getUser(uid);
+
+            await admin.auth().setCustomUserClaims(uid, {
+              ...(user.customClaims || {}),
+              admin: true
+            });
+
+            console.log('Administrator authorization assigned successfully.');
+            console.log('Authorized UID:', uid);
+          }
+
+          main()
+            .then(() => process.exit(0))
+            .catch((error) => {
+              console.error('Administrator setup failed:', error.message);
+              process.exit(1);
+            });
+          NODE
+
+          rm -f service-account.json
+          
