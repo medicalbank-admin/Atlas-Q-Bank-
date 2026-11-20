@@ -1,28 +1,40 @@
 name: Build Atlas Academy Android APK
+
 on:
   workflow_dispatch:
+
 permissions:
   contents: read
+
 jobs:
   build-android:
     runs-on: ubuntu-latest
+
     steps:
       - name: Check out source code
         uses: actions/checkout@v4
+
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '21'
+
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
+
+      - name: Show Java version
+        run: java -version
+
       - name: Install Flutter dependencies
         run: flutter pub get
+
       - name: Build release APK
         run: flutter build apk --release
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
