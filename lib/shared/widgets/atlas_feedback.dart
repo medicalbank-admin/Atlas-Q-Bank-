@@ -8,7 +8,7 @@ AtlasFeedback._();
 static void showSuccess(
 BuildContext context,
 String message, {
-String title = ‘Success’,
+String title = 'Success',
 }) {
 _showMessage(
 context,
@@ -22,7 +22,7 @@ color: AtlasColors.success,
 static void showError(
 BuildContext context,
 String message, {
-String title = ‘Something went wrong’,
+String title = 'Something went wrong',
 }) {
 _showMessage(
 context,
@@ -36,7 +36,7 @@ color: AtlasColors.error,
 static void showInfo(
 BuildContext context,
 String message, {
-String title = ‘Information’,
+String title = 'Information',
 }) {
 _showMessage(
 context,
@@ -50,7 +50,7 @@ color: AtlasColors.info,
 static void showWarning(
 BuildContext context,
 String message, {
-String title = ‘Please note’,
+String title = 'Please note',
 }) {
 _showMessage(
 context,
@@ -138,8 +138,8 @@ static Future<bool?> showConfirmation(
 BuildContext context, {
 required String title,
 required String message,
-String confirmText = ‘Continue’,
-String cancelText = ‘Cancel’,
+String confirmText = 'Continue',
+String cancelText = 'Cancel',
 IconData icon = Icons.help_outline_rounded,
 Color? accentColor,
 bool isDestructive = false,
