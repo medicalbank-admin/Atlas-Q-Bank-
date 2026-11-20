@@ -1,9 +1,5 @@
-
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-
 import '../features/auth/screens/auth_gate.dart';
-
 class AtlasColors {
   static const Color deepTeal = Color(0xFF123F46);
   static const Color oceanTeal = Color(0xFF28777B);
@@ -20,10 +16,8 @@ class AtlasColors {
   static const Color darkBackground = Color(0xFF101B20);
   static const Color darkSurface = Color(0xFF1B292F);
 }
-
 class AtlasAcademyApp extends StatelessWidget {
   const AtlasAcademyApp({super.key});
-
   ThemeData _lightTheme() {
     final base = ThemeData(
       useMaterial3: true,
@@ -36,12 +30,9 @@ class AtlasAcademyApp extends StatelessWidget {
         error: AtlasColors.error,
       ),
     );
-
     return base.copyWith(
       scaffoldBackgroundColor: AtlasColors.ivory,
-      textTheme: GoogleFonts.plusJakartaSansTextTheme(
-        base.textTheme,
-      ),
+      textTheme: base.textTheme,
       appBarTheme: const AppBarTheme(
         backgroundColor: AtlasColors.ivory,
         foregroundColor: AtlasColors.deepTeal,
@@ -86,7 +77,6 @@ class AtlasAcademyApp extends StatelessWidget {
       ),
     );
   }
-
   ThemeData _darkTheme() {
     final base = ThemeData(
       useMaterial3: true,
@@ -99,12 +89,9 @@ class AtlasAcademyApp extends StatelessWidget {
         surface: AtlasColors.darkSurface,
       ),
     );
-
     return base.copyWith(
       scaffoldBackgroundColor: AtlasColors.darkBackground,
-      textTheme: GoogleFonts.plusJakartaSansTextTheme(
-        base.textTheme,
-      ),
+      textTheme: base.textTheme,
       appBarTheme: const AppBarTheme(
         backgroundColor: AtlasColors.darkBackground,
         foregroundColor: Colors.white,
@@ -121,7 +108,6 @@ class AtlasAcademyApp extends StatelessWidget {
       ),
     );
   }
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
