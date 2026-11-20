@@ -1,68 +1,64 @@
-
 import 'package:flutter/material.dart';
-
 import '../../app/atlas_academy_app.dart';
 import '../../theme/atlas_spacing.dart';
-
 class AtlasFeedback {
   AtlasFeedback._();
-
   static void showSuccess(
-    BuildContext context, {
-    required String message,
+    BuildContext context,
+    [String? text], {
+    String? message,
     String? title,
   }) {
     _showMessage(
       context,
-      message: message,
+      message: message ?? text ?? '',
       title: title ?? 'Success',
       icon: Icons.check_circle_rounded,
       color: AtlasColors.success,
     );
   }
-
   static void showError(
-    BuildContext context, {
-    required String message,
+    BuildContext context,
+    [String? text], {
+    String? message,
     String? title,
   }) {
     _showMessage(
       context,
-      message: message,
+      message: message ?? text ?? '',
       title: title ?? 'Something went wrong',
       icon: Icons.error_rounded,
       color: AtlasColors.error,
     );
   }
-
   static void showInfo(
-    BuildContext context, {
-    required String message,
+    BuildContext context,
+    [String? text], {
+    String? message,
     String? title,
   }) {
     _showMessage(
       context,
-      message: message,
+      message: message ?? text ?? '',
       title: title ?? 'Information',
       icon: Icons.info_rounded,
       color: AtlasColors.info,
     );
   }
-
   static void showWarning(
-    BuildContext context, {
-    required String message,
+    BuildContext context,
+    [String? text], {
+    String? message,
     String? title,
   }) {
     _showMessage(
       context,
-      message: message,
+      message: message ?? text ?? '',
       title: title ?? 'Please note',
       icon: Icons.warning_rounded,
       color: AtlasColors.gold,
     );
   }
-
   static void _showMessage(
     BuildContext context, {
     required String title,
@@ -135,7 +131,6 @@ class AtlasFeedback {
         ),
       );
   }
-
   static Future<bool?> showConfirmation(
     BuildContext context, {
     required String title,
@@ -149,7 +144,6 @@ class AtlasFeedback {
     final color = isDestructive
         ? AtlasColors.error
         : accentColor ?? AtlasColors.oceanTeal;
-
     return showDialog<bool>(
       context: context,
       builder: (dialogContext) {
