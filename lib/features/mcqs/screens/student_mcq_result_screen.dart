@@ -3,12 +3,12 @@ import 'package:flutter/material.dart';
 import '../services/mcq_session_service.dart';
 
 class StudentMcqResultScreen extends StatefulWidget {
+  final String sessionId;
+
   const StudentMcqResultScreen({
     super.key,
     required this.sessionId,
   });
-
-  final String sessionId;
 
   @override
   State<StudentMcqResultScreen> createState() =>
@@ -17,14 +17,14 @@ class StudentMcqResultScreen extends StatefulWidget {
 
 class _StudentMcqResultScreenState
     extends State<StudentMcqResultScreen> {
-  final McqSessionService _service = McqSessionService();
-
   static const Color navy = Color(0xFF123F46);
   static const Color teal = Color(0xFF28777B);
   static const Color gold = Color(0xFFD8B66B);
-  static const Color ivory = Color(0xFFF7F8F5);
+  static const Color background = Color(0xFFF7F8F5);
 
-  late Future<Map<String, dynamic>> _resultFuture;
+  final McqSessionService _service = McqSessionService();
+
+  late Future<Map<String, dynamic>?> _resultFuture;
 
   @override
   void initState() {
@@ -32,32 +32,35 @@ class _StudentMcqResultScreenState
     _resultFuture = _service.getMySession(widget.sessionId);
   }
 
+  Color _resultColor(double percentage) {
+    if (percentage >= 80) return const Color(0xFF16845B);
+    if (percentage >= 50) return const Color(0xFFE09B32);
+    return const Color(0xFFD9534F);
+  }
+
+  String _grade(double percentage) {
+    if (percentage >= 90) return 'Outstanding';
+    if (percentage >= 80) return 'Excellent';
+    if (percentage >= 70) return 'Very Good';
+    if (percentage >= 60) return 'Good';
+    if (percentage >= 50) return 'Needs Improvement';
+    return 'Keep Practising';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: ivory,
+      backgroundColor: background,
       appBar: AppBar(
         backgroundColor: navy,
         foregroundColor: Colors.white,
-        automaticallyImplyLeading: false,
+        elevation: 0,
         title: const Text(
           'Practice Result',
           style: TextStyle(fontWeight: FontWeight.w700),
         ),
-        actions: [
-          IconButton(
-            tooltip: 'Refresh',
-            onPressed: () {
-              setState(() {
-                _resultFuture =
-                    _service.getMySession(widget.sessionId);
-              });
-            },
-            icon: const Icon(Icons.refresh),
-          ),
-        ],
       ),
-      body: FutureBuilder<Map<String, dynamic>>(
+      body: FutureBuilder<Map<String, dynamic>?>(
         future: _resultFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -66,44 +69,24 @@ class _StudentMcqResultScreenState
             );
           }
 
-          if (snapshot.hasError || !snapshot.hasData) {
-            return _errorView();
+          if (snapshot.hasError) {
+            return _message(
+              'Unable to load your result.',
+              'Please check your connection and try again.',
+            );
           }
 
-          return _buildResult(snapshot.data!);
-        },
-      ),
-    );
-  }
+          final data = snapshot.data;
 
-  Widget _errorView() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(25),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.error_outline,
-              color: Colors.red,
-              size: 50,
-            ),
-            const SizedBox(height: 14),
-            const Text(
-              'Unable to load this result.',
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.bold,
-                color: navy,
-              ),
-            ),
-            const SizedBox(height: 18),
-            FilledButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Go Back'),
-            ),
-          ],
-        ),
+          if (data == null) {
+            return _message(
+              'Result not found',
+              'This practice result is unavailable or does not belong to your account.',
+            );
+          }
+
+          return _buildResult(data);
+        },
       ),
     );
   }
@@ -111,238 +94,240 @@ class _StudentMcqResultScreenState
   Widget _buildResult(Map<String, dynamic> data) {
     final total = (data['totalQuestions'] as num?)?.toInt() ?? 0;
     final correct = (data['correctAnswers'] as num?)?.toInt() ?? 0;
-    final incorrect =
-        (data['incorrectAnswers'] as num?)?.toInt() ?? 0;
+    final incorrect = (data['incorrectAnswers'] as num?)?.toInt() ?? 0;
+    final unanswered =
+        (data['unansweredQuestions'] as num?)?.toInt() ??
+        (total - correct - incorrect).clamp(0, total);
+
     final percentage =
-        (data['percentage'] as num?)?.toInt() ?? 0;
+        (data['percentage'] as num?)?.toDouble() ?? 0;
 
-    final answers = (data['answers'] as List<dynamic>? ?? [])
-        .whereType<Map>()
-        .map((item) => Map<String, dynamic>.from(item))
-        .toList();
+    final answers = (data['answers'] as List<dynamic>?) ?? [];
 
-    final subject = data['subject']?.toString() ?? 'Mixed subjects';
-    final topic = data['topic']?.toString() ?? 'Mixed topics';
+    final resultColor = _resultColor(percentage);
 
-    return SingleChildScrollView(
+    return ListView(
       padding: const EdgeInsets.all(18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _scoreCard(
-            percentage: percentage,
-            correct: correct,
-            total: total,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [navy, teal],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(24),
           ),
-          const SizedBox(height: 18),
-          Row(
+          child: Column(
             children: [
-              Expanded(
-                child: _statCard(
-                  'Correct',
-                  correct.toString(),
-                  const Color(0xFF23865B),
-                  Icons.check_circle_outline,
+              const Icon(
+                Icons.emoji_events_rounded,
+                color: gold,
+                size: 42,
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Your Performance',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 15,
                 ),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _statCard(
-                  'Incorrect',
-                  incorrect.toString(),
-                  const Color(0xFFC44B4B),
-                  Icons.cancel_outlined,
+              const SizedBox(height: 10),
+              Text(
+                '${percentage.toStringAsFixed(1)}%',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 42,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _statCard(
-                  'Total',
-                  total.toString(),
-                  navy,
-                  Icons.quiz_outlined,
+              Text(
+                _grade(percentage),
+                style: const TextStyle(
+                  color: gold,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 18),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: LinearProgressIndicator(
+                  value: total == 0 ? 0 : correct / total,
+                  minHeight: 9,
+                  backgroundColor: Colors.white24,
+                  valueColor:
+                      const AlwaysStoppedAnimation<Color>(gold),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                '$correct correct out of $total questions',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
-          _informationCard(subject, topic),
-          const SizedBox(height: 26),
-          const Text(
-            'Detailed Answer Review',
-            style: TextStyle(
-              color: navy,
-              fontSize: 19,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          const SizedBox(height: 12),
-          if (answers.isEmpty)
-            _emptyReview()
-          else
-            ...List.generate(
-              answers.length,
-              (index) => _answerCard(answers[index], index),
-            ),
-          const SizedBox(height: 24),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton.icon(
-              onPressed: () {
-                Navigator.popUntil(context, (route) => route.isFirst);
-              },
-              style: FilledButton.styleFrom(
-                backgroundColor: navy,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
-              icon: const Icon(Icons.home_outlined),
-              label: const Text('Back to Dashboard'),
-            ),
-          ),
-          const SizedBox(height: 20),
-        ],
-      ),
-    );
-  }
-
-  Widget _scoreCard({
-    required int percentage,
-    required int correct,
-    required int total,
-  }) {
-    final Color scoreColor = percentage >= 70
-        ? const Color(0xFF23865B)
-        : percentage >= 40
-            ? gold
-            : const Color(0xFFC44B4B);
-
-    final message = percentage >= 80
-        ? 'Excellent performance!'
-        : percentage >= 60
-            ? 'Good work. Keep improving!'
-            : percentage >= 40
-                ? 'You are making progress!'
-                : 'Keep practicing. You can improve!';
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(25),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [navy, teal],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: Column(
-        children: [
-          const Text(
-            'YOUR FINAL SCORE',
-            style: TextStyle(
-              color: Colors.white70,
-              letterSpacing: 2,
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
+
+        const SizedBox(height: 22),
+
+        const Text(
+          'Result Breakdown',
+          style: TextStyle(
+            color: navy,
+            fontSize: 19,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        Row(
+          children: [
+            Expanded(
+              child: _statCard(
+                'Correct',
+                correct,
+                const Color(0xFF16845B),
+                Icons.check_circle_rounded,
+              ),
+            ),
+            const SizedBox(width: 9),
+            Expanded(
+              child: _statCard(
+                'Incorrect',
+                incorrect,
+                const Color(0xFFD9534F),
+                Icons.cancel_rounded,
+              ),
+            ),
+            const SizedBox(width: 9),
+            Expanded(
+              child: _statCard(
+                'Unanswered',
+                unanswered,
+                const Color(0xFFE09B32),
+                Icons.remove_circle_rounded,
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 24),
+
+        const Text(
+          'Question Review',
+          style: TextStyle(
+            color: navy,
+            fontSize: 19,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+
+        const SizedBox(height: 5),
+
+        const Text(
+          'Review your selected answers and explanations.',
+          style: TextStyle(
+            color: Colors.black54,
+            fontSize: 13,
+          ),
+        ),
+
+        const SizedBox(height: 14),
+
+        if (answers.isEmpty)
+          const Text('No detailed question review is available.')
+        else
+          ...List.generate(
+            answers.length,
+            (index) {
+              final raw = answers[index];
+
+              if (raw is! Map) {
+                return const SizedBox.shrink();
+              }
+
+              return _questionCard(
+                Map<String, dynamic>.from(raw),
+                index,
+              );
+            },
+          ),
+
+        const SizedBox(height: 24),
+
+        SizedBox(
+          height: 52,
+          child: ElevatedButton.icon(
+            onPressed: () {
+              Navigator.popUntil(
+                context,
+                (route) => route.isFirst,
+              );
+            },
+            icon: const Icon(Icons.dashboard_rounded),
+            label: const Text(
+              'Back to Dashboard',
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 15,
+              ),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: navy,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
             ),
           ),
-          const SizedBox(height: 18),
-          SizedBox(
-            width: 142,
-            height: 142,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                SizedBox(
-                  width: 142,
-                  height: 142,
-                  child: CircularProgressIndicator(
-                    value: (percentage.clamp(0, 100)) / 100,
-                    strokeWidth: 11,
-                    backgroundColor: Colors.white24,
-                    valueColor:
-                        AlwaysStoppedAnimation<Color>(scoreColor),
-                  ),
-                ),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      '$percentage%',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 34,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    const Text(
-                      'SCORE',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 10,
-                        letterSpacing: 1.5,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          const SizedBox(height: 7),
-          Text(
-            '$correct correct answers out of $total questions',
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 13,
-            ),
-          ),
-        ],
-      ),
+        ),
+
+        const SizedBox(height: 20),
+      ],
     );
   }
 
   Widget _statCard(
-    String title,
-    String value,
+    String label,
+    int value,
     Color color,
     IconData icon,
   ) {
     return Container(
       padding: const EdgeInsets.symmetric(
+        vertical: 16,
         horizontal: 8,
-        vertical: 17,
       ),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(17),
+        border: Border.all(color: color.withValues(alpha: 0.18)),
       ),
       child: Column(
         children: [
-          Icon(icon, color: color, size: 23),
+          Icon(icon, color: color, size: 24),
           const SizedBox(height: 9),
           Text(
-            value,
+            '$value',
             style: TextStyle(
               color: color,
-              fontSize: 21,
-              fontWeight: FontWeight.w900,
+              fontSize: 23,
+              fontWeight: FontWeight.w800,
             ),
           ),
           const SizedBox(height: 4),
           Text(
-            title,
+            label,
+            textAlign: TextAlign.center,
             style: const TextStyle(
-              color: navy,
+              color: Colors.black54,
               fontSize: 11,
               fontWeight: FontWeight.w600,
             ),
@@ -352,73 +337,50 @@ class _StudentMcqResultScreenState
     );
   }
 
-  Widget _informationCard(String subject, String topic) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(17),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(17),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _infoRow(Icons.menu_book_outlined, 'Subject', subject),
-          const Divider(height: 22),
-          _infoRow(Icons.topic_outlined, 'Topic', topic),
-        ],
-      ),
-    );
-  }
+  Widget _questionCard(
+    Map<String, dynamic> answer,
+    int index,
+  ) {
+    final question =
+        answer['question']?.toString() ?? '';
 
-  Widget _infoRow(IconData icon, String title, String value) {
-    return Row(
-      children: [
-        Icon(icon, color: teal, size: 20),
-        const SizedBox(width: 11),
-        Text(
-          '$title: ',
-          style: const TextStyle(
-            color: navy,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        Expanded(
-          child: Text(
-            value,
-            textAlign: TextAlign.end,
-            style: const TextStyle(color: Colors.black54),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _answerCard(Map<String, dynamic> answer, int index) {
-    final question = answer['question']?.toString() ?? '';
     final options =
-        (answer['options'] as List<dynamic>? ?? [])
-            .map((option) => option.toString())
-            .toList();
+        (answer['options'] as List<dynamic>?) ?? [];
 
-    final selected = answer['selectedAnswer']?.toString() ?? '';
-    final correct = answer['correctAnswer']?.toString() ?? '';
+    final selected =
+        answer['selectedAnswer']?.toString();
+
+    final correct =
+        answer['correctAnswer']?.toString() ?? '';
+
+    final explanation =
+        answer['explanation']?.toString() ?? '';
+
+    final isAnswered =
+        answer['isAnswered'] == true || selected != null;
+
     final isCorrect = answer['isCorrect'] == true;
-    final explanation = answer['explanation']?.toString() ?? '';
 
-    final subject = answer['subject']?.toString() ?? '';
-    final topic = answer['topic']?.toString() ?? '';
+    final Color statusColor = !isAnswered
+        ? const Color(0xFFE09B32)
+        : isCorrect
+            ? const Color(0xFF16845B)
+            : const Color(0xFFD9534F);
+
+    final String status = !isAnswered
+        ? 'Unanswered'
+        : isCorrect
+            ? 'Correct'
+            : 'Incorrect';
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 15),
-      padding: const EdgeInsets.all(17),
+      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: isCorrect
-              ? const Color(0xFF23865B).withValues(alpha: 0.25)
-              : const Color(0xFFC44B4B).withValues(alpha: 0.25),
+          color: statusColor.withValues(alpha: 0.25),
         ),
       ),
       child: Column(
@@ -428,12 +390,11 @@ class _StudentMcqResultScreenState
             children: [
               Expanded(
                 child: Text(
-                  'QUESTION ${index + 1}',
+                  'Question ${index + 1}',
                   style: const TextStyle(
-                    color: teal,
-                    fontSize: 11,
-                    letterSpacing: 1.1,
+                    color: navy,
                     fontWeight: FontWeight.w800,
+                    fontSize: 14,
                   ),
                 ),
               ),
@@ -443,112 +404,112 @@ class _StudentMcqResultScreenState
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: isCorrect
-                      ? const Color(0xFFE5F3EA)
-                      : const Color(0xFFFCE9E9),
+                  color: statusColor.withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  isCorrect ? 'Correct' : 'Incorrect',
+                  status,
                   style: TextStyle(
-                    color: isCorrect
-                        ? const Color(0xFF23865B)
-                        : const Color(0xFFC44B4B),
+                    color: statusColor,
+                    fontWeight: FontWeight.w700,
                     fontSize: 11,
-                    fontWeight: FontWeight.w800,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+
+          const SizedBox(height: 13),
+
           Text(
             question,
             style: const TextStyle(
-              color: navy,
+              color: Color(0xFF202A30),
               fontSize: 15,
-              height: 1.5,
               fontWeight: FontWeight.w700,
+              height: 1.5,
             ),
           ),
-          const SizedBox(height: 15),
-          ...List.generate(options.length, (optionIndex) {
-            final letter = String.fromCharCode(65 + optionIndex);
-            final isSelected = letter == selected;
-            final isCorrectOption = letter == correct;
 
-            Color background = ivory;
-            Color border = Colors.transparent;
-            Color textColor = navy;
-            IconData? icon;
+          const SizedBox(height: 13),
+
+          ...List.generate(options.length, (optionIndex) {
+            final letter =
+                String.fromCharCode(65 + optionIndex);
+
+            final option = options[optionIndex].toString();
+
+            final isCorrectOption = letter == correct;
+            final isSelectedOption = letter == selected;
+
+            Color optionColor = Colors.black54;
+            Color optionBackground = const Color(0xFFF7F8F5);
+            IconData? optionIcon;
 
             if (isCorrectOption) {
-              background = const Color(0xFFE5F3EA);
-              border = const Color(0xFF23865B);
-              textColor = const Color(0xFF176B47);
-              icon = Icons.check_circle;
-            } else if (isSelected) {
-              background = const Color(0xFFFCE9E9);
-              border = const Color(0xFFC44B4B);
-              textColor = const Color(0xFFAD3434);
-              icon = Icons.cancel;
+              optionColor = const Color(0xFF16845B);
+              optionBackground = const Color(0xFFE7F5EE);
+              optionIcon = Icons.check_circle_rounded;
+            } else if (isSelectedOption) {
+              optionColor = const Color(0xFFD9534F);
+              optionBackground = const Color(0xFFFFEEEE);
+              optionIcon = Icons.cancel_rounded;
             }
 
             return Container(
-              margin: const EdgeInsets.only(bottom: 8),
+              margin: const EdgeInsets.only(bottom: 7),
               padding: const EdgeInsets.all(11),
               decoration: BoxDecoration(
-                color: background,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: border),
+                color: optionBackground,
+                borderRadius: BorderRadius.circular(11),
               ),
               child: Row(
                 children: [
                   Text(
                     '$letter.',
                     style: TextStyle(
-                      color: textColor,
+                      color: optionColor,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
                   const SizedBox(width: 9),
                   Expanded(
                     child: Text(
-                      options[optionIndex],
+                      option,
                       style: TextStyle(
-                        color: textColor,
+                        color: optionColor,
                         fontSize: 13,
                       ),
                     ),
                   ),
-                  if (icon != null)
-                    Icon(icon, color: textColor, size: 18),
+                  if (optionIcon != null)
+                    Icon(
+                      optionIcon,
+                      color: optionColor,
+                      size: 18,
+                    ),
                 ],
               ),
             );
           }),
-          const SizedBox(height: 8),
-          Text(
-            'Your answer: ${selected.isEmpty ? 'Not answered' : selected}',
-            style: const TextStyle(
-              color: navy,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
+
+          if (!isAnswered) ...[
+            const SizedBox(height: 8),
+            const Text(
+              'You did not select an answer.',
+              style: TextStyle(
+                color: Color(0xFFE09B32),
+                fontWeight: FontWeight.w600,
+                fontSize: 12,
+              ),
             ),
-          ),
-          Text(
-            'Correct answer: $correct',
-            style: const TextStyle(
-              color: Color(0xFF23865B),
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          if (explanation.trim().isNotEmpty) ...[
-            const SizedBox(height: 14),
+          ],
+
+          if (explanation.isNotEmpty) ...[
+            const SizedBox(height: 13),
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(13),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: const Color(0xFFEAF2F1),
                 borderRadius: BorderRadius.circular(12),
@@ -557,19 +518,18 @@ class _StudentMcqResultScreenState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'EXPLANATION',
+                    'Explanation',
                     style: TextStyle(
-                      color: teal,
-                      fontSize: 10,
-                      letterSpacing: 1,
+                      color: navy,
                       fontWeight: FontWeight.w800,
+                      fontSize: 12,
                     ),
                   ),
-                  const SizedBox(height: 7),
+                  const SizedBox(height: 5),
                   Text(
                     explanation,
                     style: const TextStyle(
-                      color: navy,
+                      color: Color(0xFF40565A),
                       fontSize: 13,
                       height: 1.5,
                     ),
@@ -578,12 +538,17 @@ class _StudentMcqResultScreenState
               ),
             ),
           ],
-          if (subject.isNotEmpty || topic.isNotEmpty) ...[
+
+          if ((answer['subject'] ?? '').toString().isNotEmpty ||
+              (answer['topic'] ?? '').toString().isNotEmpty) ...[
             const SizedBox(height: 10),
             Text(
-              [subject, topic]
-                  .where((value) => value.isNotEmpty)
-                  .join(' • '),
+              [
+                if ((answer['subject'] ?? '').toString().isNotEmpty)
+                  answer['subject'].toString(),
+                if ((answer['topic'] ?? '').toString().isNotEmpty)
+                  answer['topic'].toString(),
+              ].join(' • '),
               style: const TextStyle(
                 color: Colors.black45,
                 fontSize: 11,
@@ -595,18 +560,39 @@ class _StudentMcqResultScreenState
     );
   }
 
-  Widget _emptyReview() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: const Text(
-        'Detailed answers are not available for this older practice session.',
-        textAlign: TextAlign.center,
-        style: TextStyle(color: Colors.black54),
+  Widget _message(String title, String description) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.info_outline_rounded,
+              color: teal,
+              size: 45,
+            ),
+            const SizedBox(height: 14),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: navy,
+                fontSize: 19,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              description,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.black54,
+                height: 1.5,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
