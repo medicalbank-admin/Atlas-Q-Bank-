@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../app/atlas_academy_app.dart';
 import '../../auth/screens/student_account_status_screen.dart';
 import '../../auth/services/student_auth_service.dart';
+import '../../mcqs/screens/student_mcq_hub_screen.dart';
 
 class StudentDashboardScreen extends StatelessWidget {
   const StudentDashboardScreen({super.key});
@@ -30,6 +31,14 @@ class StudentDashboardScreen extends StatelessWidget {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => const StudentAccountStatusScreen(),
+      ),
+    );
+  }
+
+  void _openMcqCentre(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => const StudentMcqHubScreen(),
       ),
     );
   }
@@ -149,7 +158,7 @@ class StudentDashboardScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 13),
                         Text(
-                          'Welcome back,\\n$displayName',
+                          'Welcome back,\n$displayName',
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
@@ -215,8 +224,8 @@ class StudentDashboardScreen extends StatelessWidget {
                     mainAxisSpacing: 13,
                     crossAxisSpacing: 13,
                     childAspectRatio: 1.12,
-                    children: const [
-                      _LearningTile(
+                    children: [
+                      const _LearningTile(
                         icon: Icons.menu_book_rounded,
                         title: 'Study Library',
                         subtitle: 'Notes and resources',
@@ -224,14 +233,15 @@ class StudentDashboardScreen extends StatelessWidget {
                       _LearningTile(
                         icon: Icons.quiz_rounded,
                         title: 'MCQ Practice',
-                        subtitle: 'Test your knowledge',
+                        subtitle: 'Practice and review answers',
+                        onTap: () => _openMcqCentre(context),
                       ),
-                      _LearningTile(
+                      const _LearningTile(
                         icon: Icons.assignment_rounded,
                         title: 'Examinations',
                         subtitle: 'Attempt assessments',
                       ),
-                      _LearningTile(
+                      const _LearningTile(
                         icon: Icons.route_rounded,
                         title: 'Exam Pathways',
                         subtitle: 'Explore your pathway',
@@ -279,7 +289,9 @@ class StudentDashboardScreen extends StatelessWidget {
                   OutlinedButton.icon(
                     onPressed: () => _openAccountStatus(context),
                     icon: const Icon(Icons.verified_user_outlined),
-                    label: const Text('View Account and Membership Status'),
+                    label: const Text(
+                      'View Account and Membership Status',
+                    ),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AtlasColors.deepTeal,
                       minimumSize: const Size(double.infinity, 52),
@@ -354,58 +366,67 @@ class _LearningTile extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.subtitle,
+    this.onTap,
   });
 
   final IconData icon;
   final String title;
   final String subtitle;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
+    return Material(
+      color: Theme.of(context).cardColor,
+      borderRadius: BorderRadius.circular(19),
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(19),
-        border: Border.all(
-          color: AtlasColors.softTeal,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            height: 42,
-            width: 42,
-            decoration: BoxDecoration(
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(19),
+            border: Border.all(
               color: AtlasColors.softTeal,
-              borderRadius: BorderRadius.circular(13),
-            ),
-            child: Icon(
-              icon,
-              color: AtlasColors.deepTeal,
-              size: 22,
             ),
           ),
-          const SizedBox(height: 13),
-          Text(
-            title,
-            style: const TextStyle(
-              fontWeight: FontWeight.w800,
-              fontSize: 14,
-              color: AtlasColors.charcoal,
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                height: 42,
+                width: 42,
+                decoration: BoxDecoration(
+                  color: AtlasColors.softTeal,
+                  borderRadius: BorderRadius.circular(13),
+                ),
+                child: Icon(
+                  icon,
+                  color: AtlasColors.deepTeal,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(height: 13),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 14,
+                  color: AtlasColors.charcoal,
+                ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                subtitle,
+                style: const TextStyle(
+                  color: AtlasColors.secondaryText,
+                  fontSize: 11,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 5),
-          Text(
-            subtitle,
-            style: const TextStyle(
-              color: AtlasColors.secondaryText,
-              fontSize: 11,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
