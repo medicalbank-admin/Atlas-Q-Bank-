@@ -41,27 +41,27 @@ jobs:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           ADMIN_UID: ${{ inputs.admin_uid }}
         run: |
-          cat > service-account.json <<'EOF'
-          ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          EOF
-
           npm install firebase-admin
 
           node <<'NODE'
-          const admin = require('firebase-admin');
-
-          const credentials = require('./service-account.json');
-
-          admin.initializeApp({
-            credential: admin.credential.cert(credentials)
-          });
+          const { initializeApp, cert } = require('firebase-admin/app');
+          const { getAuth } = require('firebase-admin/auth');
 
           async function main() {
+            const credentials = JSON.parse(
+              process.env.FIREBASE_SERVICE_ACCOUNT
+            );
+
+            initializeApp({
+              credential: cert(credentials)
+            });
+
             const uid = process.env.ADMIN_UID.trim();
+            const auth = getAuth();
 
-            const user = await admin.auth().getUser(uid);
+            const user = await auth.getUser(uid);
 
-            await admin.auth().setCustomUserClaims(uid, {
+            await auth.setCustomUserClaims(uid, {
               ...(user.customClaims || {}),
               admin: true
             });
@@ -77,6 +77,3 @@ jobs:
               process.exit(1);
             });
           NODE
-
-          rm -f service-account.json
-          
