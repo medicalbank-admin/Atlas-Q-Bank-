@@ -1,0 +1,171 @@
+name: Bootstrap Flutter Platforms
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  bootstrap:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Generate platform scaffolding
+        shell: bash
+        run: |
+          set -e
+
+          mkdir -p /tmp/atlas-platform
+          mkdir -p /tmp/atlas-firebase-backup/android/app
+          mkdir -p /tmp/atlas-firebase-backup/ios/Runner
+
+          if [ -f android/app/google-services.json ]; then
+            cp android/app/google-services.json \
+              /tmp/atlas-firebase-backup/android/app/
+          fi
+
+          if [ -f ios/Runner/GoogleService-Info.plist ]; then
+            cp ios/Runner/GoogleService-Info.plist \
+              /tmp/atlas-firebase-backup/ios/Runner/
+          fi
+
+          flutter create \
+            --platforms=android,ios,web \
+            --org com.atlasacademy \
+            --project-name atlas_academy \
+            /tmp/atlas-platform
+
+          rm -rf android ios web
+
+          cp -a /tmp/atlas-platform/android ./android
+          cp -a /tmp/atlas-platform/ios ./ios
+          cp -a /tmp/atlas-platform/web ./web
+
+          cp /tmp/atlas-firebase-backup/android/app/google-services.json \
+            android/app/ 2>/dev/null || true
+
+          cp /tmp/atlas-firebase-backup/ios/Runner/GoogleService-Info.plist \
+            ios/Runner/ 2>/dev/null || true
+
+      - name: Configure Firebase Android plugin
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          settings = Path("android/settings.gradle.kts")
+          app = Path("android/app/build.gradle.kts")
+
+          if not settings.exists() or not app.exists():
+              raise SystemExit("Expected Kotlin Gradle files were not generated.")
+
+          s = settings.read_text()
+
+          if "com.google.gms.google-services" not in s:
+              s = s.replace(
+                  "plugins {",
+                  'plugins {\n    id("com.google.gms.google-services") version "4.6.0" apply false',
+                  1
+              )
+
+          settings.write_text(s)
+
+          a = app.read_text()
+
+          if "id(\"com.google.gms.google-services\")" not in a:
+              a = a.replace(
+                  "plugins {",
+                  'plugins {\n    id("com.google.gms.google-services")',
+                  1
+              )
+
+          a = re.sub(
+              r'namespace\s*=\s*"[^"]+"',
+              'namespace = "com.atlasacademy.app"',
+              a
+          )
+
+          a = re.sub(
+              r'applicationId\s*=\s*"[^"]+"',
+              'applicationId = "com.atlasacademy.app"',
+              a
+          )
+
+          app.write_text(a)
+
+          main_activity = list(
+              Path("android/app/src/main").rglob("MainActivity.kt")
+          )
+
+          if not main_activity:
+              raise SystemExit("MainActivity.kt was not generated.")
+
+          source = main_activity[0]
+          content = source.read_text()
+
+          content = re.sub(
+              r'^package\s+.*$',
+              'package com.atlasacademy.app',
+              content,
+              count=1,
+              flags=re.MULTILINE
+          )
+
+          destination = Path(
+              "android/app/src/main/kotlin/"
+              "com/atlasacademy/app/MainActivity.kt"
+          )
+
+          destination.parent.mkdir(parents=True, exist_ok=True)
+          destination.write_text(content)
+
+          if source != destination:
+              source.unlink()
+
+          pbx = Path("ios/Runner.xcodeproj/project.pbxproj")
+
+          if pbx.exists():
+              content = pbx.read_text()
+              content = re.sub(
+                  r'PRODUCT_BUNDLE_IDENTIFIER = [^;]+;',
+                  'PRODUCT_BUNDLE_IDENTIFIER = com.atlasacademy.app;',
+                  content
+              )
+              pbx.write_text(content)
+
+          print("Android Firebase plugin and platform identifiers configured.")
+          PY
+
+      - name: Verify Firebase configuration files
+        run: |
+          test -f android/app/google-services.json
+          test -f ios/Runner/GoogleService-Info.plist
+          test -f android/app/build.gradle.kts
+          test -f ios/Runner.xcodeproj/project.pbxproj
+          test -f web/index.html
+
+      - name: Commit generated platform files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email \
+            "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add android ios web
+
+          if git diff --cached --quiet; then
+            echo "No platform changes to commit."
+          else
+            git commit -m "Generate Flutter Android iOS and Web platforms"
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi
+          
