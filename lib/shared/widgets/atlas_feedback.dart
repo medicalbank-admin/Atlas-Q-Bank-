@@ -1,6 +1,6 @@
-import ‘package:flutter/material.dart’;
-import ‘../../app/atlas_academy_app.dart’;
-import ‘../../theme/atlas_spacing.dart’;
+import 'package:flutter/material.dart';
+import '../../app/atlas_academy_app.dart';
+import '../../theme/atlas_spacing.dart';
 
 class AtlasFeedback {
 AtlasFeedback._();
