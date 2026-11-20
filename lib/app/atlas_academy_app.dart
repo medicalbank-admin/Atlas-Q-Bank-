@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../features/auth/screens/auth_landing_screen.dart';
+import '../features/auth/screens/auth_gate.dart';
 
 class AtlasColors {
   static const Color deepTeal = Color(0xFF123F46);
@@ -130,7 +130,7 @@ class AtlasAcademyApp extends StatelessWidget {
       theme: _lightTheme(),
       darkTheme: _darkTheme(),
       themeMode: ThemeMode.system,
-      home: const AuthLandingScreen(),
+      home: const AuthGate(),
     );
   }
 }
