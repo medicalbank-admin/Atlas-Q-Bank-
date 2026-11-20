@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 
 import 'student_mcq_practice_screen.dart';
@@ -11,82 +12,20 @@ class StudentMcqHubScreen extends StatelessWidget {
   static const Color gold = Color(0xFFD8B66B);
   static const Color ivory = Color(0xFFF7F8F5);
 
-  void _openScreen(BuildContext context, Widget screen) {
+  void _openPractice(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => screen),
+      MaterialPageRoute(
+        builder: (_) => const StudentMcqPracticeScreen(),
+      ),
     );
   }
 
-  Widget _featureCard({
-    required BuildContext context,
-    required String title,
-    required String description,
-    required IconData icon,
-    required Color iconColor,
-    required VoidCallback onTap,
-    required String buttonText,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(19),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: navy.withValues(alpha: 0.05),
-            blurRadius: 16,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            height: 52,
-            width: 52,
-            decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: Icon(icon, color: iconColor, size: 27),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            title,
-            style: const TextStyle(
-              color: navy,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 7),
-          Text(
-            description,
-            style: const TextStyle(
-              color: Colors.grey,
-              height: 1.5,
-              fontSize: 13,
-            ),
-          ),
-          const SizedBox(height: 17),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton(
-              onPressed: onTap,
-              style: FilledButton.styleFrom(
-                backgroundColor: teal,
-                padding: const EdgeInsets.symmetric(vertical: 13),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: Text(buttonText),
-            ),
-          ),
-        ],
+  void _openHistory(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const StudentMcqHistoryScreen(),
       ),
     );
   }
@@ -96,121 +35,248 @@ class StudentMcqHubScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: ivory,
       appBar: AppBar(
-        title: const Text('MCQ Learning Centre'),
         backgroundColor: navy,
         foregroundColor: Colors.white,
+        title: const Text(
+          'MCQ Learning Centre',
+          style: TextStyle(fontWeight: FontWeight.w800),
+        ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(22),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [navy, teal],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(22),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(
-                    Icons.school_outlined,
-                    color: gold,
-                    size: 35,
-                  ),
-                  const SizedBox(height: 15),
-                  const Text(
-                    'Master Your Medical MCQs',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 9),
-                  const Text(
-                    'Practise important medical questions, '
-                    'understand explanations and track your progress.',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      height: 1.5,
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 25),
+            _heroCard(context),
+            const SizedBox(height: 28),
             const Text(
               'Your Learning Tools',
               style: TextStyle(
                 color: navy,
-                fontSize: 19,
-                fontWeight: FontWeight.bold,
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
               ),
             ),
             const SizedBox(height: 15),
             _featureCard(
               context: context,
-              title: 'MCQ Practice',
+              icon: Icons.play_circle_fill_rounded,
+              title: 'Start MCQ Practice',
               description:
-                  'Attempt published questions, choose answers, '
-                  'check explanations and improve your knowledge.',
-              icon: Icons.quiz_outlined,
-              iconColor: teal,
-              buttonText: 'Start Practising',
-              onTap: () => _openScreen(
-                context,
-                const StudentMcqPracticeScreen(),
-              ),
+                  'Practice medical questions and test your knowledge.',
+              buttonText: 'Start Practicing',
+              color: teal,
+              onTap: () => _openPractice(context),
             ),
+            const SizedBox(height: 14),
             _featureCard(
               context: context,
+              icon: Icons.history_rounded,
               title: 'Practice History',
               description:
-                  'Review your previous practice sessions, '
-                  'scores, accuracy and learning progress.',
-              icon: Icons.history,
-              iconColor: gold,
+                  'Review your previous scores and detailed answers.',
               buttonText: 'View History',
-              onTap: () => _openScreen(
-                context,
-                const StudentMcqHistoryScreen(),
-              ),
+              color: navy,
+              onTap: () => _openHistory(context),
             ),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: teal.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: const Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.lightbulb_outline, color: teal),
-                  SizedBox(width: 11),
-                  Expanded(
-                    child: Text(
-                      'Study tip: Focus on understanding why an '
-                      'answer is correct, not just memorising it.',
-                      style: TextStyle(
-                        color: navy,
-                        height: 1.5,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            const SizedBox(height: 22),
+            _tipCard(),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _heroCard(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(23),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [navy, teal],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(25),
+        boxShadow: [
+          BoxShadow(
+            color: navy.withValues(alpha: 0.18),
+            blurRadius: 18,
+            offset: const Offset(0, 9),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(13),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Icon(
+              Icons.school_rounded,
+              color: gold,
+              size: 31,
+            ),
+          ),
+          const SizedBox(height: 19),
+          const Text(
+            'Learn. Practice. Excel.',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 23,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 9),
+          const Text(
+            'Strengthen your medical knowledge with '
+            'focused MCQ practice and detailed explanations.',
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 14,
+              height: 1.6,
+            ),
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: () => _openPractice(context),
+              style: FilledButton.styleFrom(
+                backgroundColor: gold,
+                foregroundColor: navy,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(13),
+                ),
+              ),
+              child: const Text(
+                'Begin Practice',
+                style: TextStyle(fontWeight: FontWeight.w800),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _featureCard({
+    required BuildContext context,
+    required IconData icon,
+    required String title,
+    required String description,
+    required String buttonText,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(19),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(19),
+        child: Padding(
+          padding: const EdgeInsets.all(18),
+          child: Row(
+            children: [
+              Container(
+                width: 55,
+                height: 55,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.09),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(icon, color: color, size: 28),
+              ),
+              const SizedBox(width: 15),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: navy,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      description,
+                      style: const TextStyle(
+                        color: Colors.black54,
+                        fontSize: 12,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      buttonText,
+                      style: TextStyle(
+                        color: color,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                color: color,
+                size: 16,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _tipCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(17),
+      decoration: BoxDecoration(
+        color: const Color(0xFFE5F1EF),
+        borderRadius: BorderRadius.circular(17),
+      ),
+      child: const Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.lightbulb_outline, color: teal, size: 23),
+          SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Study Tip',
+                  style: TextStyle(
+                    color: navy,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                SizedBox(height: 5),
+                Text(
+                  'Read the explanation after every practice '
+                  'session. Understanding why an answer is correct '
+                  'is just as important as remembering it.',
+                  style: TextStyle(
+                    color: navy,
+                    fontSize: 12,
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
