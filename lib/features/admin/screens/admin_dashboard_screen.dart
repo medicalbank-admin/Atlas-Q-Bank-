@@ -1,10 +1,10 @@
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import 'admin_academic_screen.dart';
 import 'admin_mcq_bank_screen.dart';
 import 'admin_students_screen.dart';
+import 'admin_subscription_plans_screen.dart';
 import 'admin_subscription_requests_screen.dart';
 
 class AdminDashboardScreen extends StatelessWidget {
@@ -179,6 +179,7 @@ class AdminDashboardScreen extends StatelessWidget {
                               const AdminStudentsScreen(),
                             ),
                           ),
+
                           _managementTile(
                             icon: Icons.payments_rounded,
                             title: 'Subscription Requests',
@@ -189,6 +190,18 @@ class AdminDashboardScreen extends StatelessWidget {
                               const AdminSubscriptionRequestsScreen(),
                             ),
                           ),
+
+                          _managementTile(
+                            icon: Icons.workspace_premium_rounded,
+                            title: 'Subscription Plans',
+                            subtitle:
+                                'Create plans, set prices and manage access',
+                            onTap: () => _openPage(
+                              context,
+                              const AdminSubscriptionPlansScreen(),
+                            ),
+                          ),
+
                           _managementTile(
                             icon: Icons.school_rounded,
                             title: 'Academic Management',
@@ -199,6 +212,7 @@ class AdminDashboardScreen extends StatelessWidget {
                               const AdminAcademicScreen(),
                             ),
                           ),
+
                           _managementTile(
                             icon: Icons.video_library_rounded,
                             title: 'Learning Resources',
@@ -209,6 +223,7 @@ class AdminDashboardScreen extends StatelessWidget {
                               const AdminAcademicScreen(),
                             ),
                           ),
+
                           _managementTile(
                             icon: Icons.quiz_rounded,
                             title: 'MCQ Question Bank',
@@ -219,16 +234,7 @@ class AdminDashboardScreen extends StatelessWidget {
                               const AdminMcqBankScreen(),
                             ),
                           ),
-                          _managementTile(
-                            icon: Icons.workspace_premium_rounded,
-                            title: 'Subscription Plans',
-                            subtitle:
-                                'Plan administration is not connected yet',
-                            onTap: () => _showComingSoon(
-                              context,
-                              'Subscription Plan Management',
-                            ),
-                          ),
+
                           _managementTile(
                             icon: Icons.notifications_active_rounded,
                             title: 'Notifications',
@@ -239,6 +245,7 @@ class AdminDashboardScreen extends StatelessWidget {
                               'Notifications',
                             ),
                           ),
+
                           _managementTile(
                             icon: Icons.analytics_rounded,
                             title: 'Analytics & Reports',
