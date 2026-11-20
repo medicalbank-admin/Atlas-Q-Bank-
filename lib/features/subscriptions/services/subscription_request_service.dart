@@ -1,7 +1,6 @@
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
-import 'package:image_picker/image_picker.dart';
 
 import '../models/subscription_plan_model.dart';
 import '../models/subscription_request_model.dart';
@@ -9,15 +8,12 @@ import '../models/subscription_request_model.dart';
 class SubscriptionRequestService {
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
-  final FirebaseStorage _storage;
 
   SubscriptionRequestService({
     FirebaseFirestore? firestore,
     FirebaseAuth? auth,
-    FirebaseStorage? storage,
   })  : _firestore = firestore ?? FirebaseFirestore.instance,
-        _auth = auth ?? FirebaseAuth.instance,
-        _storage = storage ?? FirebaseStorage.instance;
+        _auth = auth ?? FirebaseAuth.instance;
 
   CollectionReference<Map<String, dynamic>> get _requests =>
       _firestore.collection('subscription_requests');
@@ -26,7 +22,6 @@ class SubscriptionRequestService {
     required SubscriptionPlanModel plan,
     required String paymentMethod,
     required String transactionReference,
-    required XFile paymentProof,
   }) async {
     final user = _auth.currentUser;
 
@@ -50,8 +45,8 @@ class SubscriptionRequestService {
       throw Exception('Please select a payment method.');
     }
 
-    if (transactionReference.trim().isEmpty) {
-      throw Exception('Please enter your transaction reference.');
+    if (transactionReference.trim().length < 3) {
+      throw Exception('Please enter a valid transaction reference.');
     }
 
     if (plan.durationDays <= 0 || plan.price <= 0) {
@@ -75,61 +70,27 @@ class SubscriptionRequestService {
     }
 
     final requestId = _requests.doc().id;
-    final extension = _fileExtension(paymentProof.name);
-    final storagePath =
-        'subscription_payment_proofs/${currentUser.uid}/$requestId.$extension';
 
-    final bytes = await paymentProof.readAsBytes();
+    final request = SubscriptionRequestModel(
+      id: requestId,
+      studentUid: currentUser.uid,
+      studentName: studentName,
+      studentEmail: studentEmail,
+      planId: plan.id,
+      planName: plan.name,
+      durationDays: plan.durationDays,
+      amount: plan.price,
+      currency: plan.currency,
+      paymentMethod: paymentMethod.trim(),
+      transactionReference: transactionReference.trim(),
+      proofImageUrl: null,
+      proofImagePath: null,
+      status: 'pending',
+    );
 
-    if (bytes.isEmpty) {
-      throw Exception('The selected payment proof is empty.');
-    }
+    await _requests.doc(requestId).set(request.toFirestore());
 
-    if (bytes.length > 10 * 1024 * 1024) {
-      throw Exception('Payment proof must be smaller than 10 MB.');
-    }
-
-    final contentType = _contentType(extension);
-
-    final uploadRef = _storage.ref().child(storagePath);
-
-    try {
-      final uploadTask = await uploadRef.putData(
-        bytes,
-        SettableMetadata(contentType: contentType),
-      );
-
-      final proofUrl = await uploadTask.ref.getDownloadURL();
-
-      final request = SubscriptionRequestModel(
-        id: requestId,
-        studentUid: currentUser.uid,
-        studentName: studentName,
-        studentEmail: studentEmail,
-        planId: plan.id,
-        planName: plan.name,
-        durationDays: plan.durationDays,
-        amount: plan.price,
-        currency: plan.currency,
-        paymentMethod: paymentMethod.trim(),
-        transactionReference: transactionReference.trim(),
-        proofImageUrl: proofUrl,
-        proofImagePath: storagePath,
-        status: 'pending',
-      );
-
-      await _requests.doc(requestId).set(request.toFirestore());
-
-      return requestId;
-    } catch (_) {
-      try {
-        await uploadRef.delete();
-      } catch (_) {
-        // Ignore cleanup failure.
-      }
-
-      rethrow;
-    }
+    return requestId;
   }
 
   Stream<List<SubscriptionRequestModel>> watchMyRequests() {
@@ -180,32 +141,5 @@ class SubscriptionRequestService {
       snapshot.id,
       data,
     );
-  }
-
-  String _fileExtension(String fileName) {
-    final parts = fileName.split('.');
-
-    if (parts.length < 2) {
-      return 'jpg';
-    }
-
-    final extension = parts.last.toLowerCase();
-
-    if (!['jpg', 'jpeg', 'png', 'webp'].contains(extension)) {
-      throw Exception('Please upload a JPG, PNG, or WEBP image.');
-    }
-
-    return extension;
-  }
-
-  String _contentType(String extension) {
-    switch (extension) {
-      case 'png':
-        return 'image/png';
-      case 'webp':
-        return 'image/webp';
-      default:
-        return 'image/jpeg';
-    }
   }
 }
