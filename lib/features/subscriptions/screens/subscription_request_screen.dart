@@ -1,8 +1,5 @@
 
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 
 import '../../../app/atlas_academy_app.dart';
 import '../../../shared/widgets/atlas_feedback.dart';
@@ -28,12 +25,8 @@ class _SubscriptionRequestScreenState
   final _referenceController = TextEditingController();
 
   final _service = SubscriptionRequestService();
-  final _picker = ImagePicker();
 
   String? _paymentMethod;
-  XFile? _proofImage;
-  Uint8List? _proofBytes;
-
   bool _isSubmitting = false;
 
   final List<String> _paymentMethods = [
@@ -44,48 +37,6 @@ class _SubscriptionRequestScreenState
     'International Bank Transfer',
     'Other',
   ];
-
-  Future<void> _selectProofImage() async {
-    try {
-      final image = await _picker.pickImage(
-        source: ImageSource.gallery,
-        imageQuality: 85,
-        maxWidth: 1800,
-      );
-
-      if (image == null) return;
-
-      final bytes = await image.readAsBytes();
-
-      if (bytes.isEmpty) {
-        throw Exception('The selected image is empty.');
-      }
-
-      if (bytes.length > 10 * 1024 * 1024) {
-        throw Exception('Image must be smaller than 10 MB.');
-      }
-
-      final extension = image.name.split('.').last.toLowerCase();
-
-      if (!['jpg', 'jpeg', 'png', 'webp'].contains(extension)) {
-        throw Exception('Please select a JPG, PNG, or WEBP image.');
-      }
-
-      if (!mounted) return;
-
-      setState(() {
-        _proofImage = image;
-        _proofBytes = bytes;
-      });
-    } catch (e) {
-      if (!mounted) return;
-
-      AtlasFeedback.showError(
-        context,
-        e.toString().replaceFirst('Exception: ', ''),
-      );
-    }
-  }
 
   Future<void> _submitRequest() async {
     if (!_formKey.currentState!.validate()) return;
@@ -98,14 +49,6 @@ class _SubscriptionRequestScreenState
       return;
     }
 
-    if (_proofImage == null) {
-      AtlasFeedback.showError(
-        context,
-        'Please upload your payment receipt.',
-      );
-      return;
-    }
-
     setState(() => _isSubmitting = true);
 
     try {
@@ -113,7 +56,6 @@ class _SubscriptionRequestScreenState
         plan: widget.plan,
         paymentMethod: _paymentMethod!,
         transactionReference: _referenceController.text.trim(),
-        paymentProof: _proofImage!,
       );
 
       if (!mounted) return;
@@ -150,7 +92,8 @@ class _SubscriptionRequestScreenState
                 const SizedBox(height: 10),
                 const Text(
                   'Your payment details have been submitted. '
-                  'Our administration team will review your request.',
+                  'Our administration team will review your '
+                  'transaction reference and update your request.',
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 20),
@@ -216,20 +159,9 @@ class _SubscriptionRequestScreenState
               _buildPaymentMethodField(),
               const SizedBox(height: 18),
               _buildReferenceField(),
-              const SizedBox(height: 26),
-              _buildSectionTitle('Payment Receipt'),
-              const SizedBox(height: 8),
-              const Text(
-                'Upload a clear screenshot or photograph of your '
-                'payment confirmation.',
-                style: TextStyle(
-                  color: AtlasColors.secondaryText,
-                  fontSize: 13,
-                ),
-              ),
-              const SizedBox(height: 14),
-              _buildProofPicker(),
-              const SizedBox(height: 26),
+              const SizedBox(height: 24),
+              _buildPaymentInformationNotice(),
+              const SizedBox(height: 18),
               _buildNotice(),
               const SizedBox(height: 26),
               SizedBox(
@@ -414,82 +346,49 @@ class _SubscriptionRequestScreenState
     );
   }
 
-  Widget _buildProofPicker() {
-    return InkWell(
-      onTap: _selectProofImage,
-      borderRadius: BorderRadius.circular(18),
-      child: Container(
-        width: double.infinity,
-        constraints: const BoxConstraints(minHeight: 170),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: AtlasColors.oceanTeal.withValues(alpha: 0.45),
-            width: 1.3,
-          ),
+  Widget _buildPaymentInformationNotice() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AtlasColors.oceanTeal.withValues(alpha: 0.25),
         ),
-        child: _proofBytes == null
-            ? const Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.cloud_upload_outlined,
-                    size: 42,
-                    color: AtlasColors.oceanTeal,
-                  ),
-                  SizedBox(height: 12),
-                  Text(
-                    'Tap to upload payment proof',
-                    style: TextStyle(
-                      color: AtlasColors.deepTeal,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: 6),
-                  Text(
-                    'JPG, PNG or WEBP · Maximum 10 MB',
-                    style: TextStyle(
-                      color: AtlasColors.secondaryText,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              )
-            : Column(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.memory(
-                      _proofBytes!,
-                      height: 190,
-                      width: double.infinity,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.check_circle,
-                        color: AtlasColors.success,
-                        size: 18,
-                      ),
-                      SizedBox(width: 7),
-                      Text(
-                        'Receipt selected · Tap to change',
-                        style: TextStyle(
-                          color: AtlasColors.success,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+      ),
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.verified_user_outlined,
+                color: AtlasColors.oceanTeal,
               ),
+              SizedBox(width: 9),
+              Text(
+                'Payment verification',
+                style: TextStyle(
+                  color: AtlasColors.deepTeal,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 10),
+          Text(
+            'Enter the transaction ID or reference provided '
+            'by your bank or payment service. Please ensure '
+            'the reference is accurate so our team can verify '
+            'your payment.',
+            style: TextStyle(
+              color: AtlasColors.secondaryText,
+              fontSize: 12,
+              height: 1.6,
+            ),
+          ),
+        ],
       ),
     );
   }
