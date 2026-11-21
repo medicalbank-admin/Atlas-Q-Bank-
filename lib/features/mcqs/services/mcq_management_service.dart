@@ -130,17 +130,40 @@ class McqManagementService {
       throw Exception('MCQ does not exist.');
     }
     if (isPublished) {
-      final answerSnapshot = await _answerKeys.doc(id).get();
+      final answerDocument = _answerKeys.doc(id);
+      final answerSnapshot = await answerDocument.get();
       final publicData = snapshot.data() ?? {};
-      final hasPrivateAnswer = answerSnapshot.exists &&
-          answerSnapshot.data()?['correctAnswer'] != null;
-      final hasLegacyAnswer =
-          publicData['correctAnswer'] != null;
-      if (!hasPrivateAnswer && !hasLegacyAnswer) {
+      final privateData = answerSnapshot.data() ?? {};
+      final correctAnswer = (
+        privateData['correctAnswer'] ?? publicData['correctAnswer'] ?? ''
+      ).toString().trim().toUpperCase();
+      if (!['A', 'B', 'C', 'D', 'E'].contains(correctAnswer)) {
         throw Exception(
-          'This question has no answer key. '
+          'This question has no valid private answer key. '
           'Edit and save it before publishing.',
         );
+      }
+      final legacyExplanation = (
+        privateData['explanation'] ?? publicData['explanation'] ?? ''
+      ).toString();
+      final containsLegacyAnswer =
+          publicData.containsKey('correctAnswer') ||
+          publicData.containsKey('explanation');
+      if (containsLegacyAnswer || !answerSnapshot.exists) {
+        final batch = _firestore.batch();
+        batch.set(answerDocument, {
+          'correctAnswer': correctAnswer,
+          'explanation': legacyExplanation,
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+        batch.update(document, {
+          'correctAnswer': FieldValue.delete(),
+          'explanation': FieldValue.delete(),
+          'isPublished': true,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+        await batch.commit();
+        return;
       }
     }
     await document.update({
