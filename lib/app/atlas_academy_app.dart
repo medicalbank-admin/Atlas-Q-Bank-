@@ -120,6 +120,10 @@ class AtlasAcademyApp extends StatelessWidget {
 
     return base.copyWith(
       textTheme: _textTheme(AtlasColors.charcoal),
+      inputDecorationTheme: const InputDecorationTheme(
+        // Keep all typed values readable regardless of device defaults.
+        // The InputDecorationTheme below supplies field surfaces and borders.
+      ),
       primaryTextTheme: _textTheme(AtlasColors.white),
       scaffoldBackgroundColor: AtlasColors.ivory,
       appBarTheme: const AppBarTheme(
@@ -147,10 +151,18 @@ class AtlasAcademyApp extends StatelessWidget {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
+        // Explicit input text colour prevents white-on-white fields on devices
+        // whose system brightness or inherited text theme differs.
+        hintFadeDuration: const Duration(milliseconds: 150),
         floatingLabelStyle: const TextStyle(color: AtlasColors.royalBlue, fontWeight: FontWeight.w700),
+        labelStyle: const TextStyle(color: AtlasColors.secondaryText, fontSize: 13, fontWeight: FontWeight.w600),
+        hintStyle: const TextStyle(color: AtlasColors.secondaryText, fontSize: 14),
         prefixIconColor: AtlasColors.royalBlue,
         suffixIconColor: AtlasColors.secondaryText,
         fillColor: AtlasColors.white,
+        // Applies to TextField and TextFormField throughout the entire app.
+        // Actual editable characters must remain dark on the light surface.
+        // (Set again in dark mode below.)
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 17,
           vertical: 16,
@@ -291,6 +303,9 @@ class AtlasAcademyApp extends StatelessWidget {
 
     return base.copyWith(
       textTheme: _textTheme(AtlasColors.white),
+      inputDecorationTheme: const InputDecorationTheme(
+        // Dark surfaces use light editable text.
+      ),
       scaffoldBackgroundColor: AtlasColors.darkBackground,
       appBarTheme: const AppBarTheme(
         backgroundColor: AtlasColors.darkBackground,
@@ -311,6 +326,8 @@ class AtlasAcademyApp extends StatelessWidget {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AtlasColors.darkSurface,
+        labelStyle: const TextStyle(color: Colors.white70),
+        hintStyle: const TextStyle(color: Colors.white54),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 17,
           vertical: 16,
