@@ -8,6 +8,9 @@ void main() {
         input: 'Which chamber pumps blood to the lungs?|Right atrium|Right ventricle|Left atrium|Left ventricle|B|It pumps blood to the lungs.|Anatomy|Heart|easy',
         yearId: ' year-1 ',
         adminUid: ' admin-1 ',
+        subjectId: 'anatomy',
+        examSetId: 'heart-set',
+        examSetName: 'Heart Set',
       );
 
       expect(result.totalRows, 1);
@@ -56,7 +59,7 @@ void main() {
       expect(result.questions, isEmpty);
       expect(result.hasErrors, isTrue);
       expect(result.errors.single.message,
-          contains('Academic year and administrator'));
+          contains('destination and administrator'));
     });
   });
 }
