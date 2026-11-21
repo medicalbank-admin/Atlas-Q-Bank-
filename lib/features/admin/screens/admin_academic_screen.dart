@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import '../../academic/screens/academic_subject_management_screen.dart';
 import '../../../app/atlas_academy_app.dart';
 class AdminAcademicScreen extends StatefulWidget {
   const AdminAcademicScreen({super.key});
@@ -304,6 +305,14 @@ class _AdminAcademicScreenState extends State<AdminAcademicScreen> {
         ],
       ),
       child: ListTile(
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => AcademicSubjectManagementScreen(
+              yearId: id,
+              yearName: name,
+            ),
+          ),
+        ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 15,
           vertical: 9,
@@ -345,7 +354,7 @@ class _AdminAcademicScreenState extends State<AdminAcademicScreen> {
               ),
               const SizedBox(width: 7),
               Text(
-                active ? 'Active academic year' : 'Inactive',
+                active ? 'Tap to manage subjects' : 'Inactive · tap to manage',
                 style: TextStyle(
                   color: active
                       ? AtlasColors.success
