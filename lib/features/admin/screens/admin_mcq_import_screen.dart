@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../mcqs/services/mcq_bulk_import_service.dart';
 import '../../mcqs/services/mcq_pipe_import_parser.dart';
+import '../widgets/mcq_destination_selector.dart';
 
 class AdminMcqImportScreen extends StatefulWidget {
   const AdminMcqImportScreen({super.key});
@@ -20,7 +21,7 @@ class _AdminMcqImportScreenState
   final McqBulkImportService _importService =
       McqBulkImportService();
 
-  String? _selectedYearId;
+  McqDestination? _destination;
 
   McqImportResult? _previewResult;
 
@@ -41,9 +42,8 @@ class _AdminMcqImportScreenState
       return;
     }
 
-    if (_selectedYearId == null ||
-        _selectedYearId!.isEmpty) {
-      _showMessage('Please select an academic year.');
+    if (_destination == null) {
+      _showMessage('Please select a track, subject and exam set.');
       return;
     }
 
@@ -54,8 +54,14 @@ class _AdminMcqImportScreenState
 
     final result = McqPipeImportParser.parse(
       input: _inputController.text,
-      yearId: _selectedYearId!,
+      yearId: _destination!.yearId,
       adminUid: user.uid,
+      trackType: _destination!.trackType,
+      pathwayId: _destination!.pathwayId,
+      pathwayName: _destination!.pathwayName,
+      subjectId: _destination!.subjectId,
+      examSetId: _destination!.examSetId,
+      examSetName: _destination!.examSetName,
     );
 
     setState(() {
@@ -491,14 +497,16 @@ class _AdminMcqImportScreenState
               ),
               const SizedBox(height: 22),
               const Text(
-                '1. Select Academic Year',
+                '1. Select MCQ Destination',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
               ),
               const SizedBox(height: 10),
-              _buildYearSelector(),
+              McqDestinationSelector(
+                onChanged: (value) => setState(() { _destination = value; _previewResult = null; }),
+              ),
               const SizedBox(height: 24),
               const Text(
                 '2. Paste Pipe-Delimited MCQs',
