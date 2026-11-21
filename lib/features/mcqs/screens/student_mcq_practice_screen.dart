@@ -61,7 +61,7 @@ class _StudentMcqPracticeScreenState
         _deadlineAt = DateTime.tryParse(session['expiresAt']?.toString() ?? '');
         _remainingSeconds = _deadlineAt == null
             ? (session['durationMinutes'] as int) * 60
-            : _deadlineAt!.difference(DateTime.now()).inSeconds.clamp(0, 240 * 60);
+            : _deadlineAt!.difference(DateTime.now()).inSeconds.clamp(0, 240 * 60).toInt();
         _isLoading = false;
       });
       _startCountdown();
