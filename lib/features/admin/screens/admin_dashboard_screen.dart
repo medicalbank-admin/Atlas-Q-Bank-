@@ -7,6 +7,7 @@ import '../../profile/screens/profile_screen.dart';
 import 'admin_academic_screen.dart';
 import '../../academic/screens/admin_learning_resources_screen.dart';
 import 'admin_mcq_bank_screen.dart';
+import 'admin_past_papers_screen.dart';
 import 'admin_mcq_curriculum_screen.dart';
 import 'admin_students_screen.dart';
 import 'admin_subscription_plans_screen.dart';
@@ -448,6 +449,13 @@ class AdminDashboardScreen extends StatelessWidget {
         subtitle: 'Manage pathways, subjects and exam sets',
         color: AtlasColors.gold,
         page: const AdminMcqCurriculumScreen(),
+      ),
+      _AdminItem(
+        icon: Icons.history_edu_rounded,
+        title: 'Past Papers',
+        subtitle: 'Create, import, publish and manage past papers',
+        color: AtlasColors.brightBlue,
+        page: const AdminPastPapersScreen(),
       ),
       _AdminItem(
         icon: Icons.quiz_rounded,
