@@ -6,6 +6,7 @@ import '../../../shared/widgets/atlas_logo.dart';
 import '../../profile/screens/profile_screen.dart';
 import 'admin_academic_screen.dart';
 import 'admin_mcq_bank_screen.dart';
+import 'admin_mcq_curriculum_screen.dart';
 import 'admin_students_screen.dart';
 import 'admin_subscription_plans_screen.dart';
 import 'admin_subscription_requests_screen.dart';
@@ -439,6 +440,13 @@ class AdminDashboardScreen extends StatelessWidget {
         subtitle: 'Live student, payment and content metrics',
         color: AtlasColors.gold,
         page: const AdminAnalyticsScreen(),
+      ),
+      _AdminItem(
+        icon: Icons.account_tree_rounded,
+        title: 'MCQ Curriculum',
+        subtitle: 'Manage pathways, subjects and exam sets',
+        color: AtlasColors.gold,
+        page: const AdminMcqCurriculumScreen(),
       ),
       _AdminItem(
         icon: Icons.quiz_rounded,
