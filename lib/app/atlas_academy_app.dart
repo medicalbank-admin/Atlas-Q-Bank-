@@ -92,6 +92,11 @@ class AtlasAcademyApp extends StatelessWidget {
         fontWeight: FontWeight.w800,
         letterSpacing: 0.1,
       ),
+    ).apply(
+      // Re-apply after copyWith: replacement TextStyles otherwise lose the
+      // explicit foreground colour inherited from the base theme.
+      bodyColor: textColor,
+      displayColor: textColor,
     );
   }
 
