@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import '../../../app/atlas_academy_app.dart';
 import '../models/student_mcq_model.dart';
 import '../services/mcq_session_service.dart';
 import 'student_mcq_result_screen.dart';
@@ -12,12 +13,6 @@ class StudentMcqPracticeScreen extends StatefulWidget {
 }
 class _StudentMcqPracticeScreenState
     extends State<StudentMcqPracticeScreen> {
-  static const Color navy = Color(0xFF123F46);
-  static const Color teal = Color(0xFF28777B);
-  static const Color gold = Color(0xFFD8B66B);
-  static const Color ivory = Color(0xFFF7F8F5);
-  static const Color charcoal = Color(0xFF202A30);
-  static const Color softTeal = Color(0xFFE5F1EF);
   final McqSessionService _sessionService = McqSessionService();
   List<StudentMcqModel> _questions = [];
   List<int?> _selectedAnswers = [];
@@ -44,11 +39,12 @@ class _StudentMcqPracticeScreenState
       if (!mounted) return;
       setState(() {
         _questions = questions;
-        _selectedAnswers =
-            List<int?>.filled(questions.length, null);
+        _selectedAnswers = List<int?>.filled(questions.length, null);
+        _currentIndex = 0;
+        _startedAt = DateTime.now();
         _isLoading = false;
       });
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       setState(() {
         _isLoading = false;
@@ -84,68 +80,59 @@ class _StudentMcqPracticeScreenState
     final unanswered = _selectedAnswers
         .where((answer) => answer == null)
         .length;
-    if (unanswered > 0) {
-      final shouldFinish = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Unanswered Questions'),
-          content: Text(
-            'You have $unanswered unanswered questions. '
-            'Do you still want to submit your practice?',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () =>
-                  Navigator.pop(context, false),
-              child: const Text('Continue Practice'),
-            ),
-            FilledButton(
-              onPressed: () =>
-                  Navigator.pop(context, true),
-              child: const Text('Submit'),
-            ),
-          ],
+    final shouldFinish = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(22),
         ),
-      );
-      if (shouldFinish != true) return;
-    } else {
-      final shouldFinish = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Finish Practice'),
-          content: const Text(
-            'Are you sure you want to submit your answers?',
+        title: Text(
+          unanswered > 0
+              ? 'Unanswered Questions'
+              : 'Finish Practice',
+          style: const TextStyle(
+            color: AtlasColors.navy,
+            fontWeight: FontWeight.w900,
           ),
-          actions: [
-            TextButton(
-              onPressed: () =>
-                  Navigator.pop(context, false),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () =>
-                  Navigator.pop(context, true),
-              child: const Text('Submit'),
-            ),
-          ],
         ),
-      );
-      if (shouldFinish != true) return;
-    }
-    if (!mounted) return;
+        content: Text(
+          unanswered > 0
+              ? 'You have $unanswered unanswered questions. '
+                  'Do you still want to submit your practice?'
+              : 'Are you sure you want to submit your answers?',
+          style: const TextStyle(
+            color: AtlasColors.secondaryText,
+            height: 1.5,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Continue Practice'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: AtlasColors.navy,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Submit'),
+          ),
+        ],
+      ),
+    );
+    if (shouldFinish != true || !mounted) return;
     setState(() {
       _isSubmitting = true;
     });
     try {
       final selectedAnswers = <String, int?>{};
       for (var i = 0; i < _questions.length; i++) {
-        selectedAnswers[_questions[i].id] =
-            _selectedAnswers[i];
+        selectedAnswers[_questions[i].id] = _selectedAnswers[i];
       }
-      final attemptId =
-          await _sessionService.saveCompletedSession(
-        questionIds:
-            _questions.map((question) => question.id).toList(),
+      final attemptId = await _sessionService.saveCompletedSession(
+        questionIds: _questions.map((question) => question.id).toList(),
         selectedAnswers: selectedAnswers,
         startedAt: _startedAt,
       );
@@ -158,7 +145,7 @@ class _StudentMcqPracticeScreenState
           ),
         ),
       );
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       setState(() {
         _isSubmitting = false;
@@ -176,7 +163,8 @@ class _StudentMcqPracticeScreenState
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError ? Colors.red.shade700 : navy,
+        backgroundColor:
+            isError ? AtlasColors.error : AtlasColors.navy,
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -184,17 +172,17 @@ class _StudentMcqPracticeScreenState
   void _showQuestionNavigator() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: ivory,
+      backgroundColor: AtlasColors.ivory,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
-          top: Radius.circular(24),
+          top: Radius.circular(26),
         ),
       ),
-      builder: (context) {
+      builder: (sheetContext) {
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.fromLTRB(21, 13, 21, 25),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -206,77 +194,101 @@ class _StudentMcqPracticeScreenState
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 21),
                 const Text(
                   'Question Navigator',
                   style: TextStyle(
+                    color: AtlasColors.navy,
                     fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: navy,
+                    fontWeight: FontWeight.w900,
                   ),
                 ),
-                const SizedBox(height: 18),
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: List.generate(
-                    _questions.length,
-                    (index) {
-                      final answered =
-                          _selectedAnswers[index] != null;
-                      final current = index == _currentIndex;
-                      return InkWell(
-                        borderRadius: BorderRadius.circular(12),
-                        onTap: () {
-                          Navigator.pop(context);
-                          setState(() {
-                            _currentIndex = index;
-                          });
-                        },
-                        child: Container(
-                          width: 46,
-                          height: 46,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: current
-                                ? navy
-                                : answered
-                                    ? softTeal
-                                    : Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: current
-                                  ? gold
-                                  : answered
-                                      ? teal
-                                      : Colors.grey.shade300,
-                              width: current ? 2 : 1,
-                            ),
-                          ),
-                          child: Text(
-                            '${index + 1}',
-                            style: TextStyle(
-                              color: current
-                                  ? Colors.white
-                                  : navy,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      );
-                    },
+                const SizedBox(height: 7),
+                const Text(
+                  'Select a question to jump directly to it.',
+                  style: TextStyle(
+                    color: AtlasColors.secondaryText,
+                    fontSize: 11,
                   ),
                 ),
                 const SizedBox(height: 20),
-                Row(
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: Wrap(
+                      spacing: 10,
+                      runSpacing: 10,
+                      children: List.generate(
+                        _questions.length,
+                        (index) {
+                          final answered =
+                              _selectedAnswers[index] != null;
+                          final current = index == _currentIndex;
+                          final background = current
+                              ? AtlasColors.navy
+                              : answered
+                                  ? AtlasColors.paleBlue
+                                  : Colors.white;
+                          final border = current
+                              ? AtlasColors.champagne
+                              : answered
+                                  ? AtlasColors.royalBlue
+                                  : AtlasColors.border;
+                          return InkWell(
+                            borderRadius: BorderRadius.circular(13),
+                            onTap: () {
+                              Navigator.pop(sheetContext);
+                              setState(() {
+                                _currentIndex = index;
+                              });
+                            },
+                            child: Container(
+                              width: 45,
+                              height: 45,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: background,
+                                borderRadius: BorderRadius.circular(13),
+                                border: Border.all(
+                                  color: border,
+                                  width: current ? 2 : 1,
+                                ),
+                              ),
+                              child: Text(
+                                '${index + 1}',
+                                style: TextStyle(
+                                  color: current
+                                      ? Colors.white
+                                      : AtlasColors.navy,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 19),
+                const Wrap(
+                  spacing: 17,
+                  runSpacing: 10,
                   children: [
-                    _legendDot(softTeal, teal),
-                    const SizedBox(width: 6),
-                    const Text('Answered'),
-                    const SizedBox(width: 18),
-                    _legendDot(Colors.white, Colors.grey),
-                    const SizedBox(width: 6),
-                    const Text('Unanswered'),
+                    _NavigatorLegend(
+                      color: AtlasColors.paleBlue,
+                      borderColor: AtlasColors.royalBlue,
+                      label: 'Answered',
+                    ),
+                    _NavigatorLegend(
+                      color: Colors.white,
+                      borderColor: AtlasColors.border,
+                      label: 'Unanswered',
+                    ),
+                    _NavigatorLegend(
+                      color: AtlasColors.navy,
+                      borderColor: AtlasColors.champagne,
+                      label: 'Current',
+                    ),
                   ],
                 ),
               ],
@@ -286,30 +298,35 @@ class _StudentMcqPracticeScreenState
       },
     );
   }
-  Widget _legendDot(Color color, Color border) {
-    return Container(
-      width: 12,
-      height: 12,
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-        border: Border.all(color: border),
-      ),
-    );
-  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: ivory,
+      backgroundColor: AtlasColors.ivory,
       appBar: AppBar(
-        backgroundColor: navy,
+        backgroundColor: AtlasColors.navy,
         foregroundColor: Colors.white,
         elevation: 0,
-        title: const Text(
-          'MCQ Practice',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
+        title: const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'MCQ Practice',
+              style: TextStyle(
+                fontWeight: FontWeight.w900,
+                fontSize: 16,
+              ),
+            ),
+            SizedBox(height: 2),
+            Text(
+              'THE ATLAS ACADEMY',
+              style: TextStyle(
+                fontSize: 8,
+                letterSpacing: 1.3,
+                color: AtlasColors.champagne,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
         ),
         actions: [
           if (!_isLoading && _questions.isNotEmpty)
@@ -318,6 +335,7 @@ class _StudentMcqPracticeScreenState
               onPressed: _showQuestionNavigator,
               icon: const Icon(Icons.grid_view_rounded),
             ),
+          const SizedBox(width: 5),
         ],
       ),
       body: _buildBody(),
@@ -326,51 +344,13 @@ class _StudentMcqPracticeScreenState
   Widget _buildBody() {
     if (_isLoading) {
       return const Center(
-        child: CircularProgressIndicator(color: teal),
+        child: CircularProgressIndicator(
+          color: AtlasColors.royalBlue,
+        ),
       );
     }
     if (_questions.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                Icons.menu_book_rounded,
-                size: 58,
-                color: teal,
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'No Questions Available',
-                style: TextStyle(
-                  fontSize: 21,
-                  fontWeight: FontWeight.bold,
-                  color: navy,
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'There are currently no published questions. '
-                'Please check again later.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: charcoal),
-              ),
-              const SizedBox(height: 20),
-              FilledButton(
-                onPressed: () {
-                  setState(() {
-                    _isLoading = true;
-                  });
-                  _loadQuestions();
-                },
-                child: const Text('Try Again'),
-              ),
-            ],
-          ),
-        ),
-      );
+      return _buildEmptyState();
     }
     final question = _questions[_currentIndex];
     return Column(
@@ -378,16 +358,16 @@ class _StudentMcqPracticeScreenState
         _buildProgressHeader(),
         Expanded(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(19, 20, 19, 25),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildQuestionMetadata(question),
-                const SizedBox(height: 20),
+                const SizedBox(height: 17),
                 _buildQuestionCard(question),
                 const SizedBox(height: 22),
                 _buildOptions(question),
-                const SizedBox(height: 25),
               ],
             ),
           ),
@@ -396,44 +376,142 @@ class _StudentMcqPracticeScreenState
       ],
     );
   }
+  Widget _buildEmptyState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              height: 85,
+              width: 85,
+              decoration: BoxDecoration(
+                color: AtlasColors.paleBlue,
+                borderRadius: BorderRadius.circular(27),
+              ),
+              child: const Icon(
+                Icons.menu_book_rounded,
+                size: 42,
+                color: AtlasColors.royalBlue,
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'No Questions Available',
+              style: TextStyle(
+                fontSize: 21,
+                fontWeight: FontWeight.w900,
+                color: AtlasColors.navy,
+              ),
+            ),
+            const SizedBox(height: 9),
+            const Text(
+              'There are currently no published questions. '
+              'Please check again later.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: AtlasColors.secondaryText,
+                height: 1.6,
+                fontSize: 12,
+              ),
+            ),
+            const SizedBox(height: 22),
+            FilledButton.icon(
+              onPressed: () {
+                setState(() {
+                  _isLoading = true;
+                });
+                _loadQuestions();
+              },
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Try Again'),
+              style: FilledButton.styleFrom(
+                backgroundColor: AtlasColors.navy,
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
   Widget _buildProgressHeader() {
-    final progress =
-        (_currentIndex + 1) / _questions.length;
+    final progress = (_currentIndex + 1) / _questions.length;
     final answered = _selectedAnswers
         .where((answer) => answer != null)
         .length;
     return Container(
-      color: navy,
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 22),
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(20, 15, 20, 21),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AtlasColors.navy,
+            AtlasColors.royalBlue,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.vertical(
+          bottom: Radius.circular(23),
+        ),
+      ),
       child: Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Question ${_currentIndex + 1} of ${_questions.length}',
+                'QUESTION ${_currentIndex + 1} / ${_questions.length}',
                 style: const TextStyle(
                   color: Colors.white,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 11,
+                  letterSpacing: 0.8,
                 ),
               ),
-              Text(
-                '$answered answered',
-                style: const TextStyle(
-                  color: Color(0xFFD8E8E6),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 11,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.13),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  '$answered answered',
+                  style: const TextStyle(
+                    color: AtlasColors.champagne,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 13),
           ClipRRect(
             borderRadius: BorderRadius.circular(20),
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 8,
-              backgroundColor: Colors.white24,
-              valueColor:
-                  const AlwaysStoppedAnimation<Color>(gold),
+              backgroundColor: Colors.white.withValues(alpha: 0.20),
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                AtlasColors.champagne,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerRight,
+            child: Text(
+              '${(progress * 100).round()}% completed',
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 9,
+              ),
             ),
           ),
         ],
@@ -445,81 +523,135 @@ class _StudentMcqPracticeScreenState
       spacing: 8,
       runSpacing: 8,
       children: [
-        _metadataChip(question.subject),
+        _metadataChip(
+          Icons.book_outlined,
+          question.subject,
+        ),
         if (question.topic.isNotEmpty)
-          _metadataChip(question.topic),
+          _metadataChip(
+            Icons.category_outlined,
+            question.topic,
+          ),
         if (question.difficulty.isNotEmpty)
-          _metadataChip(question.difficulty),
+          _metadataChip(
+            Icons.signal_cellular_alt_rounded,
+            question.difficulty,
+          ),
       ],
     );
   }
-  Widget _metadataChip(String text) {
+  Widget _metadataChip(IconData icon, String text) {
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: 7,
+        horizontal: 11,
+        vertical: 8,
       ),
       decoration: BoxDecoration(
-        color: softTeal,
-        borderRadius: BorderRadius.circular(20),
+        color: AtlasColors.paleBlue,
+        borderRadius: BorderRadius.circular(30),
       ),
-      child: Text(
-        text,
-        style: const TextStyle(
-          color: navy,
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 13,
+            color: AtlasColors.royalBlue,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            text,
+            style: const TextStyle(
+              color: AtlasColors.navy,
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
       ),
     );
   }
   Widget _buildQuestionCard(StudentMcqModel question) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(21),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE5E9E7)),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AtlasColors.border),
         boxShadow: [
           BoxShadow(
-            color: navy.withValues(alpha: 0.05),
-            blurRadius: 18,
-            offset: const Offset(0, 7),
+            color: AtlasColors.navy.withValues(alpha: 0.045),
+            blurRadius: 16,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'QUESTION ${_currentIndex + 1}',
-            style: const TextStyle(
-              color: teal,
-              fontSize: 11,
-              letterSpacing: 1.4,
-              fontWeight: FontWeight.bold,
-            ),
+          Row(
+            children: [
+              Container(
+                height: 32,
+                width: 32,
+                decoration: BoxDecoration(
+                  color: AtlasColors.paleBlue,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.help_outline_rounded,
+                  color: AtlasColors.royalBlue,
+                  size: 19,
+                ),
+              ),
+              const SizedBox(width: 10),
+              const Text(
+                'QUESTION',
+                style: TextStyle(
+                  color: AtlasColors.royalBlue,
+                  fontSize: 10,
+                  letterSpacing: 1.4,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 17),
           Text(
             question.question,
             style: const TextStyle(
-              color: charcoal,
-              fontSize: 18,
-              height: 1.55,
-              fontWeight: FontWeight.w600,
+              color: AtlasColors.charcoal,
+              fontSize: 17,
+              height: 1.65,
+              fontWeight: FontWeight.w700,
             ),
           ),
           if (question.reference.isNotEmpty) ...[
-            const SizedBox(height: 14),
-            Text(
-              'Reference: ${question.reference}',
-              style: const TextStyle(
-                color: Colors.grey,
-                fontSize: 12,
-                fontStyle: FontStyle.italic,
-              ),
+            const SizedBox(height: 15),
+            const Divider(color: AtlasColors.border),
+            const SizedBox(height: 8),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(
+                  Icons.menu_book_outlined,
+                  size: 15,
+                  color: AtlasColors.secondaryText,
+                ),
+                const SizedBox(width: 7),
+                Expanded(
+                  child: Text(
+                    'Reference: ${question.reference}',
+                    style: const TextStyle(
+                      color: AtlasColors.secondaryText,
+                      fontSize: 10,
+                      fontStyle: FontStyle.italic,
+                      height: 1.5,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ],
@@ -528,155 +660,268 @@ class _StudentMcqPracticeScreenState
   }
   Widget _buildOptions(StudentMcqModel question) {
     return Column(
-      children: List.generate(
-        question.options.length,
-        (index) {
-          final selected =
-              _selectedAnswers[_currentIndex] == index;
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(16),
-              onTap: () => _selectAnswer(index),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 17,
-                ),
-                decoration: BoxDecoration(
-                  color: selected ? softTeal : Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: selected ? teal : Colors.grey.shade300,
-                    width: selected ? 2 : 1,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(bottom: 12, left: 2),
+          child: Text(
+            'SELECT YOUR ANSWER',
+            style: TextStyle(
+              color: AtlasColors.navy,
+              fontSize: 11,
+              letterSpacing: 1,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ),
+        ...List.generate(
+          question.options.length,
+          (index) {
+            final selected = _selectedAnswers[_currentIndex] == index;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 11),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(17),
+                  onTap: () => _selectAnswer(index),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 15,
+                      vertical: 15,
+                    ),
+                    decoration: BoxDecoration(
+                      color: selected
+                          ? AtlasColors.paleBlue
+                          : Colors.white,
+                      borderRadius: BorderRadius.circular(17),
+                      border: Border.all(
+                        color: selected
+                            ? AtlasColors.royalBlue
+                            : AtlasColors.border,
+                        width: selected ? 1.8 : 1,
+                      ),
+                      boxShadow: selected
+                          ? [
+                              BoxShadow(
+                                color: AtlasColors.royalBlue.withValues(
+                                  alpha: 0.07,
+                                ),
+                                blurRadius: 12,
+                                offset: const Offset(0, 3),
+                              ),
+                            ]
+                          : [],
+                    ),
+                    child: Row(
+                      children: [
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 180),
+                          height: 34,
+                          width: 34,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: selected
+                                ? AtlasColors.navy
+                                : AtlasColors.ivory,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: selected
+                                  ? AtlasColors.navy
+                                  : AtlasColors.border,
+                            ),
+                          ),
+                          child: Text(
+                            String.fromCharCode(65 + index),
+                            style: TextStyle(
+                              color: selected
+                                  ? Colors.white
+                                  : AtlasColors.navy,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 13),
+                        Expanded(
+                          child: Text(
+                            question.options[index],
+                            style: TextStyle(
+                              color: AtlasColors.charcoal,
+                              fontSize: 13,
+                              height: 1.5,
+                              fontWeight: selected
+                                  ? FontWeight.w800
+                                  : FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        if (selected)
+                          const Icon(
+                            Icons.check_circle_rounded,
+                            color: AtlasColors.royalBlue,
+                            size: 21,
+                          ),
+                      ],
+                    ),
                   ),
                 ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 32,
-                      height: 32,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: selected ? navy : ivory,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Text(
-                        String.fromCharCode(65 + index),
-                        style: TextStyle(
-                          color: selected ? Colors.white : navy,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Text(
-                        question.options[index],
-                        style: const TextStyle(
-                          color: charcoal,
-                          fontSize: 15,
-                          height: 1.4,
-                        ),
-                      ),
-                    ),
-                    if (selected)
-                      const Icon(
-                        Icons.check_circle_rounded,
-                        color: teal,
-                      ),
-                  ],
-                ),
               ),
-            ),
-          );
-        },
-      ),
+            );
+          },
+        ),
+      ],
     );
   }
   Widget _buildBottomNavigation() {
-    final isLast =
-        _currentIndex == _questions.length - 1;
+    final isFirst = _currentIndex == 0;
+    final isLast = _currentIndex == _questions.length - 1;
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 14, 18, 20),
+      padding: const EdgeInsets.fromLTRB(16, 13, 16, 19),
       decoration: BoxDecoration(
         color: Colors.white,
+        border: const Border(
+          top: BorderSide(color: AtlasColors.border),
+        ),
         boxShadow: [
           BoxShadow(
-            color: navy.withValues(alpha: 0.06),
-            blurRadius: 15,
+            color: AtlasColors.navy.withValues(alpha: 0.05),
+            blurRadius: 14,
             offset: const Offset(0, -4),
           ),
         ],
       ),
       child: Row(
         children: [
-          OutlinedButton(
-            onPressed:
-                _currentIndex == 0 ? null : _previousQuestion,
-            style: OutlinedButton.styleFrom(
-              foregroundColor: navy,
-              side: const BorderSide(color: teal),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 14,
-              ),
-            ),
-            child: const Icon(Icons.arrow_back_rounded),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: FilledButton(
-              onPressed: _isSubmitting
+          SizedBox(
+            height: 49,
+            width: 49,
+            child: OutlinedButton(
+              onPressed: isFirst || _isSubmitting
                   ? null
-                  : isLast
-                      ? _finishPractice
-                      : _nextQuestion,
-              style: FilledButton.styleFrom(
-                backgroundColor: navy,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  vertical: 15,
-                ),
+                  : _previousQuestion,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AtlasColors.navy,
+                side: const BorderSide(color: AtlasColors.border),
+                padding: EdgeInsets.zero,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),
               ),
-              child: _isSubmitting
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : Text(
-                      isLast ? 'Submit Practice' : 'Next Question',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+              child: const Icon(Icons.arrow_back_rounded),
             ),
           ),
           const SizedBox(width: 10),
-          OutlinedButton(
-            onPressed:
-                isLast ? null : _nextQuestion,
-            style: OutlinedButton.styleFrom(
-              foregroundColor: navy,
-              side: const BorderSide(color: teal),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 14,
+          Expanded(
+            child: SizedBox(
+              height: 49,
+              child: FilledButton(
+                onPressed: _isSubmitting
+                    ? null
+                    : isLast
+                        ? _finishPractice
+                        : _nextQuestion,
+                style: FilledButton.styleFrom(
+                  backgroundColor: isLast
+                      ? AtlasColors.gold
+                      : AtlasColors.navy,
+                  foregroundColor: isLast
+                      ? AtlasColors.navy
+                      : Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                child: _isSubmitting
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            isLast ? 'Submit Practice' : 'Next Question',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w900,
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(width: 7),
+                          Icon(
+                            isLast
+                                ? Icons.check_rounded
+                                : Icons.arrow_forward_rounded,
+                            size: 17,
+                          ),
+                        ],
+                      ),
               ),
             ),
-            child: const Icon(Icons.arrow_forward_rounded),
+          ),
+          const SizedBox(width: 10),
+          SizedBox(
+            height: 49,
+            width: 49,
+            child: OutlinedButton(
+              onPressed: isLast || _isSubmitting
+                  ? null
+                  : _nextQuestion,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AtlasColors.navy,
+                side: const BorderSide(color: AtlasColors.border),
+                padding: EdgeInsets.zero,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              child: const Icon(Icons.arrow_forward_rounded),
+            ),
           ),
         ],
       ),
+    );
+  }
+}
+class _NavigatorLegend extends StatelessWidget {
+  const _NavigatorLegend({
+    required this.color,
+    required this.borderColor,
+    required this.label,
+  });
+  final Color color;
+  final Color borderColor;
+  final String label;
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          height: 12,
+          width: 12,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+            border: Border.all(color: borderColor),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: const TextStyle(
+            color: AtlasColors.secondaryText,
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
     );
   }
 }
