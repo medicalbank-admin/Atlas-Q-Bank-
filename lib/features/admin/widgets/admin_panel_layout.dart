@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../app/atlas_academy_app.dart';
 
 import 'admin_navigation_drawer.dart';
 
@@ -18,9 +19,9 @@ class AdminPanelLayout extends StatelessWidget {
     this.actions = const [],
   });
 
-  static const Color deepTeal = Color(0xFF123F46);
-  static const Color ivory = Color(0xFFF7F8F5);
-  static const Color champagne = Color(0xFFD8B66B);
+  static const Color deepTeal = Color(0xFF071B3D);
+  static const Color ivory = Color(0xFFF5F7FC);
+  static const Color champagne = Color(0xFFE4BE68);
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +53,7 @@ class AdminPanelLayout extends StatelessWidget {
               gradient: LinearGradient(
                 colors: [
                   deepTeal,
-                  Color(0xFF28777B),
+                  Color(0xFF174A91),
                   champagne,
                 ],
               ),
