@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import '../../../app/atlas_academy_app.dart';
 
 class AdminSubscriptionPlansScreen extends StatefulWidget {
   const AdminSubscriptionPlansScreen({super.key});
@@ -12,10 +13,10 @@ class AdminSubscriptionPlansScreen extends StatefulWidget {
 
 class _AdminSubscriptionPlansScreenState
     extends State<AdminSubscriptionPlansScreen> {
-  static const Color navy = Color(0xFF123F46);
-  static const Color teal = Color(0xFF28777B);
-  static const Color gold = Color(0xFFD8B66B);
-  static const Color ivory = Color(0xFFF7F8F5);
+  static const Color navy = Color(0xFF071B3D);
+  static const Color teal = Color(0xFF174A91);
+  static const Color gold = Color(0xFFE4BE68);
+  static const Color ivory = Color(0xFFF5F7FC);
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
@@ -272,7 +273,7 @@ class _AdminSubscriptionPlansScreenState
               Container(
                 padding: const EdgeInsets.all(11),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE5F1EF),
+                  color: const Color(0xFFEAF1FC),
                   borderRadius: BorderRadius.circular(13),
                 ),
                 child: const Icon(
@@ -421,7 +422,7 @@ class _AdminSubscriptionPlansScreenState
               children: enabledPermissions.map((permission) {
                 return Chip(
                   label: Text(permission),
-                  backgroundColor: const Color(0xFFE5F1EF),
+                  backgroundColor: const Color(0xFFEAF1FC),
                   side: BorderSide.none,
                   labelStyle: const TextStyle(
                     color: navy,
