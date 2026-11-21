@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../../mcqs/models/mcq_model.dart';
 import '../../mcqs/services/mcq_management_service.dart';
+import '../widgets/mcq_destination_selector.dart';
 
 class AdminMcqEditorScreen extends StatefulWidget {
   final McqModel? question;
@@ -30,7 +31,7 @@ class _AdminMcqEditorScreenState
   final List<TextEditingController> _optionControllers =
       List.generate(5, (_) => TextEditingController());
 
-  String? _yearId;
+  McqDestination? _destination;
   String _correctAnswer = 'A';
   String _difficulty = 'Medium';
 
@@ -56,7 +57,7 @@ class _AdminMcqEditorScreenState
     _subjectController.text = question.subject;
     _topicController.text = question.topic;
 
-    _yearId = question.yearId;
+
     _correctAnswer = question.correctAnswer;
     _difficulty = question.difficulty;
     _optionCount = question.options.length;
@@ -84,8 +85,8 @@ class _AdminMcqEditorScreenState
   Future<void> _saveQuestion() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_yearId == null || _yearId!.isEmpty) {
-      _showMessage('Please select an academic year.');
+    if (_destination == null) {
+      _showMessage('Please select a track, subject and exam set.');
       return;
     }
 
@@ -100,8 +101,14 @@ class _AdminMcqEditorScreenState
       options: options,
       correctAnswer: _correctAnswer,
       explanation: _explanationController.text.trim(),
-      yearId: _yearId!,
-      subject: _subjectController.text.trim(),
+      yearId: _destination!.yearId,
+      trackType: _destination!.trackType,
+      pathwayId: _destination!.pathwayId,
+      pathwayName: _destination!.pathwayName,
+      subjectId: _destination!.subjectId,
+      examSetId: _destination!.examSetId,
+      examSetName: _destination!.examSetName,
+      subject: _destination!.subjectName,
       topic: _topicController.text.trim(),
       difficulty: _difficulty,
       reference: _referenceController.text.trim(),
@@ -323,23 +330,11 @@ class _AdminMcqEditorScreenState
 
               _sectionTitle('Academic Classification'),
 
-              _buildYearSelector(),
+              McqDestinationSelector(
+                onChanged: (value) => setState(() => _destination = value),
+              ),
 
               const SizedBox(height: 12),
-
-              TextFormField(
-                controller: _subjectController,
-                enabled: !_saving,
-                decoration: const InputDecoration(
-                  labelText: 'Subject',
-                  hintText: 'e.g. Anatomy',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) =>
-                    value == null || value.trim().isEmpty
-                        ? 'Subject is required.'
-                        : null,
-              ),
 
               const SizedBox(height: 12),
 
