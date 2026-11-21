@@ -21,6 +21,7 @@ class McqSessionService {
     required List<String> questionIds,
     required Map<String, int?> selectedAnswers,
     required DateTime startedAt,
+    String? examSetId,
   }) async {
     final user = _auth.currentUser;
     if (user == null) {
@@ -60,6 +61,8 @@ class McqSessionService {
         'questionIds': questionIds,
         'selectedAnswers': selectedAnswerPayload,
         'startedAt': startedAt.toIso8601String(),
+        if (examSetId != null && examSetId.trim().isNotEmpty)
+          'examSetId': examSetId.trim(),
       });
       if (response.data is! Map) {
         throw Exception('The server returned an invalid response.');
