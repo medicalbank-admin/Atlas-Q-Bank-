@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../app/atlas_academy_app.dart';
 import '../../../shared/widgets/atlas_feedback.dart';
+import '../../../shared/widgets/atlas_logo.dart';
 import '../services/student_auth_service.dart';
 
 class StudentLoginScreen extends StatefulWidget {
