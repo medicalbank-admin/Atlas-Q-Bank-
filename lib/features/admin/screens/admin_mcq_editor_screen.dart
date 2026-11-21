@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../../mcqs/models/mcq_model.dart';
 import '../../mcqs/services/mcq_management_service.dart';
@@ -166,57 +165,6 @@ class _AdminMcqEditorScreenState
           fontWeight: FontWeight.bold,
         ),
       ),
-    );
-  }
-
-  Widget _buildYearSelector() {
-    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: FirebaseFirestore.instance
-          .collection('academic_years')
-          .snapshots(),
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return const Text('Unable to load academic years.');
-        }
-
-        if (!snapshot.hasData) {
-          return const LinearProgressIndicator();
-        }
-
-        final years = snapshot.data!.docs;
-
-        return DropdownButtonFormField<String>(
-          value: years.any((doc) => doc.id == _yearId)
-              ? _yearId
-              : null,
-          isExpanded: true,
-          decoration: const InputDecoration(
-            labelText: 'Academic year',
-            border: OutlineInputBorder(),
-          ),
-          items: years.map((doc) {
-            final data = doc.data();
-            final name = data['name'] ??
-                data['title'] ??
-                data['year'] ??
-                doc.id;
-
-            return DropdownMenuItem<String>(
-              value: doc.id,
-              child: Text(name.toString()),
-            );
-          }).toList(),
-          onChanged: _saving
-              ? null
-              : (value) {
-                  setState(() {
-                    _yearId = value;
-                  });
-                },
-          validator: (value) =>
-              value == null ? 'Select an academic year.' : null,
-        );
-      },
     );
   }
 
