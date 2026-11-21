@@ -145,11 +145,53 @@ class _StudentStudyLibraryScreenState extends State<StudentStudyLibraryScreen> {
     try {
       final opened=await launchUrl(uri,mode:LaunchMode.externalApplication);
       if(!opened) throw Exception('No application could open this resource.');
-      final uid=FirebaseAuth.instance.currentUser?.uid;
-      if(uid!=null) await FirebaseFirestore.instance.collection('student_resource_progress').doc('${uid}_${resource.id}').set({
-        'userId':uid,'resourceId':resource.id,'yearId':resource.yearId,'subjectId':resource.subjectId,
-        'topicId':resource.topicId,'completed':true,'completedAt':FieldValue.serverTimestamp(),
-      },SetOptions(merge:true));
+      if (!mounted) return;
+      final markCompleted = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          backgroundColor: Colors.white,
+          title: const Text(
+            'Finish this resource?',
+            style: TextStyle(color: AtlasColors.navy, fontWeight: FontWeight.w900),
+          ),
+          content: const Text(
+            'After you have finished studying this material, mark it as completed. Opening a link alone will not count as completion.',
+            style: TextStyle(color: AtlasColors.secondaryText, height: 1.5),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Not yet'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Mark completed'),
+            ),
+          ],
+        ),
+      );
+      if (markCompleted == true) {
+        final uid = FirebaseAuth.instance.currentUser?.uid;
+        if (uid != null) {
+          await FirebaseFirestore.instance
+              .collection('student_resource_progress')
+              .doc('${uid}_${resource.id}')
+              .set({
+            'userId': uid,
+            'resourceId': resource.id,
+            'yearId': resource.yearId,
+            'subjectId': resource.subjectId,
+            'topicId': resource.topicId,
+            'completed': true,
+            'completedAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Resource marked as completed.')),
+            );
+          }
+        }
+      }
     } catch(e) {
       if(mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('Unable to open this resource: $e')));
     }
