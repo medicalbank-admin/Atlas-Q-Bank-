@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../app/atlas_academy_app.dart';
-
 import 'admin_navigation_drawer.dart';
 
 class AdminPanelLayout extends StatelessWidget {
