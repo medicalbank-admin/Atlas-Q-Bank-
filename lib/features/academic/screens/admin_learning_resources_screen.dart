@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import '../../../app/atlas_academy_app.dart';
+import '../../admin/screens/admin_academic_screen.dart';
 import 'learning_resource_management_screen.dart';
 
 /// Resource-first navigation: choose existing curriculum nodes without
@@ -65,6 +66,19 @@ class _AdminLearningResourcesScreenState
                     'to add, publish or manage learning materials.',
                     style: TextStyle(color: Colors.white70, height: 1.5)),
               ],
+            ),
+          ),
+          const SizedBox(height: 18),
+          FilledButton.icon(
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const AdminAcademicScreen()),
+            ),
+            icon: const Icon(Icons.account_tree_rounded),
+            label: const Text('Create / Manage Academic Years & Subjects'),
+            style: FilledButton.styleFrom(
+              backgroundColor: AtlasColors.royalBlue,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 14),
             ),
           ),
           const SizedBox(height: 22),
