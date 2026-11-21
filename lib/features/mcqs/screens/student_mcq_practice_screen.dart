@@ -6,7 +6,8 @@ import '../models/student_mcq_model.dart';
 import '../services/mcq_session_service.dart';
 import 'student_mcq_result_screen.dart';
 class StudentMcqPracticeScreen extends StatefulWidget {
-  const StudentMcqPracticeScreen({super.key});
+  final String? examSetId;
+  const StudentMcqPracticeScreen({super.key, this.examSetId});
   @override
   State<StudentMcqPracticeScreen> createState() =>
       _StudentMcqPracticeScreenState();
@@ -28,10 +29,13 @@ class _StudentMcqPracticeScreenState
   }
   Future<void> _loadQuestions() async {
     try {
-      final snapshot = await FirebaseFirestore.instance
+      Query<Map<String, dynamic>> query = FirebaseFirestore.instance
           .collection('mcqs')
-          .where('isPublished', isEqualTo: true)
-          .get();
+          .where('isPublished', isEqualTo: true);
+      if (widget.examSetId != null && widget.examSetId!.isNotEmpty) {
+        query = query.where('examSetId', isEqualTo: widget.examSetId);
+      }
+      final snapshot = await query.get();
       final questions = snapshot.docs
           .map((doc) => StudentMcqModel.fromFirestore(doc))
           .toList();
