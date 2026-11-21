@@ -317,6 +317,7 @@ service cloud.firestore {
       allow read: if isAdmin() ||
         (
           resource.data.isPublished == true &&
+          !resource.data.keys().hasAny(['correctAnswer', 'explanation']) &&
           (
             (resource.data.trackType == 'licensing' && hasFeatureAccess('examPathways')) ||
             (resource.data.trackType != 'licensing' && hasFeatureAccess('mcqPractice'))
