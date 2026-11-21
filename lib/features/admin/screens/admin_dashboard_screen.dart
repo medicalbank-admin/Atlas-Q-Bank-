@@ -5,6 +5,7 @@ import '../../../app/atlas_academy_app.dart';
 import '../../../shared/widgets/atlas_logo.dart';
 import '../../profile/screens/profile_screen.dart';
 import 'admin_academic_screen.dart';
+import '../../academic/screens/admin_learning_resources_screen.dart';
 import 'admin_mcq_bank_screen.dart';
 import 'admin_mcq_curriculum_screen.dart';
 import 'admin_students_screen.dart';
@@ -425,7 +426,7 @@ class AdminDashboardScreen extends StatelessWidget {
         title: 'Learning Resources',
         subtitle: 'Manage notes, PDFs and learning videos',
         color: AtlasColors.gold,
-        page: const AdminAcademicScreen(),
+        page: const AdminLearningResourcesScreen(),
       ),
       _AdminItem(
         icon: Icons.campaign_rounded,
