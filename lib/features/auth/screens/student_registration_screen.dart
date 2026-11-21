@@ -3,9 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../../../app/atlas_academy_app.dart';
 import '../../../shared/widgets/atlas_buttons.dart';
-import '../../../shared/widgets/atlas_card.dart';
 import '../../../shared/widgets/atlas_profile_image_picker.dart';
 import '../../../shared/widgets/atlas_selection_fields.dart';
 import '../../../shared/widgets/atlas_feedback.dart';
