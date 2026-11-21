@@ -6,6 +6,7 @@ import 'admin_mcq_bank_screen.dart';
 import 'admin_students_screen.dart';
 import 'admin_subscription_plans_screen.dart';
 import 'admin_subscription_requests_screen.dart';
+import 'admin_payment_settings_screen.dart';
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
   Future<bool> _isAuthorizedAdmin() async {
@@ -373,6 +374,13 @@ class AdminDashboardScreen extends StatelessWidget {
         subtitle: 'Review payments and access requests',
         color: AtlasColors.gold,
         page: const AdminSubscriptionRequestsScreen(),
+      ),
+      _AdminItem(
+        icon: Icons.account_balance_rounded,
+        title: 'Payment Settings',
+        subtitle: 'Configure bank details and academy WhatsApp',
+        color: AtlasColors.success,
+        page: const AdminPaymentSettingsScreen(),
       ),
       _AdminItem(
         icon: Icons.workspace_premium_rounded,
