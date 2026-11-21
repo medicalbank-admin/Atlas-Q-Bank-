@@ -330,6 +330,11 @@ service cloud.firestore {
       allow read, create, update, delete: if isAdmin();
     }
 
+    // Server-owned timed MCQ sessions. Clients cannot read or modify them.
+    match /mcq_practice_sessions/{sessionId} {
+      allow read, write: if false;
+    }
+
     // ==================================================
     // MCQ PRACTICE ATTEMPTS
     // ==================================================
