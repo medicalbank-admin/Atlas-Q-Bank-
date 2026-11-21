@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../shared/widgets/dashboard_announcement_welcome.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../../app/atlas_academy_app.dart';
@@ -46,8 +47,9 @@ class StudentDashboardScreen extends StatelessWidget {
       );
       final expiry = data['subscriptionExpiryAt'];
       final notExpired = expiry is Timestamp && expiry.toDate().isAfter(DateTime.now());
+      final permissionKey = feature == 'pastPapers' ? 'examinations' : feature;
       final hasAccess = data['subscriptionStatus'] == 'active' &&
-          data['accessEnabled'] == true && notExpired && permissions[feature] == true;
+          data['accessEnabled'] == true && notExpired && permissions[permissionKey] == true;
       if (!context.mounted) return;
       if (!hasAccess) {
         Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SubscriptionPlansScreen()));
@@ -87,7 +89,7 @@ class StudentDashboardScreen extends StatelessWidget {
                 delegate: SliverChildListDelegate([
                   _buildHeader(context),
                   const SizedBox(height: 25),
-                  _buildWelcomeCard(displayName),
+                  DashboardAnnouncementWelcome(displayName: displayName),
                   const SizedBox(height: 29),
                   _sectionHeading(
                     'Your Learning Space',
@@ -376,6 +378,13 @@ class StudentDashboardScreen extends StatelessWidget {
           subtitle: 'Practice and review',
           accent: AtlasColors.gold,
           onTap: () => _openProtectedFeature(context, 'mcqPractice'),
+        ),
+        _LearningTile(
+          icon: Icons.history_edu_rounded,
+          title: 'Past Papers',
+          subtitle: 'Solve previous exam papers',
+          accent: AtlasColors.gold,
+          onTap: () => _openProtectedFeature(context, 'pastPapers'),
         ),
         _LearningTile(
           icon: Icons.history_edu_rounded,
