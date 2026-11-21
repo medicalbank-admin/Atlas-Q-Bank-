@@ -13,66 +13,56 @@ class McqSessionService {
         _auth = auth ?? FirebaseAuth.instance,
         _functions = functions ??
             FirebaseFunctions.instanceFor(region: 'asia-south1');
-  /// Submits answers to the secure backend.
-  ///
-  /// The client sends question IDs and selected option indexes only.
-  /// Correct answers and scores are calculated by the backend.
-  Future<String> saveCompletedSession({
-    required List<String> questionIds,
-    required Map<String, int?> selectedAnswers,
-    required DateTime startedAt,
-    String? examSetId,
-  }) async {
+  /// Starts a server-timed session and receives its fixed question list.
+  Future<Map<String, dynamic>> startSession({String? examSetId}) async {
     final user = _auth.currentUser;
-    if (user == null) {
-      throw Exception(
-        'Please log in before submitting your MCQ practice.',
-      );
-    }
-    if (questionIds.isEmpty || questionIds.length > 100) {
-      throw Exception(
-        'A practice session must contain between 1 and 100 questions.',
-      );
-    }
-    if (startedAt.isAfter(DateTime.now())) {
-      throw Exception('The practice session start time is invalid.');
-    }
-    if (DateTime.now().difference(startedAt).inHours > 24) {
-      throw Exception('The practice session has expired.');
-    }
-    if (questionIds.toSet().length != questionIds.length) {
-      throw Exception('Duplicate questions are not allowed.');
-    }
-    final selectedAnswerPayload = <String, dynamic>{};
-    for (final questionId in questionIds) {
-      if (questionId.trim().isEmpty) {
-        throw Exception('A question has an invalid ID.');
-      }
-      final selectedIndex = selectedAnswers[questionId];
-      if (selectedIndex != null &&
-          (selectedIndex < 0 || selectedIndex > 4)) {
-        throw Exception('An invalid answer was selected.');
-      }
-      selectedAnswerPayload[questionId] = selectedIndex;
-    }
-    final callable = _functions.httpsCallable('submitMcqPractice');
+    if (user == null) throw Exception('Please log in before starting practice.');
+    final callable = _functions.httpsCallable('startMcqPractice');
     try {
       final response = await callable.call({
-        'questionIds': questionIds,
-        'selectedAnswers': selectedAnswerPayload,
-        'startedAt': startedAt.toIso8601String(),
         if (examSetId != null && examSetId.trim().isNotEmpty)
           'examSetId': examSetId.trim(),
       });
-      if (response.data is! Map) {
-        throw Exception('The server returned an invalid response.');
+      if (response.data is! Map) throw Exception('The server returned an invalid session.');
+      final data = Map<String, dynamic>.from(response.data as Map);
+      final ids = data['questionIds'];
+      if (data['success'] != true ||
+          data['sessionId'] is! String ||
+          ids is! List ||
+          ids.isEmpty ||
+          data['durationMinutes'] is! num) {
+        throw Exception(data['message']?.toString() ?? 'The practice session could not be started.');
       }
+      return {
+        'sessionId': data['sessionId'],
+        'questionIds': ids.map((id) => id.toString()).toList(),
+        'durationMinutes': (data['durationMinutes'] as num).toInt(),
+      };
+    } on FirebaseFunctionsException catch (error) {
+      throw Exception(error.message ?? 'Unable to start practice. Please try again.');
+    }
+  }
+
+  /// Sends only selected option indexes. The server owns the session,
+  /// timer, question list, answer keys and scoring.
+  Future<String> saveCompletedSession({
+    required String sessionId,
+    required Map<String, int?> selectedAnswers,
+  }) async {
+    if (_auth.currentUser == null) {
+      throw Exception('Please log in before submitting your practice.');
+    }
+    if (sessionId.trim().isEmpty) throw Exception('The practice session is invalid.');
+    final callable = _functions.httpsCallable('submitMcqPractice');
+    try {
+      final response = await callable.call({
+        'sessionId': sessionId.trim(),
+        'selectedAnswers': selectedAnswers,
+      });
+      if (response.data is! Map) throw Exception('The server returned an invalid result.');
       final data = Map<String, dynamic>.from(response.data as Map);
       if (data['success'] != true) {
-        throw Exception(
-          data['message']?.toString() ??
-              'The practice could not be submitted.',
-        );
+        throw Exception(data['message']?.toString() ?? 'The practice could not be submitted.');
       }
       final attemptId = data['attemptId']?.toString();
       if (attemptId == null || attemptId.isEmpty) {
@@ -80,10 +70,7 @@ class McqSessionService {
       }
       return attemptId;
     } on FirebaseFunctionsException catch (error) {
-      throw Exception(
-        error.message ??
-            'Secure practice submission failed. Please try again.',
-      );
+      throw Exception(error.message ?? 'Secure practice submission failed. Please try again.');
     }
   }
   /// Retrieves one practice session belonging to the signed-in student.
