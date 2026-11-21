@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../app/atlas_academy_app.dart';
-
 class AdminNavigationItem {
   final String title;
   final IconData icon;
