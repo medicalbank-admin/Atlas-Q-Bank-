@@ -37,6 +37,7 @@ class McqSessionService {
         'sessionId': data['sessionId'],
         'questionIds': ids.map((id) => id.toString()).toList(),
         'durationMinutes': (data['durationMinutes'] as num).toInt(),
+        'expiresAt': data['expiresAt']?.toString() ?? '',
       };
     } on FirebaseFunctionsException catch (error) {
       throw Exception(error.message ?? 'Unable to start practice. Please try again.');
