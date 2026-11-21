@@ -310,7 +310,10 @@ service cloud.firestore {
 
       allow read: if isAdmin() ||
         (
-          hasFeatureAccess('mcqPractice') &&
+          (
+            hasFeatureAccess('mcqPractice') ||
+            hasFeatureAccess('examPathways')
+          ) &&
           resource.data.isPublished == true
         );
 
