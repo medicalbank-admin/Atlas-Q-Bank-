@@ -44,6 +44,16 @@ service cloud.firestore {
         ).data.subscriptionStatus == 'active';
     }
 
+    function hasFeatureAccess(feature) {
+      return hasActiveAccess() &&
+        get(
+          /databases/$(database)/documents/users/$(request.auth.uid)
+        ).data.subscriptionExpiryAt > request.time &&
+        get(
+          /databases/$(database)/documents/users/$(request.auth.uid)
+        ).data.subscriptionAccessPermissions[feature] == true;
+    }
+
     function validSubscriptionPlan(planId) {
       return exists(
         /databases/$(database)/documents/subscription_plans/$(planId)
@@ -157,7 +167,7 @@ service cloud.firestore {
     match /learning_resources/{resourceId} {
       allow read: if isAdmin() ||
         (
-          hasActiveAccess() &&
+          hasFeatureAccess('studyLibrary') &&
           resource.data.isPublished == true
         );
 
@@ -260,7 +270,7 @@ service cloud.firestore {
 
       allow read: if isAdmin() ||
         (
-          hasActiveAccess() &&
+          hasFeatureAccess('mcqPractice') &&
           resource.data.isPublished == true
         );
 
@@ -317,7 +327,7 @@ service cloud.firestore {
     match /exams/{examId} {
       allow read: if isAdmin() ||
         (
-          hasActiveAccess() &&
+          hasFeatureAccess('examinations') &&
           resource.data.isPublished == true
         );
 
