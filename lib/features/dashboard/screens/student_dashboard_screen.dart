@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../../app/atlas_academy_app.dart';
+import '../../../shared/widgets/atlas_logo.dart';
+import '../../profile/screens/profile_screen.dart';
 import '../../auth/screens/student_account_status_screen.dart';
 import '../../auth/services/student_auth_service.dart';
 import '../../mcqs/screens/student_mcq_hub_screen.dart';
@@ -110,9 +112,8 @@ class StudentDashboardScreen extends StatelessWidget {
   Widget _buildHeader(BuildContext context) {
     return Row(
       children: [
-        Container(
-          height: 49,
-          width: 49,
+        const AtlasLogo(size: 52),
+        /*
           decoration: BoxDecoration(
             gradient: const LinearGradient(
               colors: [AtlasColors.navy, AtlasColors.royalBlue],
@@ -132,6 +133,7 @@ class StudentDashboardScreen extends StatelessWidget {
             size: 27,
           ),
         ),
+        */
         const SizedBox(width: 12),
         const Expanded(
           child: Column(
@@ -159,10 +161,15 @@ class StudentDashboardScreen extends StatelessWidget {
             ],
           ),
         ),
-        _HeaderButton(
-          icon: Icons.person_outline_rounded,
-          tooltip: 'Account',
-          onTap: () => _openAccountStatus(context),
+        InkWell(
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ProfileScreen())),
+          borderRadius: BorderRadius.circular(30),
+          child: CircleAvatar(
+            radius: 22,
+            backgroundColor: AtlasColors.paleBlue,
+            backgroundImage: FirebaseAuth.instance.currentUser?.photoURL != null ? NetworkImage(FirebaseAuth.instance.currentUser!.photoURL!) : null,
+            child: FirebaseAuth.instance.currentUser?.photoURL == null ? const Icon(Icons.person_rounded, color: AtlasColors.navy) : null,
+          ),
         ),
         const SizedBox(width: 8),
         _HeaderButton(
