@@ -1,38 +1,25 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-
+import '../../../app/atlas_academy_app.dart';
 class AdminAcademicScreen extends StatefulWidget {
   const AdminAcademicScreen({super.key});
-
   @override
-  State<AdminAcademicScreen> createState() =>
-      _AdminAcademicScreenState();
+  State<AdminAcademicScreen> createState() => _AdminAcademicScreenState();
 }
-
 class _AdminAcademicScreenState extends State<AdminAcademicScreen> {
-  static const Color navy = Color(0xFF123F46);
-  static const Color teal = Color(0xFF28777B);
-  static const Color gold = Color(0xFFD8B66B);
-
   final CollectionReference<Map<String, dynamic>> _years =
       FirebaseFirestore.instance.collection('academic_years');
-
   bool _authorized = false;
   bool _checking = true;
-
   @override
   void initState() {
     super.initState();
     _checkAdmin();
   }
-
   Future<void> _checkAdmin() async {
     final user = FirebaseAuth.instance.currentUser;
-
     bool allowed = false;
-
     if (user != null) {
       try {
         final token = await user.getIdTokenResult(true);
@@ -41,362 +28,506 @@ class _AdminAcademicScreenState extends State<AdminAcademicScreen> {
         allowed = false;
       }
     }
-
     if (!mounted) return;
-
     setState(() {
       _authorized = allowed;
       _checking = false;
     });
   }
-
   @override
   Widget build(BuildContext context) {
     if (_checking) {
       return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+        backgroundColor: AtlasColors.ivory,
+        body: Center(
+          child: CircularProgressIndicator(
+            color: AtlasColors.royalBlue,
+          ),
+        ),
       );
     }
-
     if (!_authorized) {
       return Scaffold(
+        backgroundColor: AtlasColors.ivory,
         appBar: AppBar(title: const Text('Academic Management')),
         body: const Center(
           child: Text('Administrator access required.'),
         ),
       );
     }
-
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7F5),
+      backgroundColor: AtlasColors.ivory,
       appBar: AppBar(
         title: const Text(
           'Academic Management',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.w900),
         ),
-        backgroundColor: navy,
+        backgroundColor: AtlasColors.navy,
         foregroundColor: Colors.white,
       ),
       floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: navy,
-        foregroundColor: Colors.white,
         onPressed: _showAddYearDialog,
-        icon: const Icon(Icons.add),
+        backgroundColor: AtlasColors.navy,
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.add_rounded),
         label: const Text('Add Academic Year'),
       ),
       body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: _years.snapshots(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
+            return _messageState(
+              Icons.cloud_off_rounded,
+              'Unable to load academic years',
+              'Please check your connection and Firestore security rules.',
+            );
+          }
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
-              child: Padding(
-                padding: EdgeInsets.all(24),
-                child: Text(
-                  'Unable to load academic years. '
-                  'Check your Firestore security rules.',
-                  textAlign: TextAlign.center,
-                ),
+              child: CircularProgressIndicator(
+                color: AtlasColors.royalBlue,
               ),
             );
           }
-
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(color: teal),
-            );
-          }
-
           final documents = snapshot.data?.docs ?? [];
-
           documents.sort((a, b) {
             final aOrder = (a.data()['order'] as num?)?.toInt() ?? 0;
             final bOrder = (b.data()['order'] as num?)?.toInt() ?? 0;
             return aOrder.compareTo(bOrder);
           });
-
-          if (documents.isEmpty) {
-            return const Center(
-              child: Padding(
-                padding: EdgeInsets.all(28),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.school_outlined,
-                      size: 65,
-                      color: teal,
-                    ),
-                    SizedBox(height: 16),
-                    Text(
-                      'No Academic Years Yet',
-                      style: TextStyle(
-                        fontSize: 19,
-                        fontWeight: FontWeight.bold,
-                        color: navy,
-                      ),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      'Add your first academic year to begin '
-                      'organizing the curriculum.',
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }
-
+          final activeCount = documents
+              .where((doc) => doc.data()['isActive'] != false)
+              .length;
           return ListView(
-            padding: const EdgeInsets.fromLTRB(16, 18, 16, 100),
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(18, 20, 18, 110),
             children: [
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [navy, teal],
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.school_outlined,
-                      size: 36,
-                      color: gold,
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Academic Structure',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 5),
-                          Text(
-                            '${documents.length} academic year(s) configured',
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.85),
-                            ),
-                          ),
-                        ],
+              _buildHero(documents.length, activeCount),
+              const SizedBox(height: 25),
+              Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'Academic Years',
+                      style: TextStyle(
+                        color: AtlasColors.navy,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                  _countBadge(documents.length),
+                ],
               ),
-              const SizedBox(height: 22),
+              const SizedBox(height: 5),
               const Text(
-                'Academic Years',
+                'Organise the academic structure of your academy.',
                 style: TextStyle(
-                  color: navy,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+                  color: AtlasColors.secondaryText,
+                  fontSize: 11,
                 ),
               ),
-              const SizedBox(height: 14),
-              ...documents.map((doc) {
-                final data = doc.data();
-                final name = (data['name'] ?? 'Unnamed Year').toString();
-                final active = data['isActive'] != false;
-
-                return Card(
-                  color: Colors.white,
-                  elevation: 1,
-                  margin: const EdgeInsets.only(bottom: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(17),
-                  ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    leading: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFE5F1EF),
-                        borderRadius: BorderRadius.circular(13),
-                      ),
-                      child: const Icon(
-                        Icons.menu_book_outlined,
-                        color: teal,
-                      ),
-                    ),
-                    title: Text(
-                      name,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: navy,
-                      ),
-                    ),
-                    subtitle: Padding(
-                      padding: const EdgeInsets.only(top: 5),
-                      child: Text(
-                        active ? 'Active' : 'Inactive',
-                        style: TextStyle(
-                          color: active ? teal : Colors.redAccent,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    trailing: PopupMenuButton<String>(
-                      onSelected: (value) {
-                        if (value == 'edit') {
-                          _showEditYearDialog(doc.id, name);
-                        } else if (value == 'toggle') {
-                          _toggleYear(doc.id, active);
-                        } else if (value == 'delete') {
-                          _confirmDelete(doc.id, name);
-                        }
-                      },
-                      itemBuilder: (_) => [
-                        const PopupMenuItem(
-                          value: 'edit',
-                          child: Text('Edit'),
-                        ),
-                        PopupMenuItem(
-                          value: 'toggle',
-                          child: Text(
-                            active ? 'Deactivate' : 'Activate',
-                          ),
-                        ),
-                        const PopupMenuItem(
-                          value: 'delete',
-                          child: Text(
-                            'Delete',
-                            style: TextStyle(color: Colors.red),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }),
+              const SizedBox(height: 17),
+              if (documents.isEmpty)
+                _messageState(
+                  Icons.menu_book_rounded,
+                  'No Academic Years Yet',
+                  'Add your first academic year to begin organising '
+                      'your curriculum.',
+                )
+              else
+                ...documents.map((doc) {
+                  final data = doc.data();
+                  final name =
+                      (data['name'] ?? 'Unnamed Year').toString();
+                  final active = data['isActive'] != false;
+                  return _yearCard(
+                    id: doc.id,
+                    name: name,
+                    active: active,
+                  );
+                }),
             ],
           );
         },
       ),
     );
   }
-
-  Future<void> _showAddYearDialog() async {
-    final controller = TextEditingController();
-
-    await showDialog(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('Add Academic Year'),
-          content: TextField(
-            controller: controller,
-            autofocus: true,
-            decoration: const InputDecoration(
-              labelText: 'Academic year name',
-              hintText: 'e.g. First Year',
+  Widget _buildHero(int total, int active) {
+    return Container(
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [AtlasColors.navy, AtlasColors.royalBlue],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(25),
+        boxShadow: [
+          BoxShadow(
+            color: AtlasColors.navy.withValues(alpha: 0.16),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(
+                Icons.account_balance_rounded,
+                color: AtlasColors.champagne,
+                size: 29,
+              ),
+              SizedBox(width: 11),
+              Text(
+                'ACADEMIC STRUCTURE',
+                style: TextStyle(
+                  color: AtlasColors.champagne,
+                  fontSize: 10,
+                  letterSpacing: 1.4,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            'Build your curriculum',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 23,
+              fontWeight: FontWeight.w900,
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Cancel'),
+          const SizedBox(height: 7),
+          Text(
+            'Manage academic years and organise the learning '
+            'structure of The Atlas Academy.',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.78),
+              fontSize: 12,
+              height: 1.5,
             ),
-            ElevatedButton(
-              onPressed: () async {
-                final name = controller.text.trim();
-
-                if (name.isEmpty) return;
-
-                try {
-                  await _years.add({
-                    'name': name,
-                    'order': 0,
-                    'isActive': true,
-                    'createdAt': FieldValue.serverTimestamp(),
-                    'updatedAt': FieldValue.serverTimestamp(),
-                  });
-
-                  if (!mounted) return;
-                  Navigator.pop(dialogContext);
-                  _message('Academic year added successfully.');
-                } catch (e) {
-                  _message('Could not add academic year: $e');
-                }
-              },
-              child: const Text('Save'),
+          ),
+          const SizedBox(height: 22),
+          Row(
+            children: [
+              _statBox('TOTAL YEARS', '$total'),
+              const SizedBox(width: 11),
+              _statBox('ACTIVE YEARS', '$active'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+  Widget _statBox(String label, String value) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: 13,
+          vertical: 12,
+        ),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.11),
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.12),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              value,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 23,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.72),
+                fontSize: 8,
+                letterSpacing: 1,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ],
-        );
-      },
+        ),
+      ),
     );
-
+  }
+  Widget _countBadge(int count) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 12,
+        vertical: 7,
+      ),
+      decoration: BoxDecoration(
+        color: AtlasColors.paleBlue,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        '$count configured',
+        style: const TextStyle(
+          color: AtlasColors.royalBlue,
+          fontSize: 10,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+  Widget _yearCard({
+    required String id,
+    required String name,
+    required bool active,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(19),
+        border: Border.all(color: AtlasColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: AtlasColors.navy.withValues(alpha: 0.035),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 15,
+          vertical: 9,
+        ),
+        leading: Container(
+          height: 48,
+          width: 48,
+          decoration: BoxDecoration(
+            color: AtlasColors.paleBlue,
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: const Icon(
+            Icons.menu_book_rounded,
+            color: AtlasColors.royalBlue,
+            size: 23,
+          ),
+        ),
+        title: Text(
+          name,
+          style: const TextStyle(
+            color: AtlasColors.navy,
+            fontWeight: FontWeight.w900,
+            fontSize: 14,
+          ),
+        ),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 7),
+          child: Row(
+            children: [
+              Container(
+                height: 7,
+                width: 7,
+                decoration: BoxDecoration(
+                  color: active
+                      ? AtlasColors.success
+                      : AtlasColors.secondaryText,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 7),
+              Text(
+                active ? 'Active academic year' : 'Inactive',
+                style: TextStyle(
+                  color: active
+                      ? AtlasColors.success
+                      : AtlasColors.secondaryText,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
+        trailing: PopupMenuButton<String>(
+          icon: const Icon(
+            Icons.more_vert_rounded,
+            color: AtlasColors.secondaryText,
+          ),
+          onSelected: (value) {
+            if (value == 'edit') {
+              _showEditYearDialog(id, name);
+            } else if (value == 'toggle') {
+              _toggleYear(id, active);
+            } else if (value == 'delete') {
+              _confirmDelete(id, name);
+            }
+          },
+          itemBuilder: (_) => [
+            const PopupMenuItem(
+              value: 'edit',
+              child: Text('Edit name'),
+            ),
+            PopupMenuItem(
+              value: 'toggle',
+              child: Text(active ? 'Deactivate' : 'Activate'),
+            ),
+            const PopupMenuItem(
+              value: 'delete',
+              child: Text(
+                'Delete',
+                style: TextStyle(color: AtlasColors.error),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  Widget _messageState(
+    IconData icon,
+    String title,
+    String description,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 22,
+        vertical: 35,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(21),
+        border: Border.all(color: AtlasColors.border),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, size: 48, color: AtlasColors.royalBlue),
+          const SizedBox(height: 15),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: AtlasColors.navy,
+              fontSize: 17,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            description,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: AtlasColors.secondaryText,
+              fontSize: 11,
+              height: 1.6,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  Future<void> _showAddYearDialog() async {
+    final controller = TextEditingController();
+    await showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Add Academic Year'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: 'Academic year name',
+            hintText: 'e.g. First Year',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              final name = controller.text.trim();
+              if (name.isEmpty) return;
+              try {
+                await _years.add({
+                  'name': name,
+                  'order': 0,
+                  'isActive': true,
+                  'createdAt': FieldValue.serverTimestamp(),
+                  'updatedAt': FieldValue.serverTimestamp(),
+                });
+                if (!mounted) return;
+                Navigator.pop(dialogContext);
+                _message('Academic year added successfully.');
+              } catch (e) {
+                _message('Could not add academic year: $e');
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
     controller.dispose();
   }
-
   Future<void> _showEditYearDialog(
     String id,
     String currentName,
   ) async {
     final controller = TextEditingController(text: currentName);
-
     await showDialog(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('Edit Academic Year'),
-          content: TextField(
-            controller: controller,
-            decoration: const InputDecoration(
-              labelText: 'Academic year name',
-            ),
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Edit Academic Year'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            labelText: 'Academic year name',
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                final name = controller.text.trim();
-
-                if (name.isEmpty) return;
-
-                try {
-                  await _years.doc(id).update({
-                    'name': name,
-                    'updatedAt': FieldValue.serverTimestamp(),
-                  });
-
-                  if (!mounted) return;
-                  Navigator.pop(dialogContext);
-                  _message('Academic year updated.');
-                } catch (e) {
-                  _message('Update failed: $e');
-                }
-              },
-              child: const Text('Update'),
-            ),
-          ],
-        );
-      },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              final name = controller.text.trim();
+              if (name.isEmpty) return;
+              try {
+                await _years.doc(id).update({
+                  'name': name,
+                  'updatedAt': FieldValue.serverTimestamp(),
+                });
+                if (!mounted) return;
+                Navigator.pop(dialogContext);
+                _message('Academic year updated.');
+              } catch (e) {
+                _message('Update failed: $e');
+              }
+            },
+            child: const Text('Update'),
+          ),
+        ],
+      ),
     );
-
     controller.dispose();
   }
-
   Future<void> _toggleYear(String id, bool currentlyActive) async {
     try {
       await _years.doc(id).update({
         'isActive': !currentlyActive,
         'updatedAt': FieldValue.serverTimestamp(),
       });
-
       _message(
         currentlyActive
             ? 'Academic year deactivated.'
@@ -406,7 +537,6 @@ class _AdminAcademicScreenState extends State<AdminAcademicScreen> {
       _message('Could not update academic year: $e');
     }
   }
-
   Future<void> _confirmDelete(String id, String name) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -425,15 +555,13 @@ class _AdminAcademicScreenState extends State<AdminAcademicScreen> {
             onPressed: () => Navigator.pop(dialogContext, true),
             child: const Text(
               'Delete',
-              style: TextStyle(color: Colors.red),
+              style: TextStyle(color: AtlasColors.error),
             ),
           ),
         ],
       ),
     );
-
     if (confirmed != true) return;
-
     try {
       await _years.doc(id).delete();
       _message('Academic year deleted.');
@@ -441,10 +569,8 @@ class _AdminAcademicScreenState extends State<AdminAcademicScreen> {
       _message('Could not delete academic year: $e');
     }
   }
-
   void _message(String message) {
     if (!mounted) return;
-
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
