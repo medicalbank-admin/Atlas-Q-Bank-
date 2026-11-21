@@ -483,6 +483,11 @@ class _StudentRegistrationScreenState
       padding: const EdgeInsets.only(bottom: 15),
       child: TextFormField(
         controller: controller,
+        style: const TextStyle(
+          color: AtlasColors.charcoal,
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+        ),
         validator: validator ?? _requiredValidator,
         keyboardType: keyboardType,
         obscureText: obscureText,
