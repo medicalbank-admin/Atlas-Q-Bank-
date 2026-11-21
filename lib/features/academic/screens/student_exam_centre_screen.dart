@@ -116,12 +116,19 @@ class StudentExamCentreScreen extends StatelessWidget {
             title:Text(title,style:const TextStyle(color:AtlasColors.navy,fontWeight:FontWeight.w900)),
             subtitle:Text([description,'$duration minutes','$count questions'].where((v)=>v.isNotEmpty).join(' • '),style:const TextStyle(color:AtlasColors.secondaryText)),
             isThreeLine:description.isNotEmpty,
-            trailing:const Icon(Icons.info_outline_rounded,color:AtlasColors.royalBlue),
-            onTap:()=>showDialog<void>(context:context,builder:(ctx)=>AlertDialog(
+            trailing:Icon(x['examSetId'] is String ? Icons.play_circle_fill_rounded : Icons.info_outline_rounded,color:AtlasColors.royalBlue),
+            onTap:() {
+              final examSetId=(x['examSetId']??'').toString().trim();
+              if(examSetId.isNotEmpty) {
+                Navigator.push(context,MaterialPageRoute(builder:(_)=>StudentMcqPracticeScreen(examSetId:examSetId)));
+                return;
+              }
+              showDialog<void>(context:context,builder:(ctx)=>AlertDialog(
               title:Text(title,style:const TextStyle(color:AtlasColors.navy)),
               content:Text(description.isEmpty?'This examination is published by the academy. Contact your administrator for its instructions.':description,style:const TextStyle(color:AtlasColors.charcoal)),
               actions:[TextButton(onPressed:()=>Navigator.pop(ctx),child:const Text('Close'))],
-            )),
+            ));
+            },
           ));
         }).toList());
       },
