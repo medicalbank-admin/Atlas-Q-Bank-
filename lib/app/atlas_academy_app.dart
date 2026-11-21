@@ -147,6 +147,10 @@ class AtlasAcademyApp extends StatelessWidget {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
+        textStyle: const TextStyle(color: AtlasColors.charcoal, fontSize: 15, fontWeight: FontWeight.w600),
+        floatingLabelStyle: const TextStyle(color: AtlasColors.royalBlue, fontWeight: FontWeight.w700),
+        prefixIconColor: AtlasColors.royalBlue,
+        suffixIconColor: AtlasColors.secondaryText,
         fillColor: AtlasColors.white,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 17,
@@ -188,6 +192,8 @@ class AtlasAcademyApp extends StatelessWidget {
           ),
         ),
       ),
+      textSelectionTheme: const TextSelectionThemeData(cursorColor: AtlasColors.royalBlue, selectionColor: Color(0x332868C7), selectionHandleColor: AtlasColors.royalBlue),
+      dropdownMenuTheme: const DropdownMenuThemeData(textStyle: TextStyle(color: AtlasColors.charcoal)),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AtlasColors.navy,
