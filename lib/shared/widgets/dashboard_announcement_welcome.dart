@@ -11,10 +11,18 @@ class DashboardAnnouncementWelcome extends StatefulWidget {
 class _DashboardAnnouncementWelcomeState extends State<DashboardAnnouncementWelcome>{
   Timer? _rotation;
   int _index=0;
-  bool _popupShown=false;
+  final Set<String> _popupSeenIds={};
   String _seenSignature='';
   List<QueryDocumentSnapshot<Map<String,dynamic>>> _active=[];
   @override void dispose(){_rotation?.cancel();super.dispose();}
+  void _startRotation(){
+    _rotation?.cancel();
+    if(_active.length>1){
+      _rotation=Timer.periodic(const Duration(seconds:4),(_){
+        if(mounted)setState(()=>_index=(_index+1)%_active.length);
+      });
+    }
+  }
   void _sync(List<QueryDocumentSnapshot<Map<String,dynamic>>> docs){
     final signature=docs.map((d)=>d.id).join('|');
     if(signature==_seenSignature)return;
@@ -22,12 +30,18 @@ class _DashboardAnnouncementWelcomeState extends State<DashboardAnnouncementWelc
     _active=docs;
     if(_index>=_active.length)_index=0;
     _rotation?.cancel();
-    if(_active.length>1)_rotation=Timer.periodic(const Duration(seconds:4),(_){if(mounted)setState(()=>_index=(_index+1)%_active.length);});
-    if(!_popupShown&&_active.isNotEmpty){
-      _popupShown=true;
-      WidgetsBinding.instance.addPostFrameCallback((_)=>_showInitialPopup(_active.first.data()));
-    }
     if(mounted)setState((){});
+    final unseen=_active.where((d)=>!_popupSeenIds.contains(d.id)).toList();
+    if(unseen.isNotEmpty){
+      final first=unseen.first;
+      _popupSeenIds.add(first.id);
+      WidgetsBinding.instance.addPostFrameCallback((_)async{
+        await _showInitialPopup(first.data());
+        if(mounted)_startRotation();
+      });
+    }else{
+      _startRotation();
+    }
   }
   Future<void> _showInitialPopup(Map<String,dynamic> item) async {
     if(!mounted)return;
