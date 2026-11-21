@@ -43,6 +43,12 @@ class McqPipeImportParser {
     required String input,
     required String yearId,
     required String adminUid,
+    String trackType = 'mbbs',
+    String pathwayId = '',
+    String pathwayName = '',
+    String subjectId = '',
+    String examSetId = '',
+    String examSetName = '',
   }) {
     final questions = <McqModel>[];
     final errors = <McqImportError>[];
@@ -50,14 +56,14 @@ class McqPipeImportParser {
     final cleanYearId = yearId.trim();
     final cleanAdminUid = adminUid.trim();
 
-    if (cleanYearId.isEmpty || cleanAdminUid.isEmpty) {
+    if ((trackType == 'mbbs' && cleanYearId.isEmpty) || cleanAdminUid.isEmpty || examSetId.trim().isEmpty || subjectId.trim().isEmpty || (trackType == 'licensing' && pathwayId.trim().isEmpty)) {
       return const McqImportResult(
         questions: [],
         errors: [
           McqImportError(
             lineNumber: 1,
             message:
-                'Academic year and administrator information are required.',
+                'Select a valid destination and administrator account before importing.',
             originalLine: '',
           ),
         ],
@@ -244,6 +250,12 @@ class McqPipeImportParser {
             correctAnswer: correctAnswer,
             explanation: explanation,
             yearId: cleanYearId,
+            trackType: trackType,
+            pathwayId: pathwayId,
+            pathwayName: pathwayName,
+            subjectId: subjectId,
+            examSetId: examSetId,
+            examSetName: examSetName,
             subject: subject,
             topic: topic,
             difficulty: difficulty,
