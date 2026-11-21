@@ -186,7 +186,7 @@ service cloud.firestore {
         resource.data.isPublished == true &&
         (
           (resource.data.trackType == 'licensing' && hasFeatureAccess('examPathways')) ||
-          (resource.data.trackType != 'licensing' && hasFeatureAccess('mcqPractice'))
+          (resource.data.trackType != 'licensing' && hasFeatureAccess('examinations'))
         )
       );
       allow create, update, delete: if isAdmin();
@@ -320,7 +320,7 @@ service cloud.firestore {
           !resource.data.keys().hasAny(['correctAnswer', 'explanation']) &&
           (
             (resource.data.trackType == 'licensing' && hasFeatureAccess('examPathways')) ||
-            (resource.data.trackType != 'licensing' && hasFeatureAccess('mcqPractice'))
+            (resource.data.trackType != 'licensing' && (hasFeatureAccess('mcqPractice') || hasFeatureAccess('examinations')))
           )
         );
 
