@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../../app/atlas_academy_app.dart';
+import '../../../shared/widgets/atlas_logo.dart';
+import '../../profile/screens/profile_screen.dart';
 import 'admin_academic_screen.dart';
 import 'admin_mcq_bank_screen.dart';
 import 'admin_students_screen.dart';
@@ -133,9 +135,8 @@ class AdminDashboardScreen extends StatelessWidget {
   Widget _buildHeader(BuildContext context) {
     return Row(
       children: [
-        Container(
-          height: 49,
-          width: 49,
+        const AtlasLogo(size: 52),
+        /*
           decoration: BoxDecoration(
             gradient: const LinearGradient(
               colors: [AtlasColors.navy, AtlasColors.royalBlue],
@@ -155,6 +156,7 @@ class AdminDashboardScreen extends StatelessWidget {
             size: 27,
           ),
         ),
+        */
         const SizedBox(width: 12),
         const Expanded(
           child: Column(
@@ -182,6 +184,17 @@ class AdminDashboardScreen extends StatelessWidget {
             ],
           ),
         ),
+        InkWell(
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ProfileScreen(isAdmin: true))),
+          borderRadius: BorderRadius.circular(30),
+          child: CircleAvatar(
+            radius: 22,
+            backgroundColor: AtlasColors.paleBlue,
+            backgroundImage: FirebaseAuth.instance.currentUser?.photoURL != null ? NetworkImage(FirebaseAuth.instance.currentUser!.photoURL!) : null,
+            child: FirebaseAuth.instance.currentUser?.photoURL == null ? const Icon(Icons.person_rounded, color: AtlasColors.navy) : null,
+          ),
+        ),
+        const SizedBox(width: 8),
         IconButton(
           tooltip: 'Sign out',
           onPressed: () => _confirmSignOut(context),
