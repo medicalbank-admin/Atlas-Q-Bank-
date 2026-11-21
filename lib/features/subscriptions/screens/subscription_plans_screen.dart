@@ -91,7 +91,7 @@ class SubscriptionPlansScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 7),
                 const Text(
-                  'Select a plan to continue your enrollment.',
+                  'Choose a plan to view payment instructions and send your payment confirmation to the academy on WhatsApp.',
                   style: TextStyle(
                     color: AtlasColors.secondaryText,
                     fontSize: 13,
@@ -317,7 +317,7 @@ class SubscriptionPlansScreen extends StatelessWidget {
                 ),
               ),
               child: const Text(
-                'Choose This Plan',
+                'Buy Subscription',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                 ),
@@ -346,8 +346,7 @@ class SubscriptionPlansScreen extends StatelessWidget {
           SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Membership access is granted only after '
-              'administrator approval and payment verification.',
+              'After transferring the fee, send your payment confirmation through WhatsApp. An administrator will verify your payment and activate the plan.',
               style: TextStyle(
                 color: AtlasColors.deepTeal,
                 fontSize: 12,
