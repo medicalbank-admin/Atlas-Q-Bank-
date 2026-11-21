@@ -1,25 +1,16 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-
+import '../../../app/atlas_academy_app.dart';
 import 'admin_academic_screen.dart';
 import 'admin_mcq_bank_screen.dart';
 import 'admin_students_screen.dart';
 import 'admin_subscription_plans_screen.dart';
 import 'admin_subscription_requests_screen.dart';
-
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
-
-  static const Color navy = Color(0xFF123F46);
-  static const Color teal = Color(0xFF28777B);
-  static const Color gold = Color(0xFFD8B66B);
-  static const Color ivory = Color(0xFFF7F8F5);
-
   Future<bool> _isAuthorizedAdmin() async {
     final user = FirebaseAuth.instance.currentUser;
-
     if (user == null) return false;
-
     try {
       final token = await user.getIdTokenResult(true);
       return token.claims?['admin'] == true;
@@ -27,7 +18,6 @@ class AdminDashboardScreen extends StatelessWidget {
       return false;
     }
   }
-
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<bool>(
@@ -35,62 +25,69 @@ class AdminDashboardScreen extends StatelessWidget {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
-            backgroundColor: ivory,
+            backgroundColor: AtlasColors.ivory,
             body: Center(
-              child: CircularProgressIndicator(color: teal),
+              child: CircularProgressIndicator(
+                color: AtlasColors.royalBlue,
+              ),
             ),
           );
         }
-
         if (snapshot.data != true) {
-          return _accessDenied(context);
+          return _buildAccessDenied(context);
         }
-
-        return _dashboard(context);
+        return _buildDashboard(context);
       },
     );
   }
-
-  Widget _accessDenied(BuildContext context) {
+  Widget _buildAccessDenied(BuildContext context) {
     return Scaffold(
-      backgroundColor: ivory,
+      backgroundColor: AtlasColors.ivory,
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(28),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
-                Icons.lock_outline_rounded,
-                size: 65,
-                color: Colors.redAccent,
+              Container(
+                height: 85,
+                width: 85,
+                decoration: BoxDecoration(
+                  color: AtlasColors.error.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(27),
+                ),
+                child: const Icon(
+                  Icons.lock_outline_rounded,
+                  color: AtlasColors.error,
+                  size: 39,
+                ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 22),
               const Text(
                 'Administrator Access Required',
                 textAlign: TextAlign.center,
                 style: TextStyle(
+                  color: AtlasColors.navy,
                   fontSize: 21,
-                  fontWeight: FontWeight.bold,
-                  color: navy,
+                  fontWeight: FontWeight.w900,
                 ),
               ),
               const SizedBox(height: 10),
               const Text(
-                'Your account does not have administrator permission.',
+                'This account does not have administrator permission.',
                 textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: AtlasColors.secondaryText,
+                  height: 1.5,
+                ),
               ),
               const SizedBox(height: 24),
-              ElevatedButton.icon(
+              FilledButton.icon(
                 onPressed: () async {
                   await FirebaseAuth.instance.signOut();
                 },
-                icon: const Icon(Icons.logout),
+                icon: const Icon(Icons.logout_rounded),
                 label: const Text('Sign Out'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: navy,
-                  foregroundColor: Colors.white,
-                ),
               ),
             ],
           ),
@@ -98,391 +95,426 @@ class AdminDashboardScreen extends StatelessWidget {
       ),
     );
   }
-
-  Widget _dashboard(BuildContext context) {
+  Widget _buildDashboard(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
     return Scaffold(
-      backgroundColor: ivory,
-      appBar: AppBar(
-        backgroundColor: navy,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        title: const Text(
-          'Atlas Administration',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            letterSpacing: 0.3,
-          ),
-        ),
-        actions: [
-          IconButton(
-            tooltip: 'Sign out',
-            icon: const Icon(Icons.logout_rounded),
-            onPressed: () => _confirmSignOut(context),
-          ),
-        ],
-      ),
+      backgroundColor: AtlasColors.ivory,
       body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final isWide = constraints.maxWidth >= 700;
-
-            return SingleChildScrollView(
-              padding: EdgeInsets.all(isWide ? 28 : 18),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(
-                    maxWidth: 1100,
+        child: CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(19, 15, 19, 30),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  _buildHeader(context),
+                  const SizedBox(height: 25),
+                  _buildWelcomeBanner(user?.email ?? 'Administrator'),
+                  const SizedBox(height: 29),
+                  _buildSectionHeading(
+                    'Management Centre',
+                    'Your academy operations, organised in one place.',
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _welcomeBanner(),
-
-                      const SizedBox(height: 28),
-
-                      const Text(
-                        'Management Centre',
-                        style: TextStyle(
-                          fontSize: 21,
-                          fontWeight: FontWeight.bold,
-                          color: navy,
-                        ),
-                      ),
-
-                      const SizedBox(height: 6),
-
-                      const Text(
-                        'Manage your academy from one place.',
-                        style: TextStyle(
-                          color: Colors.black54,
-                          fontSize: 13,
-                        ),
-                      ),
-
-                      const SizedBox(height: 18),
-
-                      GridView.count(
-                        crossAxisCount: isWide ? 2 : 1,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        mainAxisSpacing: 12,
-                        crossAxisSpacing: 12,
-                        childAspectRatio: isWide ? 3.0 : 3.5,
-                        children: [
-                          _managementTile(
-                            icon: Icons.people_alt_rounded,
-                            title: 'Student Management',
-                            subtitle:
-                                'View and search registered students',
-                            onTap: () => _openPage(
-                              context,
-                              const AdminStudentsScreen(),
-                            ),
-                          ),
-
-                          _managementTile(
-                            icon: Icons.payments_rounded,
-                            title: 'Subscription Requests',
-                            subtitle:
-                                'Review student payments and requests',
-                            onTap: () => _openPage(
-                              context,
-                              const AdminSubscriptionRequestsScreen(),
-                            ),
-                          ),
-
-                          _managementTile(
-                            icon: Icons.workspace_premium_rounded,
-                            title: 'Subscription Plans',
-                            subtitle:
-                                'Create plans, set prices and manage access',
-                            onTap: () => _openPage(
-                              context,
-                              const AdminSubscriptionPlansScreen(),
-                            ),
-                          ),
-
-                          _managementTile(
-                            icon: Icons.school_rounded,
-                            title: 'Academic Management',
-                            subtitle:
-                                'Manage academic years, subjects and topics',
-                            onTap: () => _openPage(
-                              context,
-                              const AdminAcademicScreen(),
-                            ),
-                          ),
-
-                          _managementTile(
-                            icon: Icons.video_library_rounded,
-                            title: 'Learning Resources',
-                            subtitle:
-                                'Manage notes, PDFs and videos through topics',
-                            onTap: () => _openPage(
-                              context,
-                              const AdminAcademicScreen(),
-                            ),
-                          ),
-
-                          _managementTile(
-                            icon: Icons.quiz_rounded,
-                            title: 'MCQ Question Bank',
-                            subtitle:
-                                'Create, edit, publish and bulk import MCQs',
-                            onTap: () => _openPage(
-                              context,
-                              const AdminMcqBankScreen(),
-                            ),
-                          ),
-
-                          _managementTile(
-                            icon: Icons.notifications_active_rounded,
-                            title: 'Notifications',
-                            subtitle:
-                                'Student announcements and alerts',
-                            onTap: () => _showComingSoon(
-                              context,
-                              'Notifications',
-                            ),
-                          ),
-
-                          _managementTile(
-                            icon: Icons.analytics_rounded,
-                            title: 'Analytics & Reports',
-                            subtitle:
-                                'Student activity and academy performance',
-                            onTap: () => _showComingSoon(
-                              context,
-                              'Analytics & Reports',
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 30),
-
-                      Center(
-                        child: Column(
-                          children: [
-                            Container(
-                              width: 45,
-                              height: 3,
-                              decoration: BoxDecoration(
-                                color: gold,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                            const SizedBox(height: 14),
-                            const Text(
-                              'THE ATLAS ACADEMY',
-                              style: TextStyle(
-                                color: navy,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 2,
-                                fontSize: 12,
-                              ),
-                            ),
-                            const SizedBox(height: 5),
-                            const Text(
-                              'Excellence in Medical Education',
-                              style: TextStyle(
-                                color: Colors.black45,
-                                fontSize: 11,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(height: 15),
-                    ],
-                  ),
-                ),
+                  const SizedBox(height: 17),
+                  _buildManagementGrid(context),
+                  const SizedBox(height: 27),
+                  _buildPlannedFeatures(),
+                  const SizedBox(height: 30),
+                  _buildFooter(),
+                ]),
               ),
-            );
-          },
+            ),
+          ],
         ),
       ),
     );
   }
-
-  Widget _welcomeBanner() {
+  Widget _buildHeader(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          height: 49,
+          width: 49,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [AtlasColors.navy, AtlasColors.royalBlue],
+            ),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: AtlasColors.navy.withValues(alpha: 0.15),
+                blurRadius: 12,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: const Icon(
+            Icons.school_rounded,
+            color: AtlasColors.champagne,
+            size: 27,
+          ),
+        ),
+        const SizedBox(width: 12),
+        const Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'THE ATLAS ACADEMY',
+                style: TextStyle(
+                  color: AtlasColors.navy,
+                  fontSize: 12,
+                  letterSpacing: 1.1,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                'ADMINISTRATOR PORTAL',
+                style: TextStyle(
+                  color: AtlasColors.secondaryText,
+                  fontSize: 9,
+                  letterSpacing: 1.2,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
+        IconButton(
+          tooltip: 'Sign out',
+          onPressed: () => _confirmSignOut(context),
+          style: IconButton.styleFrom(
+            backgroundColor: Colors.white,
+            foregroundColor: AtlasColors.navy,
+            fixedSize: const Size(43, 43),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+              side: const BorderSide(color: AtlasColors.border),
+            ),
+          ),
+          icon: const Icon(Icons.logout_rounded, size: 20),
+        ),
+      ],
+    );
+  }
+  Widget _buildWelcomeBanner(String email) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(25),
+      padding: const EdgeInsets.fromLTRB(23, 25, 23, 24),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [navy, teal],
+          colors: [
+            AtlasColors.navy,
+            AtlasColors.royalBlue,
+            AtlasColors.brightBlue,
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(27),
         boxShadow: [
           BoxShadow(
-            color: navy.withValues(alpha: 0.16),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
+            color: AtlasColors.navy.withValues(alpha: 0.19),
+            blurRadius: 23,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: const Icon(
+          Positioned(
+            right: -20,
+            top: -22,
+            child: Icon(
               Icons.admin_panel_settings_rounded,
-              color: gold,
-              size: 34,
+              size: 155,
+              color: Colors.white.withValues(alpha: 0.055),
             ),
           ),
-          const SizedBox(height: 20),
-          const Text(
-            'Welcome, Administrator',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 23,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Manage The Atlas Academy from one place.',
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.85),
-              fontSize: 14,
-            ),
-          ),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              const Icon(
-                Icons.verified_user_rounded,
-                color: gold,
-                size: 16,
-              ),
-              const SizedBox(width: 7),
-              Text(
-                'Administrator Workspace',
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.9),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _managementTile({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-  }) {
-    return Card(
-      color: Colors.white,
-      elevation: 1,
-      margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
-        side: BorderSide(
-          color: navy.withValues(alpha: 0.045),
-        ),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(18),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 15,
-            vertical: 12,
-          ),
-          child: Row(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 11,
+                  vertical: 7,
+                ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE5F1EF),
-                  borderRadius: BorderRadius.circular(14),
+                  color: Colors.white.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(30),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.15),
+                  ),
                 ),
-                child: Icon(
-                  icon,
-                  color: teal,
-                  size: 25,
-                ),
-              ),
-              const SizedBox(width: 13),
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                        color: navy,
-                      ),
+                    Icon(
+                      Icons.verified_user_rounded,
+                      color: AtlasColors.champagne,
+                      size: 14,
                     ),
-                    const SizedBox(height: 5),
+                    SizedBox(width: 7),
                     Text(
-                      subtitle,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: Colors.black54,
+                      'SECURE ADMIN WORKSPACE',
+                      style: TextStyle(
+                        color: AtlasColors.champagne,
+                        fontSize: 9,
+                        letterSpacing: 1.2,
+                        fontWeight: FontWeight.w900,
                       ),
                     ),
                   ],
                 ),
               ),
-              const Icon(
-                Icons.arrow_forward_ios_rounded,
-                size: 15,
-                color: teal,
+              const SizedBox(height: 22),
+              const Text(
+                'Welcome, Administrator',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  height: 1.2,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 9),
+              Text(
+                'Manage students, subscriptions, academic content '
+                'and your medical question bank.',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.83),
+                  fontSize: 12,
+                  height: 1.6,
+                ),
+              ),
+              const SizedBox(height: 19),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 9,
+                ),
+                decoration: BoxDecoration(
+                  color: AtlasColors.champagne,
+                  borderRadius: BorderRadius.circular(11),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.dashboard_rounded,
+                      color: AtlasColors.navy,
+                      size: 16,
+                    ),
+                    SizedBox(width: 8),
+                    Text(
+                      'Academy Control Centre',
+                      style: TextStyle(
+                        color: AtlasColors.navy,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 17),
+              Text(
+                email,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.66),
+                  fontSize: 10,
+                ),
               ),
             ],
           ),
+        ],
+      ),
+    );
+  }
+  Widget _buildSectionHeading(String title, String subtitle) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            color: AtlasColors.navy,
+            fontSize: 20,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const SizedBox(height: 5),
+        Text(
+          subtitle,
+          style: const TextStyle(
+            color: AtlasColors.secondaryText,
+            fontSize: 11,
+            height: 1.5,
+          ),
+        ),
+      ],
+    );
+  }
+  Widget _buildManagementGrid(BuildContext context) {
+    final items = [
+      _AdminItem(
+        icon: Icons.people_alt_rounded,
+        title: 'Student Management',
+        subtitle: 'View and manage registered students',
+        color: AtlasColors.royalBlue,
+        page: const AdminStudentsScreen(),
+      ),
+      _AdminItem(
+        icon: Icons.payments_rounded,
+        title: 'Subscription Requests',
+        subtitle: 'Review payments and access requests',
+        color: AtlasColors.gold,
+        page: const AdminSubscriptionRequestsScreen(),
+      ),
+      _AdminItem(
+        icon: Icons.workspace_premium_rounded,
+        title: 'Subscription Plans',
+        subtitle: 'Create plans and manage membership',
+        color: AtlasColors.success,
+        page: const AdminSubscriptionPlansScreen(),
+      ),
+      _AdminItem(
+        icon: Icons.school_rounded,
+        title: 'Academic Management',
+        subtitle: 'Manage academic years, subjects and topics',
+        color: AtlasColors.brightBlue,
+        page: const AdminAcademicScreen(),
+      ),
+      _AdminItem(
+        icon: Icons.video_library_rounded,
+        title: 'Learning Resources',
+        subtitle: 'Manage notes, PDFs and learning videos',
+        color: AtlasColors.gold,
+        page: const AdminAcademicScreen(),
+      ),
+      _AdminItem(
+        icon: Icons.quiz_rounded,
+        title: 'MCQ Question Bank',
+        subtitle: 'Create, edit, publish and bulk import MCQs',
+        color: AtlasColors.royalBlue,
+        page: const AdminMcqBankScreen(),
+      ),
+    ];
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = constraints.maxWidth >= 650 ? 3 : 2;
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: items.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: columns,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            childAspectRatio: columns == 3 ? 1.12 : 0.94,
+          ),
+          itemBuilder: (context, index) {
+            final item = items[index];
+            return _AdminManagementCard(
+              item: item,
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => item.page),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+  Widget _buildPlannedFeatures() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AtlasColors.paleBlue,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: AtlasColors.royalBlue.withValues(alpha: 0.12),
         ),
       ),
-    );
-  }
-
-  void _openPage(BuildContext context, Widget page) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => page),
-    );
-  }
-
-  void _showComingSoon(BuildContext context, String feature) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('$feature is planned but not implemented yet.'),
-        behavior: SnackBarBehavior.floating,
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.auto_awesome_rounded,
+                color: AtlasColors.royalBlue,
+                size: 19,
+              ),
+              SizedBox(width: 9),
+              Text(
+                'More Tools Coming',
+                style: TextStyle(
+                  color: AtlasColors.navy,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 10),
+          Text(
+            'Notifications, analytics and reports are planned for '
+            'future development. We will add these modules later.',
+            style: TextStyle(
+              color: AtlasColors.secondaryText,
+              fontSize: 11,
+              height: 1.6,
+            ),
+          ),
+        ],
       ),
     );
   }
-
+  Widget _buildFooter() {
+    return const Center(
+      child: Column(
+        children: [
+          Icon(
+            Icons.school_rounded,
+            color: AtlasColors.champagne,
+            size: 27,
+          ),
+          SizedBox(height: 9),
+          Text(
+            'THE ATLAS ACADEMY',
+            style: TextStyle(
+              color: AtlasColors.navy,
+              fontSize: 10,
+              letterSpacing: 1.5,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          SizedBox(height: 5),
+          Text(
+            'EXCELLENCE IN MEDICAL EDUCATION',
+            style: TextStyle(
+              color: AtlasColors.secondaryText,
+              fontSize: 8,
+              letterSpacing: 1.1,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
   Future<void> _confirmSignOut(BuildContext context) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Sign out?'),
         content: const Text(
-          'Are you sure you want to sign out of the admin workspace?',
+          'Are you sure you want to leave the administrator workspace?',
         ),
         actions: [
           TextButton(
@@ -496,9 +528,97 @@ class AdminDashboardScreen extends StatelessWidget {
         ],
       ),
     );
-
     if (confirmed == true) {
       await FirebaseAuth.instance.signOut();
     }
+  }
+}
+class _AdminItem {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color color;
+  final Widget page;
+  const _AdminItem({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.color,
+    required this.page,
+  });
+}
+class _AdminManagementCard extends StatelessWidget {
+  final _AdminItem item;
+  final VoidCallback onTap;
+  const _AdminManagementCard({
+    required this.item,
+    required this.onTap,
+  });
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(21),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(21),
+        child: Container(
+          padding: const EdgeInsets.all(15),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(21),
+            border: Border.all(color: AtlasColors.border),
+            boxShadow: [
+              BoxShadow(
+                color: AtlasColors.navy.withValues(alpha: 0.035),
+                blurRadius: 13,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                height: 43,
+                width: 43,
+                decoration: BoxDecoration(
+                  color: item.color.withValues(alpha: 0.11),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(
+                  item.icon,
+                  color: item.color,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                item.title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: AtlasColors.navy,
+                  fontSize: 12,
+                  height: 1.3,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                item.subtitle,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: AtlasColors.secondaryText,
+                  fontSize: 9,
+                  height: 1.45,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
