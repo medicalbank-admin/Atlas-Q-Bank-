@@ -28,6 +28,9 @@ void main() {
         input: r'Which symbol is literal\|? |A|B|C|D|E|E|Use A\|B as notation|Physics|Waves|HARD',
         yearId: 'year-1',
         adminUid: 'admin-1',
+        subjectId: 'physics',
+        examSetId: 'waves-set',
+        examSetName: 'Waves Set',
       );
 
       expect(result.successfulRows, 1);
@@ -41,6 +44,9 @@ void main() {
         input: 'Valid question|A|B|C|D|A|Reason|Biology|Cells|Medium\nBad row|A|B',
         yearId: 'year-1',
         adminUid: 'admin-1',
+        subjectId: 'biology',
+        examSetId: 'cells-set',
+        examSetName: 'Cells Set',
       );
 
       expect(result.totalRows, 2);
