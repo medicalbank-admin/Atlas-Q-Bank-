@@ -17,9 +17,7 @@ class AdminLearningResourcesScreen extends StatefulWidget {
 class _AdminLearningResourcesScreenState
     extends State<AdminLearningResourcesScreen> {
   String? _yearId;
-  String? _yearName;
   String? _subjectId;
-  String? _subjectName;
 
   Query<Map<String, dynamic>> _years() =>
       FirebaseFirestore.instance.collection('academic_years');
@@ -94,7 +92,6 @@ class _AdminLearningResourcesScreenState
                     selected: selected,
                     onTap: () => setState(() {
                       _yearId = doc.id;
-                      _yearName = (doc.data()['name'] ?? '').toString();
                       _subjectId = null;
                       _subjectName = null;
                     }),
@@ -122,7 +119,6 @@ class _AdminLearningResourcesScreenState
                     selected: selected,
                     onTap: () => setState(() {
                       _subjectId = doc.id;
-                      _subjectName = (doc.data()['name'] ?? '').toString();
                     }),
                   );
                 }).toList());
