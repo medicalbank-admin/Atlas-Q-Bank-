@@ -29,21 +29,30 @@ class StudentDashboardScreen extends StatelessWidget {
       ),
     );
   }
-  Future<void> _openMcqCentre(BuildContext context) async {
+  Future<void> _openProtectedFeature(BuildContext context, String feature) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
     try {
       final profile = await FirebaseFirestore.instance
           .collection('users').doc(user.uid).get();
       final data = profile.data() ?? {};
-      final hasMembership = data['subscriptionStatus'] == 'active' &&
-          data['accessEnabled'] == true;
+      final permissions = Map<String, dynamic>.from(
+        data['subscriptionAccessPermissions'] ?? const {},
+      );
+      final expiry = data['subscriptionExpiryAt'];
+      final notExpired = expiry is Timestamp && expiry.toDate().isAfter(DateTime.now());
+      final hasAccess = data['subscriptionStatus'] == 'active' &&
+          data['accessEnabled'] == true && notExpired && permissions[feature] == true;
       if (!context.mounted) return;
-      Navigator.of(context).push(MaterialPageRoute(
-        builder: (_) => hasMembership
-            ? const StudentMcqHubScreen()
-            : const SubscriptionPlansScreen(),
-      ));
+      if (!hasAccess) {
+        Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SubscriptionPlansScreen()));
+        return;
+      }
+      if (feature == 'mcqPractice') {
+        Navigator.of(context).push(MaterialPageRoute(builder: (_) => const StudentMcqHubScreen()));
+      } else {
+        Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SubscriptionPlansScreen()));
+      }
     } catch (_) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -333,30 +342,33 @@ class StudentDashboardScreen extends StatelessWidget {
       crossAxisSpacing: 13,
       childAspectRatio: 1.04,
       children: [
-        const _LearningTile(
+        _LearningTile(
           icon: Icons.menu_book_rounded,
           title: 'Study Library',
           subtitle: 'Notes and resources',
           accent: AtlasColors.royalBlue,
+          onTap: () => _openProtectedFeature(context, 'studyLibrary'),
         ),
         _LearningTile(
           icon: Icons.quiz_rounded,
           title: 'MCQ Practice',
           subtitle: 'Practice and review',
           accent: AtlasColors.gold,
-          onTap: () => _openMcqCentre(context),
+          onTap: () => _openProtectedFeature(context, 'mcqPractice'),
         ),
-        const _LearningTile(
+        _LearningTile(
           icon: Icons.assignment_rounded,
           title: 'Examinations',
           subtitle: 'Assess your knowledge',
           accent: AtlasColors.brightBlue,
+          onTap: () => _openProtectedFeature(context, 'examinations'),
         ),
-        const _LearningTile(
+        _LearningTile(
           icon: Icons.route_rounded,
           title: 'Exam Pathways',
           subtitle: 'Explore your pathway',
           accent: AtlasColors.gold,
+          onTap: () => _openProtectedFeature(context, 'examPathways'),
         ),
       ],
     );
