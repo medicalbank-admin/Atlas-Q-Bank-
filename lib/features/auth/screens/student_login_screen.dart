@@ -281,11 +281,7 @@ class _StudentLoginScreenState extends State<StudentLoginScreen> {
                           ),
                         ),
                       ),
-                      child: const Icon(
-                        Icons.school_rounded,
-                        color: AtlasColors.champagne,
-                        size: 45,
-                      ),
+                      child: const AtlasLogo(size: 68),
                     ),
                     const SizedBox(height: 19),
                     const Text(
