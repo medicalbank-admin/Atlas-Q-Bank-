@@ -158,6 +158,10 @@ class AtlasAcademyApp extends StatelessWidget {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
+        textStyle: const TextStyle(
+          color: AtlasColors.charcoal,
+          fontSize: 14,
+        ),
         // The editable value itself must be explicit; hint/label styles do not
         // control the text entered by the user.
         // Explicit input text colour prevents white-on-white fields on devices
@@ -339,6 +343,10 @@ class AtlasAcademyApp extends StatelessWidget {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
+        textStyle: const TextStyle(
+          color: AtlasColors.white,
+          fontSize: 14,
+        ),
         fillColor: AtlasColors.darkSurface,
         labelStyle: const TextStyle(color: Colors.white70),
         hintStyle: const TextStyle(color: Colors.white54),
