@@ -474,52 +474,6 @@ class AdminDashboardScreen extends StatelessWidget {
       },
     );
   }
-  Widget _buildPlannedFeatures() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: AtlasColors.paleBlue,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AtlasColors.royalBlue.withValues(alpha: 0.12),
-        ),
-      ),
-      child: const Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.auto_awesome_rounded,
-                color: AtlasColors.royalBlue,
-                size: 19,
-              ),
-              SizedBox(width: 9),
-              Text(
-                'More Tools Coming',
-                style: TextStyle(
-                  color: AtlasColors.navy,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 10),
-          Text(
-            'Notifications, analytics and reports are planned for '
-            'future development. We will add these modules later.',
-            style: TextStyle(
-              color: AtlasColors.secondaryText,
-              fontSize: 11,
-              height: 1.6,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
   Widget _buildFooter() {
     return const Center(
       child: Column(
