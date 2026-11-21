@@ -324,7 +324,10 @@ service cloud.firestore {
       allow read: if isAdmin() ||
         (
           signedIn() &&
-          resource.data.userId == request.auth.uid
+          (
+            resource.data.userId == request.auth.uid ||
+            (resource.data.audience == 'all' && resource.data.isActive == true)
+          )
         );
 
       allow create, update, delete: if isAdmin();
