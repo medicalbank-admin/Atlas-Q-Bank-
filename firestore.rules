@@ -130,7 +130,17 @@ service cloud.firestore {
         request.resource.data.updatedAt is timestamp;
 
       allow read: if isOwner(uid) || isAdmin();
-      allow update, delete: if isAdmin();
+      allow update: if isAdmin() || (
+        isOwner(uid) &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['whatsappNumber', 'updatedAt']) &&
+        validString(request.resource.data.whatsappNumber, 30)
+      ) || (
+        isOwner(uid) &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['email', 'emailVerified', 'updatedAt']) &&
+        request.resource.data.email == request.auth.token.email &&
+        request.resource.data.emailVerified == request.auth.token.email_verified
+      );
+      allow delete: if isAdmin();
     }
 
     // ==================================================
