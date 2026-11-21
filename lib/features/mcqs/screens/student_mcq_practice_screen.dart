@@ -35,45 +35,39 @@ class _StudentMcqPracticeScreenState
     _startedAt = DateTime.now();
     _loadQuestions();
   }
+  String? _sessionId;
   Future<void> _loadQuestions() async {
     try {
-      var durationMinutes = 60;
-      if (widget.examSetId != null && widget.examSetId!.isNotEmpty) {
-        final setSnapshot = await FirebaseFirestore.instance
-            .collection('mcq_exam_sets').doc(widget.examSetId).get();
-        final configuredDuration = setSnapshot.data()?['durationMinutes'];
-        if (configuredDuration is num && configuredDuration.toInt() > 0) {
-          durationMinutes = configuredDuration.toInt().clamp(1, 240);
-        }
-      }
-      Query<Map<String, dynamic>> query = FirebaseFirestore.instance
-          .collection('mcqs')
-          .where('isPublished', isEqualTo: true);
-      if (widget.examSetId != null && widget.examSetId!.isNotEmpty) {
-        query = query.where('examSetId', isEqualTo: widget.examSetId);
-      }
-      final snapshot = await query.get();
-      final questions = snapshot.docs
+      final session = await _sessionService.startSession(
+        examSetId: widget.examSetId,
+      );
+      final ids = List<String>.from(session['questionIds'] as List);
+      final snapshots = await Future.wait(
+        ids.map((id) => FirebaseFirestore.instance.collection('mcqs').doc(id).get()),
+      );
+      final questions = snapshots
+          .where((doc) => doc.exists && doc.data()?['isPublished'] == true)
           .map((doc) => StudentMcqModel.fromFirestore(doc))
           .toList();
-      questions.shuffle(Random());
+      if (questions.isEmpty) {
+        throw Exception('No published questions are available in this session.');
+      }
       if (!mounted) return;
       setState(() {
+        _sessionId = session['sessionId'] as String;
         _questions = questions;
         _selectedAnswers = List<int?>.filled(questions.length, null);
         _currentIndex = 0;
         _startedAt = DateTime.now();
-        _remainingSeconds = durationMinutes * 60;
+        _remainingSeconds = (session['durationMinutes'] as int) * 60;
         _isLoading = false;
       });
       _startCountdown();
-    } catch (_) {
+    } catch (error) {
       if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
       _showMessage(
-        'Unable to load questions. Please try again.',
+        error.toString().replaceFirst('Exception: ', ''),
         isError: true,
       );
     }
@@ -177,10 +171,8 @@ class _StudentMcqPracticeScreenState
         selectedAnswers[_questions[i].id] = _selectedAnswers[i];
       }
       final attemptId = await _sessionService.saveCompletedSession(
-        questionIds: _questions.map((question) => question.id).toList(),
+        sessionId: _sessionId ?? '',
         selectedAnswers: selectedAnswers,
-        startedAt: _startedAt,
-        examSetId: widget.examSetId,
       );
       if (!mounted) return;
       Navigator.pushReplacement(
