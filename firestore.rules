@@ -111,7 +111,7 @@ service cloud.firestore {
         validOptionalImage(request.resource.data.profileImageUrl, 2048) &&
         validOptionalImage(request.resource.data.profileImagePath, 500) &&
         request.resource.data.role == 'student' &&
-        request.resource.data.accountStatus == 'pending' &&
+        request.resource.data.accountStatus == 'approved' &&
         request.resource.data.subscriptionStatus == 'inactive' &&
         request.resource.data.accessEnabled == false &&
         request.resource.data.emailVerified == false &&
