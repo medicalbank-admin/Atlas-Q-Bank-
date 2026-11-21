@@ -396,16 +396,15 @@ class StudentDashboardScreen extends StatelessWidget {
     if (uid == null) return const SizedBox.shrink();
     final attempts = FirebaseFirestore.instance.collection('mcq_attempts').where('userId', isEqualTo: uid).snapshots();
     final progress = FirebaseFirestore.instance.collection('student_resource_progress').where('userId', isEqualTo: uid).snapshots();
-    final exams = FirebaseFirestore.instance.collection('exam_attempts').where('userId', isEqualTo: uid).snapshots();
     return Container(
       padding: const EdgeInsets.all(19),
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22), border: Border.all(color: AtlasColors.border)),
       child: Column(children: [
         StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(stream: progress, builder: (c,s) => _ProgressRow(icon: Icons.menu_book_rounded, title: 'Study materials completed', value: s.hasData ? '${s.data!.docs.where((d)=>d.data()['completed']==true).length}' : '—')),
         const Divider(height: 25, color: AtlasColors.border),
-        StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(stream: attempts, builder: (c,s) => _ProgressRow(icon: Icons.quiz_outlined, title: 'MCQ sessions completed', value: s.hasData ? '${s.data!.size}' : '—')),
+        StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(stream: attempts, builder: (c,s) => _ProgressRow(icon: Icons.quiz_outlined, title: 'MCQ practice sessions', value: s.hasData ? '${s.data!.docs.where((d) => d.data()['examSetId'] == null).length}' : '—')),
         const Divider(height: 25, color: AtlasColors.border),
-        StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(stream: exams, builder: (c,s) => _ProgressRow(icon: Icons.emoji_events_outlined, title: 'Examinations attempted', value: s.hasData ? '${s.data!.size}' : '—')),
+        StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(stream: attempts, builder: (c,s) => _ProgressRow(icon: Icons.emoji_events_outlined, title: 'Timed examinations completed', value: s.hasData ? '${s.data!.docs.where((d) => d.data()['examSetId'] != null).length}' : '—')),
       ]),
     );
   }
