@@ -14,9 +14,9 @@ class AcademicSubjectManagementScreen extends StatelessWidget {
     required this.yearName,
   });
 
-  static const Color deepTeal = Color(0xFF123F46);
-  static const Color oceanTeal = Color(0xFF28777B);
-  static const Color ivory = Color(0xFFF7F8F5);
+  static const Color deepTeal = Color(0xFF10233F);
+  static const Color oceanTeal = Color(0xFF2859A8);
+  static const Color ivory = Color(0xFFF5F7FC);
   static const Color champagne = Color(0xFFD8B66B);
 
   Future<void> _showSubjectDialog(
