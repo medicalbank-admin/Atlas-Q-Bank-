@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../../../app/atlas_academy_app.dart';
@@ -21,7 +20,7 @@ class _StudentMcqPracticeScreenState
   int _currentIndex = 0;
   bool _isLoading = true;
   bool _isSubmitting = false;
-  late DateTime _startedAt;
+  DateTime? _deadlineAt;
   Timer? _countdownTimer;
   int? _remainingSeconds;
   @override
@@ -32,7 +31,6 @@ class _StudentMcqPracticeScreenState
   @override
   void initState() {
     super.initState();
-    _startedAt = DateTime.now();
     _loadQuestions();
   }
   String? _sessionId;
@@ -45,8 +43,10 @@ class _StudentMcqPracticeScreenState
       final snapshots = await Future.wait(
         ids.map((id) => FirebaseFirestore.instance.collection('mcqs').doc(id).get()),
       );
+      if (snapshots.any((doc) => !doc.exists || doc.data()?['isPublished'] != true)) {
+        throw Exception('A question in this session is no longer published. Please start again.');
+      }
       final questions = snapshots
-          .where((doc) => doc.exists && doc.data()?['isPublished'] == true)
           .map((doc) => StudentMcqModel.fromFirestore(doc))
           .toList();
       if (questions.isEmpty) {
@@ -58,8 +58,10 @@ class _StudentMcqPracticeScreenState
         _questions = questions;
         _selectedAnswers = List<int?>.filled(questions.length, null);
         _currentIndex = 0;
-        _startedAt = DateTime.now();
-        _remainingSeconds = (session['durationMinutes'] as int) * 60;
+        _deadlineAt = DateTime.tryParse(session['expiresAt']?.toString() ?? '');
+        _remainingSeconds = _deadlineAt == null
+            ? (session['durationMinutes'] as int) * 60
+            : _deadlineAt!.difference(DateTime.now()).inSeconds.clamp(0, 240 * 60);
         _isLoading = false;
       });
       _startCountdown();
@@ -79,7 +81,9 @@ class _StudentMcqPracticeScreenState
         timer.cancel();
         return;
       }
-      final remaining = (_remainingSeconds ?? 0) - 1;
+      final remaining = _deadlineAt == null
+          ? (_remainingSeconds ?? 0) - 1
+          : _deadlineAt!.difference(DateTime.now()).inSeconds;
       setState(() => _remainingSeconds = remaining < 0 ? 0 : remaining);
       if (remaining <= 0) {
         timer.cancel();
