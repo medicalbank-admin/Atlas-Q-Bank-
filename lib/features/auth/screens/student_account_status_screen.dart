@@ -1,90 +1,67 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-
 import '../../../app/atlas_academy_app.dart';
 import '../../../shared/widgets/atlas_feedback.dart';
 import '../services/student_auth_service.dart';
-
 class StudentAccountStatusScreen extends StatefulWidget {
   const StudentAccountStatusScreen({super.key});
-
   @override
   State<StudentAccountStatusScreen> createState() =>
       _StudentAccountStatusScreenState();
 }
-
 class _StudentAccountStatusScreenState
     extends State<StudentAccountStatusScreen> {
   final StudentAuthService _authService = StudentAuthService();
-
   bool _loading = true;
   Map<String, dynamic>? _profile;
   String? _error;
-
   @override
   void initState() {
     super.initState();
     _loadStatus();
   }
-
   Future<void> _loadStatus() async {
     if (!mounted) return;
-
     setState(() {
       _loading = true;
       _error = null;
     });
-
     try {
       final user = FirebaseAuth.instance.currentUser;
-
       if (user == null) {
         throw Exception('Please sign in to view your account.');
       }
-
       await user.reload();
-
       final refreshedUser = FirebaseAuth.instance.currentUser;
-
       if (refreshedUser == null) {
         throw Exception('Your session has ended. Please sign in again.');
       }
-
       final document = await FirebaseFirestore.instance
           .collection('users')
           .doc(refreshedUser.uid)
           .get();
-
       if (!document.exists) {
         throw Exception('Your student profile could not be found.');
       }
-
       if (!mounted) return;
-
       setState(() {
         _profile = document.data();
         _loading = false;
       });
     } catch (error) {
       if (!mounted) return;
-
       setState(() {
         _error = error.toString().replaceFirst('Exception: ', '');
         _loading = false;
       });
     }
   }
-
   Future<void> _signOut() async {
     try {
       await _authService.signOut();
-
       if (!mounted) return;
-
-      Navigator.of(context).popUntil(
-        (route) => route.isFirst,
-      );
+      Navigator.of(context).popUntil((route) => route.isFirst);
     } catch (_) {
       if (mounted) {
         AtlasFeedback.showError(
@@ -94,43 +71,40 @@ class _StudentAccountStatusScreenState
       }
     }
   }
-
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     if (_loading) {
       return const Scaffold(
+        backgroundColor: AtlasColors.ivory,
         body: Center(
           child: CircularProgressIndicator(
-            color: AtlasColors.deepTeal,
+            color: AtlasColors.royalBlue,
           ),
         ),
       );
     }
-
     if (_error != null || _profile == null) {
       return Scaffold(
-        appBar: AppBar(
-          title: const Text('Account Status'),
-        ),
+        backgroundColor: AtlasColors.ivory,
+        appBar: AppBar(title: const Text('Account Status')),
         body: Center(
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(25),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Icon(
                   Icons.error_outline_rounded,
-                  size: 52,
+                  size: 55,
                   color: AtlasColors.error,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 17),
                 Text(
                   _error ?? 'Something went wrong.',
                   textAlign: TextAlign.center,
+                  style: const TextStyle(height: 1.5),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 22),
                 ElevatedButton(
                   onPressed: _loadStatus,
                   child: const Text('Try Again'),
@@ -145,7 +119,6 @@ class _StudentAccountStatusScreenState
         ),
       );
     }
-
     final profile = _profile!;
     final accountStatus =
         (profile['accountStatus'] ?? 'pending').toString();
@@ -154,18 +127,19 @@ class _StudentAccountStatusScreenState
     final accessEnabled = profile['accessEnabled'] == true;
     final emailVerified =
         FirebaseAuth.instance.currentUser?.emailVerified ?? false;
-
     final isApproved = accountStatus == 'approved';
     final isRejected = accountStatus == 'rejected';
     final isActive = subscriptionStatus == 'active';
-
-    final Color statusColor = isRejected
+    final canAccess = emailVerified &&
+        isApproved &&
+        isActive &&
+        accessEnabled;
+    final statusColor = isRejected
         ? AtlasColors.error
-        : isApproved && isActive && accessEnabled
+        : canAccess
             ? AtlasColors.success
             : AtlasColors.gold;
-
-    final String heading = isRejected
+    final heading = isRejected
         ? 'Registration Rejected'
         : !emailVerified
             ? 'Verify Your Email'
@@ -176,8 +150,7 @@ class _StudentAccountStatusScreenState
                     : !accessEnabled
                         ? 'Access Not Yet Enabled'
                         : 'Account Approved';
-
-    final String description = isRejected
+    final description = isRejected
         ? 'Your registration has been reviewed but was not approved. '
             'Please contact the academy administration for assistance.'
         : !emailVerified
@@ -193,14 +166,8 @@ class _StudentAccountStatusScreenState
                             'has not enabled your learning access yet.'
                         : 'Your account is approved and your learning '
                             'access is enabled.';
-
-    final canAccess = emailVerified &&
-        isApproved &&
-        isActive &&
-        accessEnabled;
-
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: AtlasColors.ivory,
       appBar: AppBar(
         title: const Text('Account Status'),
         actions: [
@@ -209,65 +176,94 @@ class _StudentAccountStatusScreenState
             tooltip: 'Refresh status',
             icon: const Icon(Icons.refresh_rounded),
           ),
+          const SizedBox(width: 5),
         ],
       ),
       body: RefreshIndicator(
         onRefresh: _loadStatus,
-        color: AtlasColors.deepTeal,
+        color: AtlasColors.royalBlue,
         child: ListView(
-          padding: const EdgeInsets.all(20),
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics(),
+          ),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 35),
           children: [
+            // Academy identity card
             Container(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(23),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
                   colors: [
-                    AtlasColors.deepTeal,
-                    AtlasColors.oceanTeal,
+                    AtlasColors.navy,
+                    AtlasColors.royalBlue,
+                    AtlasColors.brightBlue,
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(25),
+                boxShadow: [
+                  BoxShadow(
+                    color: AtlasColors.navy.withValues(alpha: 0.17),
+                    blurRadius: 22,
+                    offset: const Offset(0, 9),
+                  ),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'THE ATLAS ACADEMY',
-                    style: TextStyle(
-                      color: AtlasColors.champagne,
-                      fontSize: 12,
-                      letterSpacing: 2,
-                      fontWeight: FontWeight.w800,
-                    ),
+                  const Row(
+                    children: [
+                      Icon(
+                        Icons.school_rounded,
+                        color: AtlasColors.champagne,
+                        size: 25,
+                      ),
+                      SizedBox(width: 10),
+                      Text(
+                        'THE ATLAS ACADEMY',
+                        style: TextStyle(
+                          color: AtlasColors.champagne,
+                          fontSize: 11,
+                          letterSpacing: 1.5,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 25),
                   Text(
                     'Welcome, ${profile['fullName'] ?? 'Student'}',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 23,
-                      fontWeight: FontWeight.w800,
+                      height: 1.25,
+                      fontWeight: FontWeight.w900,
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 9),
                   Text(
                     'Your medical learning journey starts here.',
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.82),
-                      fontSize: 14,
+                      color: Colors.white.withValues(alpha: 0.78),
+                      fontSize: 12,
                     ),
                   ),
-                  const SizedBox(height: 22),
+                  const SizedBox(height: 23),
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 13,
-                      vertical: 9,
+                      vertical: 10,
                     ),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.13),
-                      borderRadius: BorderRadius.circular(30),
+                      borderRadius: BorderRadius.circular(13),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.12),
+                      ),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -279,16 +275,16 @@ class _StudentAccountStatusScreenState
                           color: AtlasColors.champagne,
                           size: 17,
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 9),
                         Text(
                           canAccess
                               ? 'LEARNING ACCESS ENABLED'
                               : 'ACCOUNT STATUS',
                           style: const TextStyle(
                             color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 11,
-                            letterSpacing: 0.8,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 9,
+                            letterSpacing: 1,
                           ),
                         ),
                       ],
@@ -297,59 +293,60 @@ class _StudentAccountStatusScreenState
                 ],
               ),
             ),
-            const SizedBox(height: 24),
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: theme.cardColor,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: statusColor.withValues(alpha: 0.35),
-                ),
-              ),
+            const SizedBox(height: 23),
+            // Current status
+            _Panel(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      Icon(
-                        isRejected
-                            ? Icons.cancel_rounded
-                            : canAccess
-                                ? Icons.check_circle_rounded
-                                : Icons.info_rounded,
-                        color: statusColor,
-                        size: 27,
+                      Container(
+                        height: 43,
+                        width: 43,
+                        decoration: BoxDecoration(
+                          color: statusColor.withValues(alpha: 0.11),
+                          borderRadius: BorderRadius.circular(13),
+                        ),
+                        child: Icon(
+                          isRejected
+                              ? Icons.cancel_rounded
+                              : canAccess
+                                  ? Icons.check_circle_rounded
+                                  : Icons.info_rounded,
+                          color: statusColor,
+                          size: 24,
+                        ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 13),
                       Expanded(
                         child: Text(
                           heading,
                           style: TextStyle(
                             color: statusColor,
-                            fontWeight: FontWeight.w800,
-                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 17,
                           ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 15),
                   Text(
                     description,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      height: 1.6,
+                    style: const TextStyle(
+                      color: AtlasColors.secondaryText,
+                      fontSize: 12,
+                      height: 1.7,
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 24),
-            Text(
-              'Registration Details',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
+            const SizedBox(height: 25),
+            const _SectionTitle(
+              title: 'Registration Details',
+              subtitle: 'Your registered student information',
             ),
             const SizedBox(height: 14),
             _DetailTile(
@@ -359,7 +356,7 @@ class _StudentAccountStatusScreenState
             ),
             _DetailTile(
               icon: Icons.email_outlined,
-              label: 'Email',
+              label: 'Email Address',
               value: profile['email']?.toString() ?? 'Not available',
             ),
             _DetailTile(
@@ -375,38 +372,48 @@ class _StudentAccountStatusScreenState
                   'Not available',
             ),
             const SizedBox(height: 24),
-            Text(
-              'Account Checklist',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
+            const _SectionTitle(
+              title: 'Account Checklist',
+              subtitle: 'Requirements for accessing your learning portal',
             ),
             const SizedBox(height: 14),
-            _ChecklistTile(
-              title: 'Email Verification',
-              completed: emailVerified,
+            _Panel(
+              child: Column(
+                children: [
+                  _ChecklistTile(
+                    title: 'Email Verification',
+                    completed: emailVerified,
+                  ),
+                  const Divider(height: 23, color: AtlasColors.border),
+                  _ChecklistTile(
+                    title: 'Registration Approval',
+                    completed: isApproved,
+                  ),
+                  const Divider(height: 23, color: AtlasColors.border),
+                  _ChecklistTile(
+                    title: 'Active Membership',
+                    completed: isActive,
+                  ),
+                  const Divider(height: 23, color: AtlasColors.border),
+                  _ChecklistTile(
+                    title: 'Learning Access',
+                    completed: accessEnabled,
+                  ),
+                ],
+              ),
             ),
-            _ChecklistTile(
-              title: 'Registration Approval',
-              completed: isApproved,
-            ),
-            _ChecklistTile(
-              title: 'Active Membership',
-              completed: isActive,
-            ),
-            _ChecklistTile(
-              title: 'Learning Access',
-              completed: accessEnabled,
-            ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 25),
             SizedBox(
-              height: 52,
+              height: 53,
               child: ElevatedButton.icon(
                 onPressed: _loadStatus,
-                icon: const Icon(Icons.refresh_rounded),
-                label: const Text('Refresh Account Status'),
+                icon: const Icon(Icons.refresh_rounded, size: 19),
+                label: const Text(
+                  'Refresh Account Status',
+                  style: TextStyle(fontWeight: FontWeight.w800),
+                ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AtlasColors.deepTeal,
+                  backgroundColor: AtlasColors.navy,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(15),
@@ -417,8 +424,24 @@ class _StudentAccountStatusScreenState
             const SizedBox(height: 10),
             TextButton.icon(
               onPressed: _signOut,
-              icon: const Icon(Icons.logout_rounded),
+              icon: const Icon(Icons.logout_rounded, size: 18),
               label: const Text('Sign Out'),
+              style: TextButton.styleFrom(
+                foregroundColor: AtlasColors.secondaryText,
+              ),
+            ),
+            const SizedBox(height: 18),
+            const Center(
+              child: Text(
+                'THE ATLAS ACADEMY  •  EXCELLENCE IN MEDICAL EDUCATION',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: AtlasColors.secondaryText,
+                  fontSize: 8,
+                  letterSpacing: 0.8,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ),
           ],
         ),
@@ -426,90 +449,166 @@ class _StudentAccountStatusScreenState
     );
   }
 }
-
+class _Panel extends StatelessWidget {
+  const _Panel({required this.child});
+  final Widget child;
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(19),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(21),
+        border: Border.all(color: AtlasColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: AtlasColors.navy.withValues(alpha: 0.035),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: child,
+    );
+  }
+}
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle({
+    required this.title,
+    required this.subtitle,
+  });
+  final String title;
+  final String subtitle;
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            color: AtlasColors.navy,
+            fontSize: 18,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const SizedBox(height: 5),
+        Text(
+          subtitle,
+          style: const TextStyle(
+            color: AtlasColors.secondaryText,
+            fontSize: 10,
+          ),
+        ),
+      ],
+    );
+  }
+}
 class _DetailTile extends StatelessWidget {
   const _DetailTile({
     required this.icon,
     required this.label,
     required this.value,
   });
-
   final IconData icon;
   final String label;
   final String value;
-
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
+    return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      child: ListTile(
-        leading: Icon(
-          icon,
-          color: AtlasColors.oceanTeal,
-        ),
-        title: Text(
-          label,
-          style: const TextStyle(
-            fontSize: 12,
-            color: AtlasColors.secondaryText,
+      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 13),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AtlasColors.border),
+      ),
+      child: Row(
+        children: [
+          Container(
+            height: 39,
+            width: 39,
+            decoration: BoxDecoration(
+              color: AtlasColors.paleBlue,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              icon,
+              color: AtlasColors.royalBlue,
+              size: 20,
+            ),
           ),
-        ),
-        subtitle: Text(
-          value,
-          style: const TextStyle(
-            fontWeight: FontWeight.w700,
+          const SizedBox(width: 13),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    color: AtlasColors.secondaryText,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    color: AtlasColors.navy,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
 }
-
 class _ChecklistTile extends StatelessWidget {
   const _ChecklistTile({
     required this.title,
     required this.completed,
   });
-
   final String title;
   final bool completed;
-
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          Icon(
-            completed
-                ? Icons.check_circle_rounded
-                : Icons.radio_button_unchecked_rounded,
-            color: completed
-                ? AtlasColors.success
-                : AtlasColors.secondaryText,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              title,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          Text(
-            completed ? 'Complete' : 'Pending',
-            style: TextStyle(
+    final color = completed
+        ? AtlasColors.success
+        : AtlasColors.secondaryText;
+    return Row(
+      children: [
+        Icon(
+          completed
+              ? Icons.check_circle_rounded
+              : Icons.radio_button_unchecked_rounded,
+          color: color,
+          size: 21,
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            title,
+            style: const TextStyle(
+              color: AtlasColors.charcoal,
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: completed
-                  ? AtlasColors.success
-                  : AtlasColors.secondaryText,
             ),
           ),
-        ],
-      ),
+        ),
+        Text(
+          completed ? 'Complete' : 'Pending',
+          style: TextStyle(
+            color: color,
+            fontSize: 10,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ],
     );
   }
 }
