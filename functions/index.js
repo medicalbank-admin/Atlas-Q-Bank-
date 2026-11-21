@@ -322,6 +322,8 @@ exports.submitMcqPractice = onCall(
     const questionIds = data.questionIds;
     const selectedAnswers = data.selectedAnswers;
     const startedAtValue = data.startedAt;
+    const examSetId =
+      typeof data.examSetId === "string" ? data.examSetId.trim() : "";
     if (
       !Array.isArray(questionIds) ||
       questionIds.length < 1 ||
@@ -403,6 +405,9 @@ exports.submitMcqPractice = onCall(
       );
     }
     const userRef = db.collection("users").doc(userId);
+    const examSetRef = examSetId
+      ? db.collection("mcq_exam_sets").doc(examSetId)
+      : null;
     const questionRefs = questionIds.map((id) =>
       db.collection("mcqs").doc(id)
     );
@@ -424,6 +429,7 @@ exports.submitMcqPractice = onCall(
           expiry &&
           typeof expiry.toDate === "function" &&
           expiry.toDate().getTime() > Date.now();
+        const permissions = user.subscriptionAccessPermissions || {};
         if (
           user.accessEnabled !== true ||
           user.subscriptionStatus !== "active" ||
@@ -432,6 +438,27 @@ exports.submitMcqPractice = onCall(
           throw new HttpsError(
             "permission-denied",
             "An active subscription is required to submit MCQ practice."
+          );
+        }
+        let requiredFeature = "mcqPractice";
+        if (examSetRef) {
+          const examSetSnapshot = await transaction.get(examSetRef);
+          if (!examSetSnapshot.exists ||
+              examSetSnapshot.data().isPublished !== true) {
+            throw new HttpsError(
+              "not-found",
+              "This published exam set is no longer available."
+            );
+          }
+          const examSet = examSetSnapshot.data();
+          requiredFeature = examSet.trackType === "licensing"
+            ? "examPathways"
+            : "mcqPractice";
+        }
+        if (permissions[requiredFeature] !== true) {
+          throw new HttpsError(
+            "permission-denied",
+            "Your subscription does not include access to this exam set."
           );
         }
         const questionSnapshots = [];
@@ -457,6 +484,12 @@ exports.submitMcqPractice = onCall(
             throw new HttpsError(
               "failed-precondition",
               "This practice contains an unpublished question."
+            );
+          }
+          if (examSetId && question.examSetId !== examSetId) {
+            throw new HttpsError(
+              "permission-denied",
+              "A question does not belong to the selected exam set."
             );
           }
           const options = question.options;
