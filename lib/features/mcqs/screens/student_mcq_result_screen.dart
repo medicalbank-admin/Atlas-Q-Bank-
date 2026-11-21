@@ -1,273 +1,209 @@
 import 'package:flutter/material.dart';
-
+import '../../../app/atlas_academy_app.dart';
 import '../services/mcq_session_service.dart';
-
 class StudentMcqResultScreen extends StatefulWidget {
   final String attemptId;
-
   const StudentMcqResultScreen({
     super.key,
     required this.attemptId,
   });
-
   @override
   State<StudentMcqResultScreen> createState() =>
       _StudentMcqResultScreenState();
 }
-
 class _StudentMcqResultScreenState
     extends State<StudentMcqResultScreen> {
-  static const Color navy = Color(0xFF123F46);
-  static const Color teal = Color(0xFF28777B);
-  static const Color gold = Color(0xFFD8B66B);
-  static const Color background = Color(0xFFF7F8F5);
-
   final McqSessionService _service = McqSessionService();
-
   late Future<Map<String, dynamic>?> _resultFuture;
-
   @override
   void initState() {
     super.initState();
     _resultFuture = _service.getMySession(widget.attemptId);
   }
-
-  Color _resultColor(double percentage) {
-    if (percentage >= 80) return const Color(0xFF16845B);
-    if (percentage >= 50) return const Color(0xFFE09B32);
-    return const Color(0xFFD9534F);
+  int _number(dynamic value) {
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString() ?? '') ?? 0;
   }
-
-  String _grade(double percentage) {
-    if (percentage >= 90) return 'Outstanding';
-    if (percentage >= 80) return 'Excellent';
-    if (percentage >= 70) return 'Very Good';
-    if (percentage >= 60) return 'Good';
-    if (percentage >= 50) return 'Needs Improvement';
+  double _decimal(dynamic value) {
+    if (value is num) return value.toDouble();
+    return double.tryParse(value?.toString() ?? '') ?? 0;
+  }
+  Color _scoreColor(double score) {
+    if (score >= 80) return AtlasColors.success;
+    if (score >= 50) return AtlasColors.gold;
+    return AtlasColors.error;
+  }
+  String _grade(double score) {
+    if (score >= 90) return 'Outstanding Performance';
+    if (score >= 80) return 'Excellent Work';
+    if (score >= 70) return 'Very Good';
+    if (score >= 60) return 'Good Progress';
+    if (score >= 50) return 'Keep Improving';
     return 'Keep Practising';
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: background,
+      backgroundColor: AtlasColors.ivory,
       appBar: AppBar(
-        backgroundColor: navy,
+        title: const Text('Practice Result'),
+        backgroundColor: AtlasColors.navy,
         foregroundColor: Colors.white,
         elevation: 0,
-        title: const Text(
-          'Practice Result',
-          style: TextStyle(fontWeight: FontWeight.w700),
-        ),
       ),
       body: FutureBuilder<Map<String, dynamic>?>(
         future: _resultFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
-              child: CircularProgressIndicator(color: teal),
+              child: CircularProgressIndicator(
+                color: AtlasColors.royalBlue,
+              ),
             );
           }
-
           if (snapshot.hasError) {
-            return _message(
-              'Unable to load your result.',
-              'Please check your connection and try again.',
+            return const _ResultMessage(
+              icon: Icons.cloud_off_rounded,
+              title: 'Unable to load result',
+              message: 'Please check your connection and try again.',
             );
           }
-
           final data = snapshot.data;
-
           if (data == null) {
-            return _message(
-              'Result not found',
-              'This practice result is unavailable or does not belong to your account.',
+            return const _ResultMessage(
+              icon: Icons.receipt_long_outlined,
+              title: 'Result not found',
+              message:
+                  'This practice result is unavailable or does not belong '
+                  'to your account.',
             );
           }
-
           return _buildResult(data);
         },
       ),
     );
   }
-
   Widget _buildResult(Map<String, dynamic> data) {
-    final total = (data['totalQuestions'] as num?)?.toInt() ?? 0;
-    final correct = (data['correctAnswers'] as num?)?.toInt() ?? 0;
-    final incorrect = (data['incorrectAnswers'] as num?)?.toInt() ?? 0;
-
-    final unanswered =
-        (data['unansweredQuestions'] as num?)?.toInt() ??
-        (total - correct - incorrect).clamp(0, total);
-
-    final percentage =
-        (data['percentage'] as num?)?.toDouble() ?? 0;
-
-    final answers = (data['answers'] as List<dynamic>?) ?? [];
-
-    final resultColor = _resultColor(percentage);
-
+    final total = _number(data['totalQuestions']);
+    final correct = _number(data['correctAnswers']);
+    final incorrect = _number(data['incorrectAnswers']);
+    final unanswered = data['unansweredQuestions'] == null
+        ? (total - correct - incorrect).clamp(0, total)
+        : _number(data['unansweredQuestions']);
+    final percentage = _decimal(data['percentage']).clamp(0.0, 100.0);
+    final answers = data['answers'] is List
+        ? data['answers'] as List
+        : <dynamic>[];
+    final scoreColor = _scoreColor(percentage);
     return ListView(
-      padding: const EdgeInsets.all(18),
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 30),
       children: [
-        Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [navy, teal],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(24),
-          ),
-          child: Column(
-            children: [
-              const Icon(
-                Icons.emoji_events_rounded,
-                color: gold,
-                size: 42,
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'Your Performance',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 15,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                '${percentage.toStringAsFixed(1)}%',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 42,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              Text(
-                _grade(percentage),
-                style: const TextStyle(
-                  color: gold,
-                  fontSize: 17,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 18),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: LinearProgressIndicator(
-                  value: total == 0
-                      ? 0
-                      : (correct / total).clamp(0.0, 1.0),
-                  minHeight: 9,
-                  backgroundColor: Colors.white24,
-                  valueColor:
-                      const AlwaysStoppedAnimation<Color>(gold),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                '$correct correct out of $total questions',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
+        _performanceCard(
+          percentage: percentage,
+          correct: correct,
+          total: total,
+          scoreColor: scoreColor,
         ),
-
-        const SizedBox(height: 22),
-
+        const SizedBox(height: 25),
         const Text(
           'Result Breakdown',
           style: TextStyle(
-            color: navy,
+            color: AtlasColors.navy,
             fontSize: 19,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w900,
           ),
         ),
-
-        const SizedBox(height: 12),
-
+        const SizedBox(height: 13),
         Row(
           children: [
             Expanded(
-              child: _statCard(
-                'Correct',
-                correct,
-                const Color(0xFF16845B),
-                Icons.check_circle_rounded,
+              child: _StatCard(
+                label: 'Correct',
+                value: correct,
+                icon: Icons.check_circle_rounded,
+                color: AtlasColors.success,
               ),
             ),
             const SizedBox(width: 9),
             Expanded(
-              child: _statCard(
-                'Incorrect',
-                incorrect,
-                const Color(0xFFD9534F),
-                Icons.cancel_rounded,
+              child: _StatCard(
+                label: 'Incorrect',
+                value: incorrect,
+                icon: Icons.cancel_rounded,
+                color: AtlasColors.error,
               ),
             ),
             const SizedBox(width: 9),
             Expanded(
-              child: _statCard(
-                'Unanswered',
-                unanswered,
-                const Color(0xFFE09B32),
-                Icons.remove_circle_rounded,
+              child: _StatCard(
+                label: 'Skipped',
+                value: unanswered,
+                icon: Icons.remove_circle_rounded,
+                color: AtlasColors.gold,
               ),
             ),
           ],
         ),
-
-        const SizedBox(height: 24),
-
-        const Text(
-          'Question Review',
-          style: TextStyle(
-            color: navy,
-            fontSize: 19,
-            fontWeight: FontWeight.w800,
-          ),
+        const SizedBox(height: 27),
+        Row(
+          children: [
+            const Expanded(
+              child: Text(
+                'Question Review',
+                style: TextStyle(
+                  color: AtlasColors.navy,
+                  fontSize: 19,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 11,
+                vertical: 7,
+              ),
+              decoration: BoxDecoration(
+                color: AtlasColors.paleBlue,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                '${answers.length} Questions',
+                style: const TextStyle(
+                  color: AtlasColors.royalBlue,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ],
         ),
-
-        const SizedBox(height: 5),
-
+        const SizedBox(height: 6),
         const Text(
           'Review your selected answers and explanations.',
           style: TextStyle(
-            color: Colors.black54,
-            fontSize: 13,
+            color: AtlasColors.secondaryText,
+            fontSize: 12,
           ),
         ),
-
-        const SizedBox(height: 14),
-
+        const SizedBox(height: 15),
         if (answers.isEmpty)
-          const Text('No detailed question review is available.')
+          const _NoReviewCard()
         else
-          ...List.generate(
-            answers.length,
-            (index) {
-              final raw = answers[index];
-
-              if (raw is! Map) {
-                return const SizedBox.shrink();
-              }
-
-              return _questionCard(
-                Map<String, dynamic>.from(raw),
-                index,
-              );
-            },
-          ),
-
-        const SizedBox(height: 24),
-
+          ...List.generate(answers.length, (index) {
+            final raw = answers[index];
+            if (raw is! Map) {
+              return const SizedBox.shrink();
+            }
+            return _QuestionReviewCard(
+              answer: Map<String, dynamic>.from(raw),
+              index: index,
+            );
+          }),
+        const SizedBox(height: 20),
         SizedBox(
-          height: 52,
-          child: ElevatedButton.icon(
+          height: 54,
+          child: FilledButton.icon(
             onPressed: () {
               Navigator.popUntil(
                 context,
@@ -278,12 +214,12 @@ class _StudentMcqResultScreenState
             label: const Text(
               'Back to Dashboard',
               style: TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 15,
+                fontWeight: FontWeight.w900,
+                fontSize: 13,
               ),
             ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: navy,
+            style: FilledButton.styleFrom(
+              backgroundColor: AtlasColors.navy,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(15),
@@ -291,22 +227,151 @@ class _StudentMcqResultScreenState
             ),
           ),
         ),
-
-        const SizedBox(height: 20),
       ],
     );
   }
-
-  Widget _statCard(
-    String label,
-    int value,
-    Color color,
-    IconData icon,
-  ) {
+  Widget _performanceCard({
+    required double percentage,
+    required int correct,
+    required int total,
+    required Color scoreColor,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(25),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [
+            AtlasColors.navy,
+            AtlasColors.royalBlue,
+            AtlasColors.brightBlue,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(25),
+        boxShadow: [
+          BoxShadow(
+            color: AtlasColors.navy.withValues(alpha: 0.17),
+            blurRadius: 22,
+            offset: const Offset(0, 9),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            height: 57,
+            width: 57,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: AtlasColors.champagne.withValues(alpha: 0.6),
+              ),
+            ),
+            child: const Icon(
+              Icons.emoji_events_rounded,
+              color: AtlasColors.champagne,
+              size: 31,
+            ),
+          ),
+          const SizedBox(height: 17),
+          const Text(
+            'YOUR PERFORMANCE',
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 10,
+              letterSpacing: 2,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '${percentage.toStringAsFixed(1)}%',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 43,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -1,
+            ),
+          ),
+          Text(
+            _grade(percentage),
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: AtlasColors.champagne,
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 22),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: LinearProgressIndicator(
+              value: percentage / 100,
+              minHeight: 9,
+              backgroundColor: Colors.white24,
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                AtlasColors.champagne,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            '$correct correct out of $total questions',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 17),
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 15,
+              vertical: 9,
+            ),
+            decoration: BoxDecoration(
+              color: scoreColor.withValues(alpha: 0.18),
+              borderRadius: BorderRadius.circular(30),
+              border: Border.all(
+                color: scoreColor.withValues(alpha: 0.55),
+              ),
+            ),
+            child: Text(
+              percentage >= 70
+                  ? 'Strong performance'
+                  : 'More practice will help you improve',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+class _StatCard extends StatelessWidget {
+  final String label;
+  final int value;
+  final IconData icon;
+  final Color color;
+  const _StatCard({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.color,
+  });
+  @override
+  Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(
         vertical: 16,
-        horizontal: 8,
+        horizontal: 6,
       ),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -314,17 +379,24 @@ class _StudentMcqResultScreenState
         border: Border.all(
           color: color.withValues(alpha: 0.18),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: AtlasColors.navy.withValues(alpha: 0.035),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Column(
         children: [
-          Icon(icon, color: color, size: 24),
+          Icon(icon, color: color, size: 23),
           const SizedBox(height: 9),
           Text(
             '$value',
             style: TextStyle(
               color: color,
               fontSize: 23,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w900,
             ),
           ),
           const SizedBox(height: 4),
@@ -332,56 +404,61 @@ class _StudentMcqResultScreenState
             label,
             textAlign: TextAlign.center,
             style: const TextStyle(
-              color: Colors.black54,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
+              color: AtlasColors.secondaryText,
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],
       ),
     );
   }
-
-  Widget _questionCard(
-    Map<String, dynamic> answer,
-    int index,
-  ) {
+}
+class _QuestionReviewCard extends StatelessWidget {
+  final Map<String, dynamic> answer;
+  final int index;
+  const _QuestionReviewCard({
+    required this.answer,
+    required this.index,
+  });
+  @override
+  Widget build(BuildContext context) {
     final question = answer['question']?.toString() ?? '';
-
-    final options = (answer['options'] as List<dynamic>?) ?? [];
-
+    final options = answer['options'] is List
+        ? answer['options'] as List
+        : <dynamic>[];
     final selected = answer['selectedAnswer']?.toString();
-
     final correct = answer['correctAnswer']?.toString() ?? '';
-
     final explanation = answer['explanation']?.toString() ?? '';
-
     final isAnswered =
         answer['isAnswered'] == true || selected != null;
-
     final isCorrect = answer['isCorrect'] == true;
-
-    final Color statusColor = !isAnswered
-        ? const Color(0xFFE09B32)
+    final statusColor = !isAnswered
+        ? AtlasColors.gold
         : isCorrect
-            ? const Color(0xFF16845B)
-            : const Color(0xFFD9534F);
-
-    final String status = !isAnswered
+            ? AtlasColors.success
+            : AtlasColors.error;
+    final status = !isAnswered
         ? 'Unanswered'
         : isCorrect
             ? 'Correct'
             : 'Incorrect';
-
     return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 15),
+      padding: const EdgeInsets.all(17),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(19),
         border: Border.all(
-          color: statusColor.withValues(alpha: 0.25),
+          color: statusColor.withValues(alpha: 0.24),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: AtlasColors.navy.withValues(alpha: 0.035),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -390,11 +467,12 @@ class _StudentMcqResultScreenState
             children: [
               Expanded(
                 child: Text(
-                  'Question ${index + 1}',
+                  'QUESTION ${index + 1}',
                   style: const TextStyle(
-                    color: navy,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 14,
+                    color: AtlasColors.royalBlue,
+                    fontSize: 10,
+                    letterSpacing: 1.2,
+                    fontWeight: FontWeight.w900,
                   ),
                 ),
               ),
@@ -411,135 +489,142 @@ class _StudentMcqResultScreenState
                   status,
                   style: TextStyle(
                     color: statusColor,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 11,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
               ),
             ],
           ),
-
-          const SizedBox(height: 13),
-
+          const SizedBox(height: 14),
           Text(
             question,
             style: const TextStyle(
-              color: Color(0xFF202A30),
-              fontSize: 15,
+              color: AtlasColors.charcoal,
+              fontSize: 14,
+              height: 1.6,
               fontWeight: FontWeight.w700,
-              height: 1.5,
             ),
           ),
-
-          const SizedBox(height: 13),
-
+          const SizedBox(height: 15),
           ...List.generate(options.length, (optionIndex) {
             final letter = String.fromCharCode(65 + optionIndex);
             final option = options[optionIndex].toString();
-
             final isCorrectOption = letter == correct;
             final isSelectedOption = letter == selected;
-
-            Color optionColor = Colors.black54;
-            Color optionBackground = const Color(0xFFF7F8F5);
-            IconData? optionIcon;
-
+            Color textColor = AtlasColors.secondaryText;
+            Color background = AtlasColors.ivory;
+            IconData? trailingIcon;
             if (isCorrectOption) {
-              optionColor = const Color(0xFF16845B);
-              optionBackground = const Color(0xFFE7F5EE);
-              optionIcon = Icons.check_circle_rounded;
+              textColor = AtlasColors.success;
+              background = const Color(0xFFE9F6EF);
+              trailingIcon = Icons.check_circle_rounded;
             } else if (isSelectedOption) {
-              optionColor = const Color(0xFFD9534F);
-              optionBackground = const Color(0xFFFFEEEE);
-              optionIcon = Icons.cancel_rounded;
+              textColor = AtlasColors.error;
+              background = const Color(0xFFFFEEEE);
+              trailingIcon = Icons.cancel_rounded;
             }
-
             return Container(
-              margin: const EdgeInsets.only(bottom: 7),
-              padding: const EdgeInsets.all(11),
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 11,
+              ),
               decoration: BoxDecoration(
-                color: optionBackground,
-                borderRadius: BorderRadius.circular(11),
+                color: background,
+                borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
                 children: [
                   Text(
                     '$letter.',
                     style: TextStyle(
-                      color: optionColor,
-                      fontWeight: FontWeight.w800,
+                      color: textColor,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 12,
                     ),
                   ),
-                  const SizedBox(width: 9),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       option,
                       style: TextStyle(
-                        color: optionColor,
-                        fontSize: 13,
+                        color: textColor,
+                        fontSize: 12,
+                        height: 1.4,
+                        fontWeight: isCorrectOption || isSelectedOption
+                            ? FontWeight.w700
+                            : FontWeight.w500,
                       ),
                     ),
                   ),
-                  if (optionIcon != null)
+                  if (trailingIcon != null)
                     Icon(
-                      optionIcon,
-                      color: optionColor,
+                      trailingIcon,
+                      color: textColor,
                       size: 18,
                     ),
                 ],
               ),
             );
           }),
-
           if (!isAnswered) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: 5),
             const Text(
               'You did not select an answer.',
               style: TextStyle(
-                color: Color(0xFFE09B32),
-                fontWeight: FontWeight.w600,
-                fontSize: 12,
+                color: AtlasColors.gold,
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ],
-
           if (explanation.isNotEmpty) ...[
             const SizedBox(height: 13),
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(13),
               decoration: BoxDecoration(
-                color: const Color(0xFFEAF2F1),
-                borderRadius: BorderRadius.circular(12),
+                color: AtlasColors.paleBlue,
+                borderRadius: BorderRadius.circular(13),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Explanation',
-                    style: TextStyle(
-                      color: navy,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 12,
-                    ),
+                  const Row(
+                    children: [
+                      Icon(
+                        Icons.lightbulb_outline_rounded,
+                        color: AtlasColors.royalBlue,
+                        size: 17,
+                      ),
+                      SizedBox(width: 7),
+                      Text(
+                        'Explanation',
+                        style: TextStyle(
+                          color: AtlasColors.navy,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 5),
+                  const SizedBox(height: 7),
                   Text(
                     explanation,
                     style: const TextStyle(
-                      color: Color(0xFF40565A),
-                      fontSize: 13,
-                      height: 1.5,
+                      color: AtlasColors.charcoal,
+                      fontSize: 12,
+                      height: 1.55,
                     ),
                   ),
                 ],
               ),
             ),
           ],
-
           if ((answer['subject'] ?? '').toString().isNotEmpty ||
               (answer['topic'] ?? '').toString().isNotEmpty) ...[
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
             Text(
               [
                 if ((answer['subject'] ?? '').toString().isNotEmpty)
@@ -548,8 +633,9 @@ class _StudentMcqResultScreenState
                   answer['topic'].toString(),
               ].join(' • '),
               style: const TextStyle(
-                color: Colors.black45,
-                fontSize: 11,
+                color: AtlasColors.secondaryText,
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ],
@@ -557,36 +643,78 @@ class _StudentMcqResultScreenState
       ),
     );
   }
-
-  Widget _message(String title, String description) {
+}
+class _NoReviewCard extends StatelessWidget {
+  const _NoReviewCard();
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(17),
+        border: Border.all(color: AtlasColors.border),
+      ),
+      child: const Text(
+        'No detailed question review is available for this session.',
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          color: AtlasColors.secondaryText,
+          fontSize: 12,
+          height: 1.5,
+        ),
+      ),
+    );
+  }
+}
+class _ResultMessage extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String message;
+  const _ResultMessage({
+    required this.icon,
+    required this.title,
+    required this.message,
+  });
+  @override
+  Widget build(BuildContext context) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(28),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
-              Icons.info_outline_rounded,
-              color: teal,
-              size: 45,
+            Container(
+              height: 76,
+              width: 76,
+              decoration: BoxDecoration(
+                color: AtlasColors.paleBlue,
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: Icon(
+                icon,
+                color: AtlasColors.royalBlue,
+                size: 35,
+              ),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 17),
             Text(
               title,
               textAlign: TextAlign.center,
               style: const TextStyle(
-                color: navy,
+                color: AtlasColors.navy,
                 fontSize: 19,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w900,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              description,
+              message,
               textAlign: TextAlign.center,
               style: const TextStyle(
-                color: Colors.black54,
-                height: 1.5,
+                color: AtlasColors.secondaryText,
+                fontSize: 13,
+                height: 1.6,
               ),
             ),
           ],
