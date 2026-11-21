@@ -74,10 +74,10 @@ class _SubscriptionRequestScreenState
                 const SizedBox(height: 12),
                 const CircleAvatar(
                   radius: 34,
-                  backgroundColor: Color(0xFFE5F1EF),
+                  backgroundColor: Color(0xFFEAF1FC),
                   child: Icon(
                     Icons.check_circle_rounded,
-                    color: Color(0xFF28777B),
+                    color: Color(0xFF174A91),
                     size: 42,
                   ),
                 ),
