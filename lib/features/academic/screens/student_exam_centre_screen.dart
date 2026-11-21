@@ -67,7 +67,7 @@ class StudentExamCentreScreen extends StatelessWidget {
   Widget _pathwaySubjects(BuildContext context,String pathwayId) =>
     StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(
       stream:FirebaseFirestore.instance.collection('mcq_exam_sets')
-        .where('pathwayId',isEqualTo:pathwayId).where('isPublished',isEqualTo:true).snapshots(),
+        .where('pathwayId',isEqualTo:pathwayId).where('trackType',isEqualTo:'licensing').where('isPublished',isEqualTo:true).snapshots(),
       builder:(c,s){
         if(s.hasError)return const ListTile(title:Text('Unable to load exam sets.',style:TextStyle(color:AtlasColors.error)));
         if(!s.hasData)return const Padding(padding:EdgeInsets.all(12),child:CircularProgressIndicator());
@@ -83,7 +83,7 @@ class StudentExamCentreScreen extends StatelessWidget {
 
   Widget _setList(BuildContext context,String? pathwayId) =>
     StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(
-      stream:FirebaseFirestore.instance.collection('mcq_exam_sets').where('isPublished',isEqualTo:true).snapshots(),
+      stream:FirebaseFirestore.instance.collection('mcq_exam_sets').where('trackType',isEqualTo:'mbbs').where('isPublished',isEqualTo:true).snapshots(),
       builder:(c,s){
         if(s.hasError)return _message('Unable to load published practice sets.');
         if(!s.hasData)return const Center(child:CircularProgressIndicator());
