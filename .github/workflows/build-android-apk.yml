@@ -44,11 +44,13 @@ jobs:
             exit 1
           fi
           mkdir -p android/app/keystore
-          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/keystore/atlas-release.jks
+          printf "%s" "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/keystore/atlas-release.jks
+          test -s android/app/keystore/atlas-release.jks
+          echo "Persistent keystore file created successfully."
 
       - name: Build release APK
         env:
-          ANDROID_KEYSTORE_PATH: keystore/atlas-release.jks
+          ANDROID_KEYSTORE_PATH: ${{ github.workspace }}/android/app/keystore/atlas-release.jks
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
