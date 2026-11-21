@@ -171,6 +171,22 @@ service cloud.firestore {
     }
 
     // ==================================================
+    // MCQ CURRICULUM METADATA
+    // ==================================================
+    match /licensing_pathways/{pathwayId} {
+      allow read: if signedIn();
+      allow create, update, delete: if isAdmin();
+    }
+    match /licensing_pathway_subjects/{subjectId} {
+      allow read: if signedIn();
+      allow create, update, delete: if isAdmin();
+    }
+    match /mcq_exam_sets/{examSetId} {
+      allow read: if isAdmin() || (hasFeatureAccess('mcqPractice') && resource.data.isPublished == true);
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ==================================================
     // LEARNING RESOURCES
     // ==================================================
 
