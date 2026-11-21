@@ -25,6 +25,9 @@ class McqManagementService {
     String? subject,
     String? topic,
     bool? publishedOnly,
+    String? trackType,
+    String? pathwayId,
+    String? examSetId,
   }) async* {
     await _verifyAdmin();
     Query<Map<String, dynamic>> query = _collection;
@@ -37,6 +40,9 @@ class McqManagementService {
     if (topic != null && topic.isNotEmpty) {
       query = query.where('topic', isEqualTo: topic);
     }
+    if (trackType != null && trackType.isNotEmpty) query = query.where('trackType', isEqualTo: trackType);
+    if (pathwayId != null && pathwayId.isNotEmpty) query = query.where('pathwayId', isEqualTo: pathwayId);
+    if (examSetId != null && examSetId.isNotEmpty) query = query.where('examSetId', isEqualTo: examSetId);
     if (publishedOnly == true) {
       query = query.where('isPublished', isEqualTo: true);
     }
@@ -183,6 +189,12 @@ class McqManagementService {
       correctAnswer: correctAnswer,
       explanation: explanation,
       yearId: (publicData['yearId'] ?? '').toString(),
+      trackType: (publicData['trackType'] ?? 'mbbs').toString(),
+      pathwayId: (publicData['pathwayId'] ?? '').toString(),
+      pathwayName: (publicData['pathwayName'] ?? '').toString(),
+      subjectId: (publicData['subjectId'] ?? '').toString(),
+      examSetId: (publicData['examSetId'] ?? '').toString(),
+      examSetName: (publicData['examSetName'] ?? '').toString(),
       subject: (publicData['subject'] ?? '').toString(),
       topic: (publicData['topic'] ?? '').toString(),
       difficulty:
@@ -218,9 +230,16 @@ class McqManagementService {
     if (question.question.trim().isEmpty) {
       throw Exception('Question cannot be empty.');
     }
-    if (question.yearId.trim().isEmpty) {
-      throw Exception('Academic year is required.');
+    if (question.trackType == 'mbbs' && question.yearId.trim().isEmpty) {
+      throw Exception('Academic year is required for MBBS questions.');
     }
+    if (question.trackType == 'licensing' && question.pathwayId.trim().isEmpty) {
+      throw Exception('Licensing pathway is required.');
+    }
+    if (question.trackType != 'mbbs' && question.trackType != 'licensing') {
+      throw Exception('Select a valid MCQ track.');
+    }
+    if (question.examSetId.trim().isEmpty) throw Exception('Exam set is required.');
     if (question.subject.trim().isEmpty) {
       throw Exception('Subject is required.');
     }
