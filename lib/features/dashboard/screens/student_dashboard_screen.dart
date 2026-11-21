@@ -7,6 +7,8 @@ import '../../profile/screens/profile_screen.dart';
 import '../../auth/screens/student_account_status_screen.dart';
 import '../../auth/services/student_auth_service.dart';
 import '../../mcqs/screens/student_mcq_hub_screen.dart';
+import '../../academic/screens/student_study_library_screen.dart';
+import '../../academic/screens/student_exam_centre_screen.dart';
 import '../../subscriptions/screens/subscription_plans_screen.dart';
 class StudentDashboardScreen extends StatelessWidget {
   const StudentDashboardScreen({super.key});
@@ -52,8 +54,10 @@ class StudentDashboardScreen extends StatelessWidget {
       }
       if (feature == 'mcqPractice') {
         Navigator.of(context).push(MaterialPageRoute(builder: (_) => const StudentMcqHubScreen()));
-      } else {
-        Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SubscriptionPlansScreen()));
+      } else if (feature == 'studyLibrary') {
+        Navigator.of(context).push(MaterialPageRoute(builder: (_) => const StudentStudyLibraryScreen()));
+      } else if (feature == 'examinations' || feature == 'examPathways') {
+        Navigator.of(context).push(MaterialPageRoute(builder: (_) => StudentExamCentreScreen(pathwaysOnly: feature == 'examPathways')));
       }
     } catch (_) {
       if (!context.mounted) return;
@@ -388,38 +392,21 @@ class StudentDashboardScreen extends StatelessWidget {
     );
   }
   Widget _buildProgressCard() {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return const SizedBox.shrink();
+    final attempts = FirebaseFirestore.instance.collection('mcq_attempts').where('userId', isEqualTo: uid).snapshots();
+    final progress = FirebaseFirestore.instance.collection('student_resource_progress').where('userId', isEqualTo: uid).snapshots();
+    final exams = FirebaseFirestore.instance.collection('exam_attempts').where('userId', isEqualTo: uid).snapshots();
     return Container(
       padding: const EdgeInsets.all(19),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AtlasColors.border),
-        boxShadow: [
-          BoxShadow(
-            color: AtlasColors.navy.withValues(alpha: 0.035),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: const Column(
-        children: [
-          _ProgressRow(
-            icon: Icons.menu_book_rounded,
-            title: 'Study materials completed',
-          ),
-          Divider(height: 25, color: AtlasColors.border),
-          _ProgressRow(
-            icon: Icons.quiz_outlined,
-            title: 'MCQs attempted',
-          ),
-          Divider(height: 25, color: AtlasColors.border),
-          _ProgressRow(
-            icon: Icons.emoji_events_outlined,
-            title: 'Examination results',
-          ),
-        ],
-      ),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22), border: Border.all(color: AtlasColors.border)),
+      child: Column(children: [
+        StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(stream: progress, builder: (c,s) => _ProgressRow(icon: Icons.menu_book_rounded, title: 'Study materials completed', value: s.hasData ? '${s.data!.docs.where((d)=>d.data()['completed']==true).length}' : '—')),
+        const Divider(height: 25, color: AtlasColors.border),
+        StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(stream: attempts, builder: (c,s) => _ProgressRow(icon: Icons.quiz_outlined, title: 'MCQ sessions completed', value: s.hasData ? '${s.data!.size}' : '—')),
+        const Divider(height: 25, color: AtlasColors.border),
+        StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(stream: exams, builder: (c,s) => _ProgressRow(icon: Icons.emoji_events_outlined, title: 'Examinations attempted', value: s.hasData ? '${s.data!.size}' : '—')),
+      ]),
     );
   }
   Widget _buildAccountCard(BuildContext context) {
@@ -670,10 +657,8 @@ class _LearningTile extends StatelessWidget {
 class _ProgressRow extends StatelessWidget {
   final IconData icon;
   final String title;
-  const _ProgressRow({
-    required this.icon,
-    required this.title,
-  });
+  final String value;
+  const _ProgressRow({required this.icon, required this.title, required this.value});
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -702,14 +687,7 @@ class _ProgressRow extends StatelessWidget {
             ),
           ),
         ),
-        const Text(
-          'Coming soon',
-          style: TextStyle(
-            color: AtlasColors.secondaryText,
-            fontSize: 9,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        Text(value, style: const TextStyle(color: AtlasColors.royalBlue, fontSize: 12, fontWeight: FontWeight.w900)),
       ],
     );
   }
