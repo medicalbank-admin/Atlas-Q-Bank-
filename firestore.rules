@@ -182,7 +182,13 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
     match /mcq_exam_sets/{examSetId} {
-      allow read: if isAdmin() || ((hasFeatureAccess('mcqPractice') || hasFeatureAccess('examPathways')) && resource.data.isPublished == true);
+      allow read: if isAdmin() || (
+        resource.data.isPublished == true &&
+        (
+          (resource.data.trackType == 'licensing' && hasFeatureAccess('examPathways')) ||
+          (resource.data.trackType != 'licensing' && hasFeatureAccess('mcqPractice'))
+        )
+      );
       allow create, update, delete: if isAdmin();
     }
 
@@ -310,11 +316,11 @@ service cloud.firestore {
 
       allow read: if isAdmin() ||
         (
+          resource.data.isPublished == true &&
           (
-            hasFeatureAccess('mcqPractice') ||
-            hasFeatureAccess('examPathways')
-          ) &&
-          resource.data.isPublished == true
+            (resource.data.trackType == 'licensing' && hasFeatureAccess('examPathways')) ||
+            (resource.data.trackType != 'licensing' && hasFeatureAccess('mcqPractice'))
+          )
         );
 
       allow create, update, delete: if isAdmin();
