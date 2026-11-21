@@ -342,7 +342,7 @@ exports.startMcqPractice = onCall(
         setData = setSnapshot.data();
         requiredFeature = setData.trackType === "licensing"
           ? "examPathways"
-          : "mcqPractice";
+          : "examinations";
         const configuredDuration = Number(setData.durationMinutes);
         if (Number.isInteger(configuredDuration) && configuredDuration > 0) {
           durationMinutes = Math.min(configuredDuration, 240);
@@ -469,7 +469,7 @@ exports.submitMcqPractice = onCall(
           if (!examSetSnapshot.exists || examSetSnapshot.data().isPublished !== true) {
             throw new HttpsError("failed-precondition", "This exam set is no longer published.");
           }
-          const feature = examSetSnapshot.data().trackType === "licensing" ? "examPathways" : "mcqPractice";
+          const feature = examSetSnapshot.data().trackType === "licensing" ? "examPathways" : "examinations";
           if ((user.subscriptionAccessPermissions || {})[feature] !== true) {
             throw new HttpsError("permission-denied", "Your subscription no longer includes this exam set.");
           }
