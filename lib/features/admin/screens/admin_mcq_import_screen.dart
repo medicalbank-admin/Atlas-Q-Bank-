@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../mcqs/services/mcq_bulk_import_service.dart';
@@ -211,72 +210,6 @@ class _AdminMcqImportScreenState
   void _showMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
-    );
-  }
-
-  Widget _buildYearSelector() {
-    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: FirebaseFirestore.instance
-          .collection('academic_years')
-          .snapshots(),
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return const Text(
-            'Unable to load academic years. Check Firestore permissions.',
-          );
-        }
-
-        if (!snapshot.hasData) {
-          return const LinearProgressIndicator();
-        }
-
-        final documents = snapshot.data!.docs;
-
-        if (documents.isEmpty) {
-          return const Text(
-            'No academic years found. Create an academic year first.',
-          );
-        }
-
-        final validSelection = documents.any(
-          (doc) => doc.id == _selectedYearId,
-        );
-
-        final selectedValue =
-            validSelection ? _selectedYearId : null;
-
-        return DropdownButtonFormField<String>(
-          value: selectedValue,
-          isExpanded: true,
-          decoration: const InputDecoration(
-            labelText: 'Academic Year',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.school_outlined),
-          ),
-          items: documents.map((doc) {
-            final data = doc.data();
-
-            final name = data['name'] ??
-                data['title'] ??
-                data['year'] ??
-                doc.id;
-
-            return DropdownMenuItem<String>(
-              value: doc.id,
-              child: Text(
-                name.toString(),
-                overflow: TextOverflow.ellipsis,
-              ),
-            );
-          }).toList(),
-          onChanged: (value) {
-            setState(() {
-              _selectedYearId = value;
-              _previewResult = null;
-            });
-          },
-        );
-      },
     );
   }
 
