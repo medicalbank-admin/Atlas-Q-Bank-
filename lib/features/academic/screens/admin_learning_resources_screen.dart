@@ -93,7 +93,6 @@ class _AdminLearningResourcesScreenState
                     onTap: () => setState(() {
                       _yearId = doc.id;
                       _subjectId = null;
-                      _subjectName = null;
                     }),
                   );
                 }).toList(),
