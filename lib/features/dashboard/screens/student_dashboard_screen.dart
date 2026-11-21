@@ -1,9 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../../app/atlas_academy_app.dart';
 import '../../auth/screens/student_account_status_screen.dart';
 import '../../auth/services/student_auth_service.dart';
 import '../../mcqs/screens/student_mcq_hub_screen.dart';
+import '../../subscriptions/screens/subscription_plans_screen.dart';
 class StudentDashboardScreen extends StatelessWidget {
   const StudentDashboardScreen({super.key});
   Future<void> _signOut(BuildContext context) async {
@@ -27,12 +29,27 @@ class StudentDashboardScreen extends StatelessWidget {
       ),
     );
   }
-  void _openMcqCentre(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => const StudentMcqHubScreen(),
-      ),
-    );
+  Future<void> _openMcqCentre(BuildContext context) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    try {
+      final profile = await FirebaseFirestore.instance
+          .collection('users').doc(user.uid).get();
+      final data = profile.data() ?? {};
+      final hasMembership = data['subscriptionStatus'] == 'active' &&
+          data['accessEnabled'] == true;
+      if (!context.mounted) return;
+      Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => hasMembership
+            ? const StudentMcqHubScreen()
+            : const SubscriptionPlansScreen(),
+      ));
+    } catch (_) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Unable to check your membership. Please try again.')),
+      );
+    }
   }
   @override
   Widget build(BuildContext context) {
