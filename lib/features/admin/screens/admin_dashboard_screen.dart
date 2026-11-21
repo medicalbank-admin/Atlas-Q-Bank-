@@ -187,11 +187,18 @@ class AdminDashboardScreen extends StatelessWidget {
         InkWell(
           onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ProfileScreen(isAdmin: true))),
           borderRadius: BorderRadius.circular(30),
-          child: CircleAvatar(
-            radius: 22,
-            backgroundColor: AtlasColors.paleBlue,
-            backgroundImage: FirebaseAuth.instance.currentUser?.photoURL != null ? NetworkImage(FirebaseAuth.instance.currentUser!.photoURL!) : null,
-            child: FirebaseAuth.instance.currentUser?.photoURL == null ? const Icon(Icons.person_rounded, color: AtlasColors.navy) : null,
+          child: StreamBuilder(
+            stream: FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser?.uid).snapshots(),
+            builder: (context, snapshot) {
+              final photo = (snapshot.data?.data()?['profileImageUrl'] ?? FirebaseAuth.instance.currentUser?.photoURL ?? '').toString();
+              final name = (snapshot.data?.data()?['fullName'] ?? FirebaseAuth.instance.currentUser?.displayName ?? '').toString();
+              return CircleAvatar(
+                radius: 22,
+                backgroundColor: AtlasColors.paleBlue,
+                backgroundImage: photo.isNotEmpty ? NetworkImage(photo) : null,
+                child: photo.isEmpty ? Text(name.isNotEmpty ? name[0].toUpperCase() : 'A', style: const TextStyle(color: AtlasColors.navy, fontWeight: FontWeight.w900)) : null,
+              );
+            },
           ),
         ),
         const SizedBox(width: 8),
