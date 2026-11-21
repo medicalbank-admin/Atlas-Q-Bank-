@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../app/atlas_academy_app.dart';
 import '../models/learning_resource_model.dart';
 
@@ -89,7 +91,7 @@ class _StudentStudyLibraryScreenState extends State<StudentStudyLibraryScreen> {
       builder: (c,s) {
         if(!s.hasData)return _loadingOrError(s);
         if(s.data!.docs.isEmpty)return _empty('No subjects are available for this academic year yet.');
-        return Column(children:s.data!.docs.map((d)=>_tile((d.data()['name']??'Subject').toString(),'Open topics',Icons.menu_book_rounded,()=>setState(()=>{subjectId=d.id,subjectName=(d.data()['name']??'').toString()}))).toList());
+        return Column(children:s.data!.docs.map((d)=>_tile((d.data()['name']??'Subject').toString(),'Open topics',Icons.menu_book_rounded,()=>setState(() { subjectId=d.id; subjectName=(d.data()['name']??'').toString(); }))).toList());
       },
     ),
   ]);
@@ -102,7 +104,7 @@ class _StudentStudyLibraryScreenState extends State<StudentStudyLibraryScreen> {
       builder: (c,s) {
         if(!s.hasData)return _loadingOrError(s);
         if(s.data!.docs.isEmpty)return _empty('No topics are available for this subject yet.');
-        return Column(children:s.data!.docs.map((d)=>_tile((d.data()['title']??d.data()['name']??'Topic').toString(),'View learning resources',Icons.topic_rounded,()=>setState(()=>{topicId=d.id,topicName=(d.data()['title']??d.data()['name']??'').toString()}))).toList());
+        return Column(children:s.data!.docs.map((d)=>_tile((d.data()['title']??d.data()['name']??'Topic').toString(),'View learning resources',Icons.topic_rounded,()=>setState(() { topicId=d.id; topicName=(d.data()['title']??d.data()['name']??'').toString(); }))).toList());
       },
     ),
   ]);
@@ -120,7 +122,7 @@ class _StudentStudyLibraryScreenState extends State<StudentStudyLibraryScreen> {
         if(docs.isEmpty)return _empty('No published materials are available in this topic yet.');
         return Column(children:docs.map((d){
           final r=LearningResourceModel.fromFirestore(d);
-          return _tile(r.title,r.description.isEmpty?r.type.name:r.description,_icon(r.type),()=>_openResource(r.resourceUrl));
+          return _tile(r.title,r.description.isEmpty?r.type.name:r.description,_icon(r.type),()=>_openResource(r));
         }).toList());
       },
     ),
@@ -134,15 +136,23 @@ class _StudentStudyLibraryScreenState extends State<StudentStudyLibraryScreen> {
     LearningResourceType.document => Icons.description_rounded,
   };
 
-  Future<void> _openResource(String url) async {
-    final uri=Uri.tryParse(url);
+  Future<void> _openResource(LearningResourceModel resource) async {
+    final uri=Uri.tryParse(resource.resourceUrl);
     if(uri==null || !uri.hasScheme) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('This resource link is invalid.')));
       return;
     }
-    // Use the platform browser through the existing URL launcher dependency.
-    // Navigation is delegated to the app's link handler when available.
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('Open resource: $url')));
+    try {
+      final opened=await launchUrl(uri,mode:LaunchMode.externalApplication);
+      if(!opened) throw Exception('No application could open this resource.');
+      final uid=FirebaseAuth.instance.currentUser?.uid;
+      if(uid!=null) await FirebaseFirestore.instance.collection('student_resource_progress').doc('${uid}_${resource.id}').set({
+        'userId':uid,'resourceId':resource.id,'yearId':resource.yearId,'subjectId':resource.subjectId,
+        'topicId':resource.topicId,'completed':true,'completedAt':FieldValue.serverTimestamp(),
+      },SetOptions(merge:true));
+    } catch(e) {
+      if(mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('Unable to open this resource: $e')));
+    }
   }
 
   Widget _tile(String title,String subtitle,IconData icon,VoidCallback tap)=>Card(
