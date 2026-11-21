@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +22,13 @@ class _StudentMcqPracticeScreenState
   bool _isLoading = true;
   bool _isSubmitting = false;
   late DateTime _startedAt;
+  Timer? _countdownTimer;
+  int? _remainingSeconds;
+  @override
+  void dispose() {
+    _countdownTimer?.cancel();
+    super.dispose();
+  }
   @override
   void initState() {
     super.initState();
@@ -29,6 +37,15 @@ class _StudentMcqPracticeScreenState
   }
   Future<void> _loadQuestions() async {
     try {
+      var durationMinutes = 60;
+      if (widget.examSetId != null && widget.examSetId!.isNotEmpty) {
+        final setSnapshot = await FirebaseFirestore.instance
+            .collection('mcq_exam_sets').doc(widget.examSetId).get();
+        final configuredDuration = setSnapshot.data()?['durationMinutes'];
+        if (configuredDuration is num && configuredDuration.toInt() > 0) {
+          durationMinutes = configuredDuration.toInt().clamp(1, 240);
+        }
+      }
       Query<Map<String, dynamic>> query = FirebaseFirestore.instance
           .collection('mcqs')
           .where('isPublished', isEqualTo: true);
@@ -46,8 +63,10 @@ class _StudentMcqPracticeScreenState
         _selectedAnswers = List<int?>.filled(questions.length, null);
         _currentIndex = 0;
         _startedAt = DateTime.now();
+        _remainingSeconds = durationMinutes * 60;
         _isLoading = false;
       });
+      _startCountdown();
     } catch (_) {
       if (!mounted) return;
       setState(() {
@@ -58,6 +77,27 @@ class _StudentMcqPracticeScreenState
         isError: true,
       );
     }
+  }
+  void _startCountdown() {
+    _countdownTimer?.cancel();
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted || _isSubmitting) {
+        timer.cancel();
+        return;
+      }
+      final remaining = (_remainingSeconds ?? 0) - 1;
+      setState(() => _remainingSeconds = remaining < 0 ? 0 : remaining);
+      if (remaining <= 0) {
+        timer.cancel();
+        _finishPractice(force: true);
+      }
+    });
+  }
+  String _formatRemainingTime() {
+    final seconds = _remainingSeconds ?? 0;
+    final minutes = seconds ~/ 60;
+    final remainder = seconds % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${remainder.toString().padLeft(2, '0')}';
   }
   void _selectAnswer(int index) {
     if (_isSubmitting) return;
@@ -79,12 +119,12 @@ class _StudentMcqPracticeScreenState
       });
     }
   }
-  Future<void> _finishPractice() async {
+  Future<void> _finishPractice({bool force = false}) async {
     if (_isSubmitting || _questions.isEmpty) return;
     final unanswered = _selectedAnswers
         .where((answer) => answer == null)
         .length;
-    final shouldFinish = await showDialog<bool>(
+    final shouldFinish = force ? true : await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: Colors.white,
@@ -127,6 +167,7 @@ class _StudentMcqPracticeScreenState
       ),
     );
     if (shouldFinish != true || !mounted) return;
+    _countdownTimer?.cancel();
     setState(() {
       _isSubmitting = true;
     });
@@ -139,6 +180,7 @@ class _StudentMcqPracticeScreenState
         questionIds: _questions.map((question) => question.id).toList(),
         selectedAnswers: selectedAnswers,
         startedAt: _startedAt,
+        examSetId: widget.examSetId,
       );
       if (!mounted) return;
       Navigator.pushReplacement(
@@ -333,6 +375,21 @@ class _StudentMcqPracticeScreenState
           ],
         ),
         actions: [
+          if (!_isLoading && _questions.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+              child: Center(
+                child: Text(
+                  _formatRemainingTime(),
+                  style: TextStyle(
+                    color: (_remainingSeconds ?? 0) <= 60
+                        ? AtlasColors.error
+                        : AtlasColors.champagne,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ),
           if (!_isLoading && _questions.isNotEmpty)
             IconButton(
               tooltip: 'Question Navigator',
