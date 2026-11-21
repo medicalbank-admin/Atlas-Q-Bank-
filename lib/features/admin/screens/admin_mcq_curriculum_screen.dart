@@ -8,16 +8,16 @@ class AdminMcqCurriculumScreen extends StatefulWidget {
 }
 class _AdminMcqCurriculumScreenState extends State<AdminMcqCurriculumScreen> {
  final db=FirebaseFirestore.instance;
- final name=TextEditingController(), code=TextEditingController(), description=TextEditingController();
+ final name=TextEditingController(), code=TextEditingController(), description=TextEditingController(), duration=TextEditingController(text:'60');
  String track='licensing', parentId='', parentName='', subjectId='', subjectName='';
- @override void dispose(){name.dispose();code.dispose();description.dispose();super.dispose();}
+ @override void dispose(){name.dispose();code.dispose();description.dispose();duration.dispose();super.dispose();}
  Future<void> _create(String collection,Map<String,dynamic> extra) async {
-  name.clear();code.clear();description.clear();
-  final ok=await showDialog<bool>(context:context,builder:(c)=>AlertDialog(title:Text('Create ${collection=='mcq_exam_sets'?'exam set':collection=='licensing_pathways'?'pathway':'subject'}'),content:SingleChildScrollView(child:Column(mainAxisSize:MainAxisSize.min,children:[TextField(controller:name,decoration:const InputDecoration(labelText:'Name')),TextField(controller:code,decoration:const InputDecoration(labelText:'Code (optional)')),if(collection=='licensing_pathways')TextField(controller:description,decoration:const InputDecoration(labelText:'Description'),maxLines:2)])),actions:[TextButton(onPressed:()=>Navigator.pop(c,false),child:const Text('Cancel')),FilledButton(onPressed:()=>Navigator.pop(c,true),child:const Text('Create'))]));
+  name.clear();code.clear();description.clear();duration.text='60';
+  final ok=await showDialog<bool>(context:context,builder:(c)=>AlertDialog(title:Text('Create ${collection=='mcq_exam_sets'?'exam set':collection=='licensing_pathways'?'pathway':'subject'}'),content:SingleChildScrollView(child:Column(mainAxisSize:MainAxisSize.min,children:[TextField(controller:name,decoration:const InputDecoration(labelText:'Name')),TextField(controller:code,decoration:const InputDecoration(labelText:'Code (optional)')),if(collection=='licensing_pathways')TextField(controller:description,decoration:const InputDecoration(labelText:'Description'),maxLines:2),if(collection=='mcq_exam_sets')TextField(controller:duration,keyboardType:TextInputType.number,decoration:const InputDecoration(labelText:'Time limit (minutes)',hintText:'60'))])),actions:[TextButton(onPressed:()=>Navigator.pop(c,false),child:const Text('Cancel')),FilledButton(onPressed:()=>Navigator.pop(c,true),child:const Text('Create'))]));
   if(ok!=true||name.text.trim().isEmpty)return;
   final data=<String,dynamic>{...extra,'name':name.text.trim(),'code':code.text.trim(),'isActive':true,'createdAt':FieldValue.serverTimestamp(),'updatedAt':FieldValue.serverTimestamp()};
   if(collection=='licensing_pathways')data['description']=description.text.trim();
-  if(collection=='mcq_exam_sets'){data.addAll({'isPublished':false,'order':0});}
+  if(collection=='mcq_exam_sets'){final minutes=int.tryParse(duration.text.trim())??60;data.addAll({'isPublished':false,'order':0,'durationMinutes':minutes.clamp(1,240)});}
   await db.collection(collection).add(data);
  }
  Future<void> _toggle(String collection,QueryDocumentSnapshot<Map<String,dynamic>> doc,String field) async {await doc.reference.update({field:!(doc.data()[field]==true),'updatedAt':FieldValue.serverTimestamp()});}
