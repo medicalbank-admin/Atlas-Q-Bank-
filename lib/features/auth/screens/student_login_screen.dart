@@ -348,6 +348,7 @@ class _StudentLoginScreenState extends State<StudentLoginScreen> {
                         const SizedBox(height: 9),
                         TextFormField(
                           controller: _emailController,
+                          style: const TextStyle(color: AtlasColors.charcoal, fontSize: 14),
                           keyboardType: TextInputType.emailAddress,
                           textInputAction: TextInputAction.next,
                           validator: _validateEmail,
@@ -373,6 +374,7 @@ class _StudentLoginScreenState extends State<StudentLoginScreen> {
                         const SizedBox(height: 9),
                         TextFormField(
                           controller: _passwordController,
+                          style: const TextStyle(color: AtlasColors.charcoal, fontSize: 14),
                           obscureText: _obscurePassword,
                           textInputAction: TextInputAction.done,
                           onFieldSubmitted: (_) => _login(),
