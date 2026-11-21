@@ -14,27 +14,27 @@ class SubscriptionPlanService {
 
   /// Streams active plans for the student app.
   Stream<List<SubscriptionPlanModel>> watchActivePlans() {
-    return _plans
-        .where('isActive', isEqualTo: true)
-        .orderBy('sortOrder')
-        .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map(SubscriptionPlanModel.fromFirestore)
-              .toList(),
-        );
+    // Filter and sort client-side so a fresh Firebase project does not
+    // require a composite index before students can view membership plans.
+    return _plans.snapshots().map((snapshot) {
+      final plans = snapshot.docs
+          .map(SubscriptionPlanModel.fromFirestore)
+          .where((plan) => plan.isActive)
+          .toList();
+      plans.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+      return plans;
+    });
   }
 
   /// Streams all plans for the admin dashboard.
   Stream<List<SubscriptionPlanModel>> watchAllPlans() {
-    return _plans
-        .orderBy('sortOrder')
-        .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map(SubscriptionPlanModel.fromFirestore)
-              .toList(),
-        );
+    return _plans.snapshots().map((snapshot) {
+      final plans = snapshot.docs
+          .map(SubscriptionPlanModel.fromFirestore)
+          .toList();
+      plans.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+      return plans;
+    });
   }
 
   /// Retrieves one plan by its Firestore document ID.
