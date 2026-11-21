@@ -9,6 +9,7 @@ import '../../auth/services/student_auth_service.dart';
 import '../../mcqs/screens/student_mcq_hub_screen.dart';
 import '../../academic/screens/student_study_library_screen.dart';
 import '../../academic/screens/student_exam_centre_screen.dart';
+import '../../academic/screens/student_past_papers_screen.dart';
 import '../../subscriptions/screens/subscription_plans_screen.dart';
 class StudentDashboardScreen extends StatelessWidget {
   const StudentDashboardScreen({super.key});
@@ -56,6 +57,8 @@ class StudentDashboardScreen extends StatelessWidget {
         Navigator.of(context).push(MaterialPageRoute(builder: (_) => const StudentMcqHubScreen()));
       } else if (feature == 'studyLibrary') {
         Navigator.of(context).push(MaterialPageRoute(builder: (_) => const StudentStudyLibraryScreen()));
+      } else if (feature == 'pastPapers') {
+        Navigator.of(context).push(MaterialPageRoute(builder: (_) => const StudentPastPapersScreen()));
       } else if (feature == 'examinations' || feature == 'examPathways') {
         Navigator.of(context).push(MaterialPageRoute(builder: (_) => StudentExamCentreScreen(pathwaysOnly: feature == 'examPathways')));
       }
@@ -373,6 +376,13 @@ class StudentDashboardScreen extends StatelessWidget {
           subtitle: 'Practice and review',
           accent: AtlasColors.gold,
           onTap: () => _openProtectedFeature(context, 'mcqPractice'),
+        ),
+        _LearningTile(
+          icon: Icons.history_edu_rounded,
+          title: 'Past Papers',
+          subtitle: 'Solve previous exam papers',
+          accent: AtlasColors.gold,
+          onTap: () => _openProtectedFeature(context, 'pastPapers'),
         ),
         _LearningTile(
           icon: Icons.assignment_rounded,
