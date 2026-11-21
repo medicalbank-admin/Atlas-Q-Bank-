@@ -352,7 +352,11 @@ exports.startMcqPractice = onCall(
         throw new HttpsError("permission-denied", "Your subscription does not include this feature.");
       }
       let query = db.collection("mcqs").where("isPublished", "==", true);
-      if (examSetId) query = query.where("examSetId", "==", examSetId);
+      if (examSetId) {
+        query = query.where("examSetId", "==", examSetId);
+      } else {
+        query = query.where("trackType", "==", "mbbs");
+      }
       const questionSnapshot = await query.limit(100).get();
       if (questionSnapshot.empty) {
         throw new HttpsError("failed-precondition", "No published questions are available in this set.");
