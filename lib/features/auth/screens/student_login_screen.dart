@@ -184,19 +184,33 @@ class _StudentLoginScreenState extends State<StudentLoginScreen> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
+          backgroundColor: AtlasColors.white,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(23),
+          ),
           icon: Icon(
             icon,
-            color: AtlasColors.oceanTeal,
+            color: AtlasColors.royalBlue,
             size: 48,
           ),
           title: Text(
             title,
             textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: AtlasColors.navy,
+              fontWeight: FontWeight.w900,
+            ),
           ),
           content: Text(
             message,
             textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: AtlasColors.secondaryText,
+              height: 1.6,
+            ),
           ),
+          actionsAlignment: MainAxisAlignment.center,
           actions: [
             if (onAction != null)
               TextButton(
@@ -271,287 +285,325 @@ class _StudentLoginScreenState extends State<StudentLoginScreen> {
     return Scaffold(
       backgroundColor: AtlasColors.ivory,
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 24,
-              vertical: 30,
-            ),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 460),
-              child: Form(
-                key: _formKey,
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              // Navy and gold decorative header.
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(24, 25, 24, 34),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AtlasColors.navy,
+                      AtlasColors.deepNavy,
+                      AtlasColors.royalBlue,
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.vertical(
+                    bottom: Radius.circular(32),
+                  ),
+                ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const SizedBox(height: 15),
-
-                    Container(
-                      width: 88,
-                      height: 88,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [
-                            AtlasColors.deepTeal,
-                            AtlasColors.oceanTeal,
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: IconButton(
+                        onPressed: () => Navigator.maybePop(context),
+                        icon: const Icon(
+                          Icons.arrow_back_rounded,
+                          color: Colors.white,
                         ),
-                        borderRadius: BorderRadius.circular(26),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AtlasColors.deepTeal.withValues(
-                              alpha: 0.20,
-                            ),
-                            blurRadius: 22,
-                            offset: const Offset(0, 9),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      height: 82,
+                      width: 82,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(25),
+                        border: Border.all(
+                          color: AtlasColors.champagne.withValues(
+                            alpha: 0.7,
                           ),
-                        ],
+                        ),
                       ),
                       child: const Icon(
                         Icons.school_rounded,
-                        size: 45,
                         color: AtlasColors.champagne,
+                        size: 45,
                       ),
                     ),
-
-                    const SizedBox(height: 27),
-
-                    const Text(
-                      'Welcome Back',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.w900,
-                        color: AtlasColors.deepTeal,
-                        letterSpacing: -0.8,
-                      ),
-                    ),
-
-                    const SizedBox(height: 9),
-
-                    const Text(
-                      'Continue your medical learning journey.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: AtlasColors.secondaryText,
-                      ),
-                    ),
-
-                    const SizedBox(height: 38),
-
-                    const Text(
-                      'Email Address',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: AtlasColors.charcoal,
-                      ),
-                    ),
-
-                    const SizedBox(height: 9),
-
-                    TextFormField(
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      textInputAction: TextInputAction.next,
-                      validator: _validateEmail,
-                      decoration: const InputDecoration(
-                        hintText: 'Enter your email address',
-                        prefixIcon: Icon(
-                          Icons.email_outlined,
-                          color: AtlasColors.oceanTeal,
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 22),
-
-                    const Text(
-                      'Password',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: AtlasColors.charcoal,
-                      ),
-                    ),
-
-                    const SizedBox(height: 9),
-
-                    TextFormField(
-                      controller: _passwordController,
-                      obscureText: _obscurePassword,
-                      textInputAction: TextInputAction.done,
-                      onFieldSubmitted: (_) => _login(),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your password.';
-                        }
-                        return null;
-                      },
-                      decoration: InputDecoration(
-                        hintText: 'Enter your password',
-                        prefixIcon: const Icon(
-                          Icons.lock_outline_rounded,
-                          color: AtlasColors.oceanTeal,
-                        ),
-                        suffixIcon: IconButton(
-                          onPressed: () {
-                            setState(() {
-                              _obscurePassword = !_obscurePassword;
-                            });
-                          },
-                          icon: Icon(
-                            _obscurePassword
-                                ? Icons.visibility_outlined
-                                : Icons.visibility_off_outlined,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    Row(
-                      children: [
-                        SizedBox(
-                          height: 35,
-                          child: Checkbox(
-                            value: _rememberMe,
-                            activeColor: AtlasColors.oceanTeal,
-                            onChanged: (value) {
-                              setState(() {
-                                _rememberMe = value ?? false;
-                              });
-                            },
-                          ),
-                        ),
-                        const Text(
-                          'Remember me',
-                          style: TextStyle(fontSize: 12),
-                        ),
-                        const Spacer(),
-                        TextButton(
-                          onPressed: _forgotPassword,
-                          child: const Text(
-                            'Forgot Password?',
-                            style: TextStyle(
-                              color: AtlasColors.oceanTeal,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 22),
-
-                    SizedBox(
-                      height: 56,
-                      child: ElevatedButton(
-                        onPressed: _isLoading ? null : _login,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AtlasColors.deepTeal,
-                          foregroundColor: Colors.white,
-                          elevation: 3,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
-                        child: _isLoading
-                            ? const SizedBox(
-                                width: 23,
-                                height: 23,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    'Sign In',
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w800,
-                                    ),
-                                  ),
-                                  SizedBox(width: 10),
-                                  Icon(Icons.arrow_forward_rounded),
-                                ],
-                              ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 30),
-
-                    Row(
-                      children: [
-                        const Expanded(child: Divider()),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                          ),
-                          child: Text(
-                            'NEW TO THE ACADEMY?',
-                            style: TextStyle(
-                              fontSize: 10,
-                              letterSpacing: 1.2,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                        ),
-                        const Expanded(child: Divider()),
-                      ],
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    OutlinedButton(
-                      onPressed: () {
-                        Navigator.maybePop(context);
-                      },
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AtlasColors.deepTeal,
-                        side: const BorderSide(
-                          color: AtlasColors.oceanTeal,
-                        ),
-                        minimumSize: const Size.fromHeight(52),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                      child: const Text(
-                        'Create Student Account',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 28),
-
+                    const SizedBox(height: 19),
                     const Text(
                       'THE ATLAS ACADEMY',
-                      textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: AtlasColors.secondaryText,
-                        fontSize: 10,
+                        color: Colors.white,
+                        fontSize: 15,
                         letterSpacing: 2,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'LEARN  •  PREPARE  •  EXCEL',
+                      style: TextStyle(
+                        color: AtlasColors.champagne,
+                        fontSize: 10,
+                        letterSpacing: 1.8,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
                   ],
                 ),
               ),
-            ),
+
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 30, 24, 28),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 460),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Text(
+                          'Welcome Back',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 29,
+                            fontWeight: FontWeight.w900,
+                            color: AtlasColors.navy,
+                            letterSpacing: -0.8,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Sign in to continue your journey',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AtlasColors.secondaryText,
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+
+                        const Text(
+                          'Email Address',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            color: AtlasColors.charcoal,
+                          ),
+                        ),
+                        const SizedBox(height: 9),
+                        TextFormField(
+                          controller: _emailController,
+                          keyboardType: TextInputType.emailAddress,
+                          textInputAction: TextInputAction.next,
+                          validator: _validateEmail,
+                          decoration: const InputDecoration(
+                            hintText: 'Enter your email address',
+                            prefixIcon: Icon(
+                              Icons.email_outlined,
+                              color: AtlasColors.royalBlue,
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 21),
+
+                        const Text(
+                          'Password',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            color: AtlasColors.charcoal,
+                          ),
+                        ),
+                        const SizedBox(height: 9),
+                        TextFormField(
+                          controller: _passwordController,
+                          obscureText: _obscurePassword,
+                          textInputAction: TextInputAction.done,
+                          onFieldSubmitted: (_) => _login(),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter your password.';
+                            }
+                            return null;
+                          },
+                          decoration: InputDecoration(
+                            hintText: 'Enter your password',
+                            prefixIcon: const Icon(
+                              Icons.lock_outline_rounded,
+                              color: AtlasColors.royalBlue,
+                            ),
+                            suffixIcon: IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  _obscurePassword = !_obscurePassword;
+                                });
+                              },
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility_outlined
+                                    : Icons.visibility_off_outlined,
+                                color: AtlasColors.secondaryText,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 10),
+
+                        Row(
+                          children: [
+                            SizedBox(
+                              height: 38,
+                              child: Checkbox(
+                                value: _rememberMe,
+                                activeColor: AtlasColors.navy,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _rememberMe = value ?? false;
+                                  });
+                                },
+                              ),
+                            ),
+                            const Text(
+                              'Remember me',
+                              style: TextStyle(
+                                color: AtlasColors.charcoal,
+                                fontSize: 12,
+                              ),
+                            ),
+                            const Spacer(),
+                            TextButton(
+                              onPressed: _forgotPassword,
+                              child: const Text(
+                                'Forgot Password?',
+                                style: TextStyle(
+                                  color: AtlasColors.royalBlue,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        SizedBox(
+                          height: 56,
+                          child: ElevatedButton(
+                            onPressed: _isLoading ? null : _login,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AtlasColors.navy,
+                              foregroundColor: Colors.white,
+                              elevation: 3,
+                              shadowColor: AtlasColors.navy.withValues(
+                                alpha: 0.2,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                            child: _isLoading
+                                ? const SizedBox(
+                                    width: 23,
+                                    height: 23,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        'Sign In',
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                      ),
+                                      SizedBox(width: 10),
+                                      Icon(Icons.arrow_forward_rounded),
+                                    ],
+                                  ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 25),
+
+                        Row(
+                          children: [
+                            const Expanded(child: Divider()),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 13,
+                              ),
+                              child: Text(
+                                'NEW TO THE ACADEMY?',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  letterSpacing: 1.1,
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                            ),
+                            const Expanded(child: Divider()),
+                          ],
+                        ),
+
+                        const SizedBox(height: 18),
+
+                        OutlinedButton(
+                          onPressed: () => Navigator.maybePop(context),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AtlasColors.navy,
+                            backgroundColor: AtlasColors.white,
+                            side: const BorderSide(
+                              color: AtlasColors.royalBlue,
+                            ),
+                            minimumSize: const Size.fromHeight(53),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          child: const Text(
+                            'Register Now',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 26),
+
+                        const Text(
+                          'EXCELLENCE IN MEDICAL EDUCATION',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: AtlasColors.secondaryText,
+                            fontSize: 9,
+                            letterSpacing: 1.2,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
