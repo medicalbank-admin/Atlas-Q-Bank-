@@ -8,6 +8,7 @@ import '../../../shared/widgets/atlas_buttons.dart';
 import '../../../shared/widgets/atlas_profile_image_picker.dart';
 import '../../../shared/widgets/atlas_selection_fields.dart';
 import '../../../shared/widgets/atlas_feedback.dart';
+import '../../../shared/widgets/atlas_logo.dart';
 import '../services/auth_service.dart';
 
 class StudentRegistrationScreen extends StatefulWidget {
@@ -558,11 +559,7 @@ class _StudentRegistrationScreenState
                     ),
                     child: const Column(
                       children: [
-                        Icon(
-                          Icons.school_rounded,
-                          size: 47,
-                          color: AtlasColors.champagne,
-                        ),
+                        AtlasLogo(size: 70),
                         SizedBox(height: 13),
                         Text(
                           'THE ATLAS ACADEMY',
