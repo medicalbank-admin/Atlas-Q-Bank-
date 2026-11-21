@@ -15,6 +15,8 @@ class SubscriptionRequestService {
   })  : _firestore = firestore ?? FirebaseFirestore.instance,
         _auth = auth ?? FirebaseAuth.instance;
 
+  User? get currentUser => _auth.currentUser;
+
   CollectionReference<Map<String, dynamic>> get _requests =>
       _firestore.collection('subscription_requests');
 
