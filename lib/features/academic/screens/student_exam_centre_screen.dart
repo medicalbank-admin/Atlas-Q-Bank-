@@ -136,7 +136,7 @@ class StudentExamCentreScreen extends StatelessWidget {
       title:Text(name,style:const TextStyle(color:AtlasColors.navy,fontWeight:FontWeight.w800)),
       subtitle:Text(subject,style:const TextStyle(color:AtlasColors.secondaryText)),
       trailing:const Icon(Icons.play_circle_outline_rounded,color:AtlasColors.royalBlue),
-      onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>StudentMcqPracticeScreen(d.id))),
+      onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>StudentMcqPracticeScreen(examSetId: d.id))),
     );
   }
 
