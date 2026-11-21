@@ -47,6 +47,7 @@ class AtlasTextField extends StatelessWidget {
       maxLength: maxLength,
       textCapitalization: textCapitalization,
       style: const TextStyle(
+        color: AtlasColors.charcoal,
         fontSize: 14,
         fontWeight: FontWeight.w600,
       ),
@@ -180,6 +181,11 @@ class AtlasSearchField extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextField(
       controller: controller,
+      style: const TextStyle(
+        color: AtlasColors.charcoal,
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+      ),
       onChanged: onChanged,
       onSubmitted: onSubmitted,
       decoration: InputDecoration(
