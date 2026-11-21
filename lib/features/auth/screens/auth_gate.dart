@@ -63,22 +63,10 @@ class _AuthGateState extends State<AuthGate> {
 
     final profile = document.data() ?? {};
 
-    final accountApproved =
-        profile['accountStatus'] == 'approved';
-
-    final membershipActive =
-        profile['subscriptionStatus'] == 'active';
-
-    final accessEnabled =
-        profile['accessEnabled'] == true;
-
-    if (accountApproved &&
-        membershipActive &&
-        accessEnabled) {
-      return const StudentDashboardScreen();
-    }
-
-    return const StudentAccountStatusScreen();
+    // Registration approval is not part of the student onboarding flow.
+    // Verified students can enter the dashboard immediately; paid content
+    // remains protected by Firestore's active-membership security rules.
+    return const StudentDashboardScreen();
   }
 
   @override
