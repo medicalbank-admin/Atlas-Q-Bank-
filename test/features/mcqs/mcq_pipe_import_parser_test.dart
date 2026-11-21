@@ -5,7 +5,7 @@ void main() {
   group('McqPipeImportParser', () {
     test('parses a valid four-option row and normalizes difficulty', () {
       final result = McqPipeImportParser.parse(
-        input: 'Question|Option A|Option B|Option C|Option D|B|Explanation|Anatomy|Heart|easy',
+        input: 'Which chamber pumps blood to the lungs?|Right atrium|Right ventricle|Left atrium|Left ventricle|B|It pumps blood to the lungs.|Anatomy|Heart|easy',
         yearId: ' year-1 ',
         adminUid: ' admin-1 ',
       );
