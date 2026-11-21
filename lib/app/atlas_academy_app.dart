@@ -120,6 +120,12 @@ class AtlasAcademyApp extends StatelessWidget {
 
     return base.copyWith(
       textTheme: _textTheme(AtlasColors.charcoal),
+      dialogTheme: const DialogThemeData(
+        backgroundColor: AtlasColors.white,
+        surfaceTintColor: Colors.transparent,
+        titleTextStyle: TextStyle(color: AtlasColors.navy, fontSize: 20, fontWeight: FontWeight.w800),
+        contentTextStyle: TextStyle(color: AtlasColors.charcoal, fontSize: 14, height: 1.5),
+      ),
       primaryTextTheme: _textTheme(AtlasColors.white),
       scaffoldBackgroundColor: AtlasColors.ivory,
       appBarTheme: const AppBarTheme(
@@ -151,9 +157,14 @@ class AtlasAcademyApp extends StatelessWidget {
         // whose system brightness or inherited text theme differs.
         hintFadeDuration: const Duration(milliseconds: 150),
         floatingLabelStyle: const TextStyle(color: AtlasColors.royalBlue, fontWeight: FontWeight.w700),
+        // Dropdown menu and form field labels stay dark on light surfaces.
         prefixIconColor: AtlasColors.royalBlue,
         suffixIconColor: AtlasColors.secondaryText,
         fillColor: AtlasColors.white,
+        // Explicitly set editable text globally; TextField does not inherit
+        // TextTheme body colour consistently across all widget variants.
+        // Individual fields may override this when using a dark surface.
+        // See text style in the field theme below.
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 17,
           vertical: 16,
@@ -196,6 +207,14 @@ class AtlasAcademyApp extends StatelessWidget {
       ),
       textSelectionTheme: const TextSelectionThemeData(cursorColor: AtlasColors.royalBlue, selectionColor: Color(0x332868C7), selectionHandleColor: AtlasColors.royalBlue),
       dropdownMenuTheme: const DropdownMenuThemeData(textStyle: TextStyle(color: AtlasColors.charcoal)),
+      popupMenuTheme: const PopupMenuThemeData(
+        color: AtlasColors.white,
+        textStyle: TextStyle(color: AtlasColors.charcoal, fontSize: 14),
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: AtlasColors.white,
+        surfaceTintColor: Colors.transparent,
+      ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AtlasColors.navy,
