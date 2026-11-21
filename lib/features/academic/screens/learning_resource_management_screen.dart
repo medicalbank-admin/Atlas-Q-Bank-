@@ -237,6 +237,126 @@ class LearningResourceManagementScreen extends StatelessWidget {
     durationController.dispose();
   }
 
+  Future<void> _editResource(
+    BuildContext context,
+    LearningResourceModel resource,
+  ) async {
+    final formKey = GlobalKey<FormState>();
+    final title = TextEditingController(text: resource.title);
+    final description = TextEditingController(text: resource.description);
+    final url = TextEditingController(text: resource.resourceUrl);
+    final duration = TextEditingController(text: resource.durationMinutes.toString());
+    var type = resource.type;
+    var isFree = resource.isFree;
+    var saving = false;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          title: const Text('Edit Learning Resource'),
+          content: SizedBox(
+            width: 440,
+            child: SingleChildScrollView(
+              child: Form(
+                key: formKey,
+                child: Column(mainAxisSize: MainAxisSize.min, children: [
+                  TextFormField(
+                    controller: title,
+                    decoration: const InputDecoration(labelText: 'Resource title'),
+                    validator: (value) => value == null || value.trim().isEmpty ? 'Enter a title' : null,
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: description,
+                    maxLines: 3,
+                    decoration: const InputDecoration(labelText: 'Description'),
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<LearningResourceType>(
+                    value: type,
+                    decoration: const InputDecoration(labelText: 'Resource type'),
+                    items: LearningResourceType.values.map((item) =>
+                      DropdownMenuItem(value: item, child: Text(_typeLabel(item)))).toList(),
+                    onChanged: saving ? null : (value) {
+                      if (value != null) setDialogState(() => type = value);
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: url,
+                    keyboardType: TextInputType.url,
+                    decoration: const InputDecoration(labelText: 'Resource URL'),
+                    validator: (value) {
+                      final uri = Uri.tryParse(value?.trim() ?? '');
+                      return uri != null && uri.hasScheme &&
+                          (uri.scheme == 'http' || uri.scheme == 'https') &&
+                          uri.host.isNotEmpty ? null : 'Enter a valid HTTP or HTTPS URL';
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: duration,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(labelText: 'Duration in minutes'),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) return null;
+                      final parsed = int.tryParse(value.trim());
+                      return parsed == null || parsed < 0 ? 'Enter a valid duration' : null;
+                    },
+                  ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Free resource'),
+                    value: isFree,
+                    onChanged: saving ? null : (value) => setDialogState(() => isFree = value),
+                  ),
+                ]),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: saving ? null : () => Navigator.pop(dialogContext),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: saving ? null : () async {
+                if (!formKey.currentState!.validate()) return;
+                setDialogState(() => saving = true);
+                try {
+                  await LearningResourceService.updateResource(resource.copyWith(
+                    title: title.text.trim(),
+                    description: description.text.trim(),
+                    type: type,
+                    resourceUrl: url.text.trim(),
+                    isFree: isFree,
+                    durationMinutes: int.tryParse(duration.text.trim()) ?? 0,
+                  ));
+                  if (dialogContext.mounted) Navigator.pop(dialogContext);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Learning resource updated successfully.')),
+                    );
+                  }
+                } catch (error) {
+                  setDialogState(() => saving = false);
+                  ScaffoldMessenger.of(dialogContext).showSnackBar(
+                    SnackBar(content: Text('Update failed: $error')),
+                  );
+                }
+              },
+              child: saving ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('Save Changes'),
+            ),
+          ],
+        ),
+      ),
+    );
+    title.dispose();
+    description.dispose();
+    url.dispose();
+    duration.dispose();
+  }
+
   Future<void> _deleteResource(
     BuildContext context,
     LearningResourceModel resource,
@@ -383,11 +503,17 @@ class LearningResourceManagementScreen extends StatelessWidget {
                         SnackBar(content: Text('Update failed: $error')),
                       );
                     }
+                  } else if (value == 'edit') {
+                    await _editResource(context, resource);
                   } else if (value == 'delete') {
                     await _deleteResource(context, resource);
                   }
                 },
                 itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: 'edit',
+                    child: Text('Edit'),
+                  ),
                   PopupMenuItem(
                     value: 'publish',
                     child: Text(
