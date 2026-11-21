@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import '../../../app/atlas_academy_app.dart';
 
 import '../../mcqs/models/mcq_model.dart';
 import '../../mcqs/services/mcq_management_service.dart';
@@ -225,7 +226,7 @@ class _AdminMcqEditorScreenState
           Radio<String>(
             value: letter,
             groupValue: _correctAnswer,
-            activeColor: const Color(0xFF28777B),
+            activeColor: const Color(0xFF174A91),
             onChanged: _saving
                 ? null
                 : (value) {
@@ -245,7 +246,7 @@ class _AdminMcqEditorScreenState
                 suffixIcon: letter == _correctAnswer
                     ? const Icon(
                         Icons.check_circle,
-                        color: Color(0xFF28777B),
+                        color: Color(0xFF174A91),
                       )
                     : null,
               ),
@@ -304,8 +305,8 @@ class _AdminMcqEditorScreenState
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [
-                      Color(0xFF123F46),
-                      Color(0xFF28777B),
+                      Color(0xFF071B3D),
+                      Color(0xFF174A91),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(16),
@@ -428,13 +429,13 @@ class _AdminMcqEditorScreenState
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE5F1EF),
+                  color: const Color(0xFFEAF1FC),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   'Correct answer: $_correctAnswer',
                   style: const TextStyle(
-                    color: Color(0xFF123F46),
+                    color: Color(0xFF071B3D),
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -495,7 +496,7 @@ class _AdminMcqEditorScreenState
                             : 'Save MCQ',
                   ),
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF123F46),
+                    backgroundColor: const Color(0xFF071B3D),
                   ),
                 ),
               ),
