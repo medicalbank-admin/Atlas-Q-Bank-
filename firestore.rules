@@ -182,7 +182,7 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
     match /mcq_exam_sets/{examSetId} {
-      allow read: if isAdmin() || (hasFeatureAccess('mcqPractice') && resource.data.isPublished == true);
+      allow read: if isAdmin() || ((hasFeatureAccess('mcqPractice') || hasFeatureAccess('examPathways')) && resource.data.isPublished == true);
       allow create, update, delete: if isAdmin();
     }
 
@@ -283,6 +283,20 @@ service cloud.firestore {
         );
 
       allow update, delete: if false;
+    }
+
+    // ==================================================
+    // STUDENT LEARNING RESOURCE PROGRESS
+    // Students may create and update only their own completion records.
+    // ==================================================
+    match /student_resource_progress/{progressId} {
+      allow read: if signedIn() &&
+        (resource.data.userId == request.auth.uid || isAdmin());
+      allow create, update: if signedIn() &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.resourceId is string &&
+        request.resource.data.completed is bool;
+      allow delete: if isAdmin();
     }
 
     // ==================================================
