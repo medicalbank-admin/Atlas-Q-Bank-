@@ -104,20 +104,25 @@ class SubscriptionRequestService {
       );
     }
 
+    // A single-field equality query works without a composite index.
+    // Sort locally to keep the student's newest request at the top.
     return _requests
         .where('studentUid', isEqualTo: user.uid)
-        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map(
-                (doc) => SubscriptionRequestModel.fromFirestore(
-                  doc.id,
-                  doc.data(),
-                ),
-              )
-              .toList(),
-        );
+        .map((snapshot) {
+          final requests = snapshot.docs
+              .map((doc) => SubscriptionRequestModel.fromFirestore(
+                    doc.id,
+                    doc.data(),
+                  ))
+              .toList();
+          requests.sort((a, b) {
+            final aDate = a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+            final bDate = b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+            return bDate.compareTo(aDate);
+          });
+          return requests;
+        });
   }
 
   Future<SubscriptionRequestModel?> getRequest(String requestId) async {
