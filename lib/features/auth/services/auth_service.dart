@@ -126,7 +126,7 @@ class AuthService {
 
         // New accounts always start with restricted access.
         'role': 'student',
-        'accountStatus': 'pending',
+        'accountStatus': 'approved',
         'subscriptionStatus': 'inactive',
         'accessEnabled': false,
 
