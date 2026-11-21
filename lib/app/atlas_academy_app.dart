@@ -158,10 +158,6 @@ class AtlasAcademyApp extends StatelessWidget {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        textStyle: const TextStyle(
-          color: AtlasColors.charcoal,
-          fontSize: 14,
-        ),
         // The editable value itself must be explicit; hint/label styles do not
         // control the text entered by the user.
         // Explicit input text colour prevents white-on-white fields on devices
@@ -172,10 +168,8 @@ class AtlasAcademyApp extends StatelessWidget {
         prefixIconColor: AtlasColors.royalBlue,
         suffixIconColor: AtlasColors.secondaryText,
         fillColor: AtlasColors.white,
-        // Explicitly set editable text globally; TextField does not inherit
-        // TextTheme body colour consistently across all widget variants.
-        // Individual fields may override this when using a dark surface.
-        // See text style in the field theme below.
+        // Editable field text uses the explicit bodyLarge colour in textTheme.
+        // Individual fields on dark surfaces must supply a light TextField style.
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 17,
           vertical: 16,
@@ -343,10 +337,6 @@ class AtlasAcademyApp extends StatelessWidget {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        textStyle: const TextStyle(
-          color: AtlasColors.white,
-          fontSize: 14,
-        ),
         fillColor: AtlasColors.darkSurface,
         labelStyle: const TextStyle(color: Colors.white70),
         hintStyle: const TextStyle(color: Colors.white54),
