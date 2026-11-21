@@ -160,6 +160,7 @@ class McqManagementService {
           'correctAnswer': FieldValue.delete(),
           'explanation': FieldValue.delete(),
           'isPublished': true,
+          'trackType': publicData['trackType'] ?? 'mbbs',
           'updatedAt': FieldValue.serverTimestamp(),
         });
         await batch.commit();
@@ -168,6 +169,7 @@ class McqManagementService {
     }
     await document.update({
       'isPublished': isPublished,
+      if (isPublished) 'trackType': (snapshot.data()?['trackType'] ?? 'mbbs'),
       'updatedAt': FieldValue.serverTimestamp(),
     });
   }
