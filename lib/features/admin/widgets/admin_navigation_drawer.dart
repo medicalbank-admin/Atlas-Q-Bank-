@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../app/atlas_academy_app.dart';
 
 class AdminNavigationItem {
   final String title;
@@ -22,9 +23,9 @@ class AdminNavigationDrawer extends StatelessWidget {
     required this.onDestinationSelected,
   });
 
-  static const Color deepTeal = Color(0xFF123F46);
-  static const Color oceanTeal = Color(0xFF28777B);
-  static const Color champagne = Color(0xFFD8B66B);
+  static const Color deepTeal = Color(0xFF071B3D);
+  static const Color oceanTeal = Color(0xFF174A91);
+  static const Color champagne = Color(0xFFE4BE68);
 
   static const List<AdminNavigationItem> items = [
     AdminNavigationItem(
