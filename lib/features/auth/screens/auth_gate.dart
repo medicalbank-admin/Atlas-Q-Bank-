@@ -6,7 +6,6 @@ import '../../admin/screens/admin_dashboard_screen.dart';
 import '../../dashboard/screens/student_dashboard_screen.dart';
 import 'auth_landing_screen.dart';
 import 'email_verification_screen.dart';
-import 'student_account_status_screen.dart';
 
 class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
@@ -61,8 +60,7 @@ class _AuthGateState extends State<AuthGate> {
       return const AuthLandingScreen();
     }
 
-    final profile = document.data() ?? {};
-
+    // A verified student profile is sufficient for portal entry.
     // Registration approval is not part of the student onboarding flow.
     // Verified students can enter the dashboard immediately; paid content
     // remains protected by Firestore's active-membership security rules.
