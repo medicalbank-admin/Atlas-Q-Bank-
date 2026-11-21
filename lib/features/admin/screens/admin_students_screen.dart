@@ -18,7 +18,7 @@ TextEditingController();
 
 late final Future _authorizationFuture;
 
-String _search = ‘’;
+String _search = '';
 
 @override
 void initState() {
@@ -95,8 +95,8 @@ _buildSearch(),
 Expanded(
 child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
 stream: FirebaseFirestore.instance
-.collection(‘users’)
-.where(‘role’, isEqualTo: ‘student’)
+.collection('users')
+.where('role', isEqualTo: 'student')
 .snapshots(),
 builder: (context, snapshot) {
 if (snapshot.hasError) {
@@ -219,7 +219,7 @@ size: 30,
 ),
 SizedBox(height: 13),
 Text(
-‘Student Directory’,
+'Student Directory',
 style: TextStyle(
 color: Colors.white,
 fontSize: 23,
@@ -228,7 +228,7 @@ fontWeight: FontWeight.w900,
 ),
 SizedBox(height: 6),
 Text(
-‘Review student profiles and membership information.’,
+'Review student profiles and membership information.',
 style: TextStyle(
 color: Colors.white70,
 fontSize: 13,
@@ -249,7 +249,7 @@ onChanged: (value) {
 setState(() => _search = value.trim().toLowerCase());
 },
 decoration: InputDecoration(
-hintText: ‘Search name, email, phone or ID’,
+hintText: 'Search name, email, phone or ID',
 prefixIcon: const Icon(
 Icons.search_rounded,
 color: AtlasColors.royalBlue,
@@ -258,7 +258,7 @@ suffixIcon: IconButton(
 icon: const Icon(Icons.close_rounded),
 onPressed: () {
 _searchController.clear();
-setState(() => _search = ‘’);
+setState(() => _search = '');
 },
 ),
 filled: true,
@@ -289,12 +289,12 @@ BuildContext context,
 String uid,
 Map<String, dynamic> data,
 ) {
-final name = (data[‘fullName’] ?? ‘Unnamed Student’).toString();
-final email = (data[‘email’] ?? ‘No email’).toString();
+final name = (data['fullName'] ?? 'Unnamed Student').toString();
+final email = (data['email'] ?? 'No email').toString();
 final accountStatus =
-(data[‘accountStatus’] ?? ‘pending’).toString();
+(data['accountStatus'] ?? 'pending').toString();
 final subscriptionStatus =
-(data[‘subscriptionStatus’] ?? ‘inactive’).toString();
+(data['subscriptionStatus'] ?? 'inactive').toString();
 
 return Container(
   margin: const EdgeInsets.only(bottom: 12),
@@ -411,7 +411,7 @@ Widget _studentDetails(
 String uid,
 Map<String, dynamic> data,
 ) {
-final expiry = data[‘subscriptionExpiryAt’];
+final expiry = data['subscriptionExpiryAt'];
 
 String expiryText = 'Not provided';
 if (expiry is Timestamp) {
@@ -516,7 +516,7 @@ fontWeight: FontWeight.w900,
 Widget _detail(String label, dynamic value) {
 final text = value?.toString().isNotEmpty == true
 ? value.toString()
-: ‘Not provided’;
+: 'Not provided';
 
 return Padding(
   padding: const EdgeInsets.only(bottom: 15),
@@ -570,8 +570,8 @@ height: 1.5,
 }
 
 String _formatDate(DateTime date) {
-final day = date.day.toString().padLeft(2, ‘0’);
-final month = date.month.toString().padLeft(2, ‘0’);
-return ‘$day-$month-${date.year}’;
+final day = date.day.toString().padLeft(2, '0');
+final month = date.month.toString().padLeft(2, '0');
+return '$day-$month-${date.year}';
 }
 }
