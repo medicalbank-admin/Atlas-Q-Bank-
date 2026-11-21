@@ -120,52 +120,30 @@ class _StudentAccountStatusScreenState
       );
     }
     final profile = _profile!;
-    final accountStatus =
-        (profile['accountStatus'] ?? 'pending').toString();
     final subscriptionStatus =
         (profile['subscriptionStatus'] ?? 'inactive').toString();
     final accessEnabled = profile['accessEnabled'] == true;
     final emailVerified =
         FirebaseAuth.instance.currentUser?.emailVerified ?? false;
-    final isApproved = accountStatus == 'approved';
-    final isRejected = accountStatus == 'rejected';
     final isActive = subscriptionStatus == 'active';
-    final canAccess = emailVerified &&
-        isApproved &&
-        isActive &&
-        accessEnabled;
-    final statusColor = isRejected
-        ? AtlasColors.error
-        : canAccess
-            ? AtlasColors.success
-            : AtlasColors.gold;
-    final heading = isRejected
-        ? 'Registration Rejected'
-        : !emailVerified
-            ? 'Verify Your Email'
-            : !isApproved
-                ? 'Application Under Review'
-                : !isActive
-                    ? 'Membership Required'
-                    : !accessEnabled
-                        ? 'Access Not Yet Enabled'
-                        : 'Account Approved';
-    final description = isRejected
-        ? 'Your registration has been reviewed but was not approved. '
-            'Please contact the academy administration for assistance.'
-        : !emailVerified
-            ? 'Please verify your email address to continue.'
-            : !isApproved
-                ? 'Your student registration is awaiting approval '
-                    'from The Atlas Academy administration.'
-                : !isActive
-                    ? 'Your account has been approved. Choose or renew '
-                        'a membership plan to access learning materials.'
-                    : !accessEnabled
-                        ? 'Your membership is active, but the academy '
-                            'has not enabled your learning access yet.'
-                        : 'Your account is approved and your learning '
-                            'access is enabled.';
+    final canAccess = emailVerified && isActive && accessEnabled;
+    final statusColor = canAccess
+        ? AtlasColors.success
+        : AtlasColors.gold;
+    final heading = !emailVerified
+        ? 'Verify Your Email'
+        : !isActive
+            ? 'Membership Required'
+            : !accessEnabled
+                ? 'Membership Activation Pending'
+                : 'Learning Access Enabled';
+    final description = !emailVerified
+        ? 'Please verify your email address to continue.'
+        : !isActive
+            ? 'Your student account is ready. Choose a membership plan to unlock the learning materials and examinations.'
+            : !accessEnabled
+                ? 'Your membership is being activated. Learning content will become available as soon as activation is complete.'
+                : 'Your membership is active and your learning access is enabled.';
     return Scaffold(
       backgroundColor: AtlasColors.ivory,
       appBar: AppBar(
@@ -309,11 +287,9 @@ class _StudentAccountStatusScreenState
                           borderRadius: BorderRadius.circular(13),
                         ),
                         child: Icon(
-                          isRejected
-                              ? Icons.cancel_rounded
-                              : canAccess
-                                  ? Icons.check_circle_rounded
-                                  : Icons.info_rounded,
+                          canAccess
+                              ? Icons.check_circle_rounded
+                              : Icons.info_rounded,
                           color: statusColor,
                           size: 24,
                         ),
@@ -386,18 +362,13 @@ class _StudentAccountStatusScreenState
                   ),
                   const Divider(height: 23, color: AtlasColors.border),
                   _ChecklistTile(
-                    title: 'Registration Approval',
-                    completed: isApproved,
-                  ),
-                  const Divider(height: 23, color: AtlasColors.border),
-                  _ChecklistTile(
                     title: 'Active Membership',
                     completed: isActive,
                   ),
                   const Divider(height: 23, color: AtlasColors.border),
                   _ChecklistTile(
                     title: 'Learning Access',
-                    completed: accessEnabled,
+                    completed: canAccess,
                   ),
                 ],
               ),
