@@ -77,6 +77,8 @@ class McqBulkImportService {
     // Check for existing questions in Firestore.
     for (final question in uniqueQuestions) {
       final existing = await collection
+          .where('trackType', isEqualTo: question.trackType)
+          .where('examSetId', isEqualTo: question.examSetId.trim())
           .where('yearId', isEqualTo: question.yearId.trim())
           .where('subject', isEqualTo: question.subject.trim())
           .where('topic', isEqualTo: question.topic.trim())
@@ -141,6 +143,12 @@ class McqBulkImportService {
       'question': question.question.trim(),
       'options': question.options,
       'yearId': question.yearId.trim(),
+      'trackType': question.trackType,
+      'pathwayId': question.pathwayId,
+      'pathwayName': question.pathwayName,
+      'subjectId': question.subjectId,
+      'examSetId': question.examSetId,
+      'examSetName': question.examSetName,
       'subject': question.subject.trim(),
       'topic': question.topic.trim(),
       'difficulty': question.difficulty.trim(),
@@ -202,7 +210,9 @@ class McqBulkImportService {
         'An MCQ answer refers to an option that does not exist.',
       );
     }
-    if (question.yearId.trim().isEmpty ||
+    if ((question.trackType == 'mbbs' && question.yearId.trim().isEmpty) ||
+        (question.trackType == 'licensing' && question.pathwayId.trim().isEmpty) ||
+        question.examSetId.trim().isEmpty ||
         question.subject.trim().isEmpty ||
         question.topic.trim().isEmpty) {
       throw Exception(
@@ -212,7 +222,10 @@ class McqBulkImportService {
   }
   String _questionKey(McqModel question) {
     return [
+      question.trackType,
+      question.pathwayId.trim().toLowerCase(),
       question.yearId.trim().toLowerCase(),
+      question.examSetId.trim().toLowerCase(),
       question.subject.trim().toLowerCase(),
       question.topic.trim().toLowerCase(),
       question.question.trim().toLowerCase(),
