@@ -24,7 +24,7 @@ class _McqDestinationSelectorState extends State<McqDestinationSelector> {
   }
   @override Widget build(BuildContext context)=>Card(elevation:0,color:const Color(0xFFF3F6FC),shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(16)),child:Padding(padding:const EdgeInsets.all(14),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
     const Text('MCQ DESTINATION',style:TextStyle(fontWeight:FontWeight.w900,letterSpacing:1,color:Color(0xFF071B3D))),const SizedBox(height:12),
-    DropdownButtonFormField<String>(initialValue:_track,decoration:const InputDecoration(labelText:'Import category',border:OutlineInputBorder()),items:const [DropdownMenuItem(value:'mbbs',child:Text('MBBS — select a year')),DropdownMenuItem(value:'licensing',child:Text('Licensing — select a pathway')),DropdownMenuItem(value:'past_paper',child:Text('Past Papers'))],onChanged:(v){if(v==null)return;setState(()=>_track=v);_reset();}),
+    DropdownButtonFormField<String>(initialValue:_track,decoration:const InputDecoration(labelText:'Import category',border:OutlineInputBorder()),items:const [DropdownMenuItem(value:'mbbs',child:Text('MBBS — select a year')),DropdownMenuItem(value:'licensing',child:Text('Licensing — select a pathway')),DropdownMenuItem(value:'past_paper',child:Text('Past Papers'))],onChanged:(v){if(v==null)return;setState(() { _track=v; });_reset();}),
     if(_track=='past_paper')
       StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(stream:FirebaseFirestore.instance.collection('mcq_exam_sets').where('trackType',isEqualTo:'past_paper').snapshots(),builder:(c,s){
         if(s.hasError)return const Text('Unable to load past papers.');if(!s.hasData)return const LinearProgressIndicator();
