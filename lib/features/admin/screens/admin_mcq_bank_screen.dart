@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import '../../../app/atlas_academy_app.dart';
 
 import '../../mcqs/models/mcq_model.dart';
 import '../../mcqs/services/mcq_management_service.dart';
@@ -126,12 +127,12 @@ class _AdminMcqBankScreenState extends State<AdminMcqBankScreen> {
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: isCorrect
-                        ? const Color(0xFFE5F1EF)
+                        ? const Color(0xFFEAF1FC)
                         : Colors.grey.withValues(alpha: 0.07),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
                       color: isCorrect
-                          ? const Color(0xFF28777B)
+                          ? const Color(0xFF174A91)
                           : Colors.grey.withValues(alpha: 0.2),
                     ),
                   ),
@@ -147,7 +148,7 @@ class _AdminMcqBankScreenState extends State<AdminMcqBankScreen> {
                       if (isCorrect)
                         const Icon(
                           Icons.check_circle,
-                          color: Color(0xFF28777B),
+                          color: Color(0xFF174A91),
                         ),
                     ],
                   ),
@@ -249,11 +250,11 @@ class _AdminMcqBankScreenState extends State<AdminMcqBankScreen> {
               children: [
                 CircleAvatar(
                   radius: 16,
-                  backgroundColor: const Color(0xFFE5F1EF),
+                  backgroundColor: const Color(0xFFEAF1FC),
                   child: Text(
                     '${index + 1}',
                     style: const TextStyle(
-                      color: Color(0xFF123F46),
+                      color: Color(0xFF071B3D),
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -266,15 +267,15 @@ class _AdminMcqBankScreenState extends State<AdminMcqBankScreen> {
                     children: [
                       _tag(
                         question.difficulty,
-                        const Color(0xFFE5F1EF),
+                        const Color(0xFFEAF1FC),
                       ),
                       _tag(
                         question.isPublished
                             ? 'Published'
                             : 'Unpublished',
                         question.isPublished
-                            ? const Color(0xFFE4F3E8)
-                            : const Color(0xFFFFF2DB),
+                            ? const Color(0xFFE5F4EC)
+                            : const Color(0xFFFFF6E5),
                       ),
                     ],
                   ),
@@ -333,7 +334,7 @@ class _AdminMcqBankScreenState extends State<AdminMcqBankScreen> {
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: correct
-                            ? const Color(0xFF28777B)
+                            ? const Color(0xFF174A91)
                             : null,
                       ),
                     ),
@@ -342,7 +343,7 @@ class _AdminMcqBankScreenState extends State<AdminMcqBankScreen> {
                         question.options[optionIndex],
                         style: TextStyle(
                           color: correct
-                              ? const Color(0xFF28777B)
+                              ? const Color(0xFF174A91)
                               : null,
                           fontWeight: correct
                               ? FontWeight.w600
@@ -354,7 +355,7 @@ class _AdminMcqBankScreenState extends State<AdminMcqBankScreen> {
                       const Icon(
                         Icons.check_circle,
                         size: 17,
-                        color: Color(0xFF28777B),
+                        color: Color(0xFF174A91),
                       ),
                   ],
                 ),
