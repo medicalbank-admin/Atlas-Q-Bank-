@@ -147,7 +147,6 @@ class AtlasAcademyApp extends StatelessWidget {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        textStyle: const TextStyle(color: AtlasColors.charcoal, fontSize: 15, fontWeight: FontWeight.w600),
         floatingLabelStyle: const TextStyle(color: AtlasColors.royalBlue, fontWeight: FontWeight.w700),
         prefixIconColor: AtlasColors.royalBlue,
         suffixIconColor: AtlasColors.secondaryText,
