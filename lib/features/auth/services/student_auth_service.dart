@@ -25,11 +25,7 @@ class StudentLoginResult {
   bool get isRejected => accountStatus == 'rejected';
 
   // This is a UI convenience check, not a security boundary.
-  bool get canEnterStudentArea =>
-      emailVerified &&
-      isApproved &&
-      subscriptionStatus == 'active' &&
-      accessEnabled;
+  bool get canEnterStudentArea => emailVerified;
 }
 
 class StudentAuthService {
