@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import '../../../app/atlas_academy_app.dart';
 
 import '../../mcqs/models/mcq_model.dart';
 import '../../mcqs/services/mcq_bulk_import_service.dart';
@@ -456,8 +457,8 @@ class _AdminMcqImportScreenState
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [
-                      Color(0xFF123F46),
-                      Color(0xFF28777B),
+                      Color(0xFF071B3D),
+                      Color(0xFF174A91),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(18),
