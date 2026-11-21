@@ -38,11 +38,10 @@ class _AdminSubscriptionPlansScreenState
       _firestore.collection('subscription_plans');
 
   static const Map<String, String> _permissionLabels = {
-    'academicContent': 'Academic Content',
+    'studyLibrary': 'Study Library & Learning Resources',
     'mcqPractice': 'MCQ Practice',
-    'mockExams': 'Mock Exams',
-    'videoLectures': 'Video Lectures',
-    'downloadableNotes': 'Downloadable Notes',
+    'examinations': 'Examinations',
+    'examPathways': 'Exam Pathways',
   };
 
   @override
