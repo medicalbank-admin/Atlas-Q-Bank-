@@ -72,61 +72,10 @@ class _StudentLoginScreenState extends State<StudentLoginScreen> {
         return;
       }
 
-      if (result.isPendingApproval) {
-        await _showStatusDialog(
-          icon: Icons.hourglass_top_rounded,
-          title: 'Application Under Review',
-          message:
-              'Your email is verified. Your student registration is '
-              'awaiting administrator approval. You will receive '
-              'access after your application has been reviewed.',
-        );
-        return;
-      }
-
-      if (result.isRejected) {
-        await _showStatusDialog(
-          icon: Icons.info_outline_rounded,
-          title: 'Registration Not Approved',
-          message:
-              'Your registration has not been approved. Please '
-              'contact The Atlas Academy administration for assistance.',
-        );
-        return;
-      }
-
-      if (!result.isApproved) {
-        await _showStatusDialog(
-          icon: Icons.lock_outline_rounded,
-          title: 'Account Not Active',
-          message:
-              'Your account is not currently approved for student access. '
-              'Please contact the academy administration.',
-        );
-        return;
-      }
-
-      if (!result.accessEnabled ||
-          result.subscriptionStatus != 'active') {
-        await _showStatusDialog(
-          icon: Icons.workspace_premium_rounded,
-          title: 'Membership Required',
-          message:
-              'Your student account is approved, but an active '
-              'membership is required to access learning materials. '
-              'Please visit the membership section.',
-        );
-        return;
-      }
-
-      await _showStatusDialog(
-        icon: Icons.verified_rounded,
-        title: 'Welcome to The Atlas Academy',
-        message:
-            'Your account is verified and your membership is active. '
-            'Your student dashboard will be available once navigation '
-            'is connected.',
-      );
+      // AuthGate listens to Firebase authentication state and routes
+      // verified students directly to the dashboard. Subscription status
+      // controls paid content, not access to the student portal.
+      Navigator.of(context).popUntil((route) => route.isFirst);
     } catch (error) {
       if (!mounted) return;
 
