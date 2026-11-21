@@ -1,3 +1,4 @@
+import '../../../app/atlas_academy_app.dart';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
