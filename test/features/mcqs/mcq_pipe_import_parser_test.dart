@@ -55,6 +55,25 @@ void main() {
       expect(result.errors.single.lineNumber, 2);
     });
 
+
+    test('parses a past paper destination without an MBBS year or pathway', () {
+      final result = McqPipeImportParser.parse(
+        input: 'Past paper question|A|B|C|D|C|Explanation|Anatomy|Upper Limb|Medium',
+        yearId: '',
+        trackType: 'past_paper',
+        adminUid: 'admin-1',
+        subjectId: 'paper-2024-anatomy',
+        examSetId: 'paper-2024-anatomy',
+        examSetName: 'Anatomy 2024',
+      );
+
+      expect(result.successfulRows, 1);
+      expect(result.questions.single.trackType, 'past_paper');
+      expect(result.questions.single.yearId, isEmpty);
+      expect(result.questions.single.pathwayId, isEmpty);
+      expect(result.questions.single.examSetId, 'paper-2024-anatomy');
+    });
+
     test('rejects missing administrator or academic year', () {
       final result = McqPipeImportParser.parse(
         input: 'Question|A|B|C|D|A|Reason|Biology|Cells|Easy',
