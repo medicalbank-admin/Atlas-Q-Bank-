@@ -303,235 +303,204 @@ exports.rejectSubscriptionRequest = onCall(async (request) => {
   }
 });
 // ==================================================
+// ==================================================
+// START A SERVER-TIMED MCQ PRACTICE SESSION
+// ==================================================
+exports.startMcqPractice = onCall(
+  { region: "asia-south1", enforceAppCheck: false },
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Please sign in first.");
+    }
+    const userId = request.auth.uid;
+    const examSetId = typeof request.data?.examSetId === "string"
+      ? request.data.examSetId.trim()
+      : "";
+    try {
+      const userSnapshot = await db.collection("users").doc(userId).get();
+      if (!userSnapshot.exists) {
+        throw new HttpsError("permission-denied", "Your student profile could not be found.");
+      }
+      const user = userSnapshot.data();
+      const expiry = user.subscriptionExpiryAt;
+      const active = user.accessEnabled === true &&
+        user.subscriptionStatus === "active" &&
+        expiry && typeof expiry.toDate === "function" &&
+        expiry.toDate().getTime() > Date.now();
+      if (!active) {
+        throw new HttpsError("permission-denied", "An active subscription is required.");
+      }
+      const permissions = user.subscriptionAccessPermissions || {};
+      let requiredFeature = "mcqPractice";
+      let durationMinutes = 60;
+      let setData = null;
+      if (examSetId) {
+        const setSnapshot = await db.collection("mcq_exam_sets").doc(examSetId).get();
+        if (!setSnapshot.exists || setSnapshot.data().isPublished !== true) {
+          throw new HttpsError("not-found", "This published exam set is unavailable.");
+        }
+        setData = setSnapshot.data();
+        requiredFeature = setData.trackType === "licensing"
+          ? "examPathways"
+          : "mcqPractice";
+        const configuredDuration = Number(setData.durationMinutes);
+        if (Number.isInteger(configuredDuration) && configuredDuration > 0) {
+          durationMinutes = Math.min(configuredDuration, 240);
+        }
+      }
+      if (permissions[requiredFeature] !== true) {
+        throw new HttpsError("permission-denied", "Your subscription does not include this feature.");
+      }
+      let query = db.collection("mcqs").where("isPublished", "==", true);
+      if (examSetId) query = query.where("examSetId", "==", examSetId);
+      const questionSnapshot = await query.limit(100).get();
+      if (questionSnapshot.empty) {
+        throw new HttpsError("failed-precondition", "No published questions are available in this set.");
+      }
+      const questionIds = questionSnapshot.docs.map((doc) => doc.id);
+      for (let i = questionIds.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [questionIds[i], questionIds[j]] = [questionIds[j], questionIds[i]];
+      }
+      const now = Timestamp.now();
+      const expiresAt = Timestamp.fromMillis(
+        now.toMillis() + durationMinutes * 60 * 1000
+      );
+      const sessionRef = db.collection("mcq_practice_sessions").doc();
+      await sessionRef.create({
+        userId,
+        examSetId: examSetId || null,
+        trackType: setData?.trackType || "mbbs",
+        questionIds,
+        durationMinutes,
+        startedAt: now,
+        expiresAt,
+        status: "active",
+        createdAt: FieldValue.serverTimestamp(),
+      });
+      return {
+        success: true,
+        sessionId: sessionRef.id,
+        questionIds,
+        durationMinutes,
+        startedAt: now.toDate().toISOString(),
+        expiresAt: expiresAt.toDate().toISOString(),
+      };
+    } catch (error) {
+      if (error instanceof HttpsError) throw error;
+      console.error("MCQ session start failed:", error);
+      throw new HttpsError("internal", "The practice session could not be started.");
+    }
+  }
+);
+
+// ==================================================
 // SECURE MCQ PRACTICE SUBMISSION
 // ==================================================
 exports.submitMcqPractice = onCall(
-  {
-    region: "asia-south1",
-    enforceAppCheck: false,
-  },
+  { region: "asia-south1", enforceAppCheck: false },
   async (request) => {
     if (!request.auth) {
-      throw new HttpsError(
-        "unauthenticated",
-        "Please sign in before submitting your practice."
-      );
+      throw new HttpsError("unauthenticated", "Please sign in before submitting your practice.");
     }
     const userId = request.auth.uid;
-    const data = request.data || {};
-    const questionIds = data.questionIds;
-    const selectedAnswers = data.selectedAnswers;
-    const startedAtValue = data.startedAt;
-    const examSetId =
-      typeof data.examSetId === "string" ? data.examSetId.trim() : "";
-    if (
-      !Array.isArray(questionIds) ||
-      questionIds.length < 1 ||
-      questionIds.length > 100
-    ) {
-      throw new HttpsError(
-        "invalid-argument",
-        "A practice session must contain between 1 and 100 questions."
-      );
+    const sessionId = typeof request.data?.sessionId === "string"
+      ? request.data.sessionId.trim()
+      : "";
+    const selectedAnswers = request.data?.selectedAnswers;
+    if (!sessionId || sessionId.length > 150) {
+      throw new HttpsError("invalid-argument", "A valid practice session is required.");
     }
-    if (
-      !selectedAnswers ||
-      typeof selectedAnswers !== "object" ||
-      Array.isArray(selectedAnswers)
-    ) {
-      throw new HttpsError(
-        "invalid-argument",
-        "The selected answers are invalid."
-      );
+    if (!selectedAnswers || typeof selectedAnswers !== "object" || Array.isArray(selectedAnswers)) {
+      throw new HttpsError("invalid-argument", "The selected answers are invalid.");
     }
-    const uniqueIds = new Set();
-    for (const questionId of questionIds) {
-      if (
-        typeof questionId !== "string" ||
-        questionId.trim().length < 1 ||
-        questionId.length > 150
-      ) {
-        throw new HttpsError(
-          "invalid-argument",
-          "A question ID is invalid."
-        );
-      }
-      if (uniqueIds.has(questionId)) {
-        throw new HttpsError(
-          "invalid-argument",
-          "Duplicate questions are not allowed."
-        );
-      }
-      uniqueIds.add(questionId);
-    }
-    const allowedAnswerIds = new Set(questionIds);
-    for (const key of Object.keys(selectedAnswers)) {
-      if (!allowedAnswerIds.has(key)) {
-        throw new HttpsError(
-          "invalid-argument",
-          "An answer was submitted for a question outside this session."
-        );
-      }
-      const value = selectedAnswers[key];
-      if (
-        value !== null &&
-        (!Number.isInteger(value) || value < 0 || value > 4)
-      ) {
-        throw new HttpsError(
-          "invalid-argument",
-          "A selected option index is invalid."
-        );
-      }
-    }
-    let startedAt = new Date();
-    if (typeof startedAtValue === "string") {
-      const parsedDate = new Date(startedAtValue);
-      if (Number.isNaN(parsedDate.getTime())) {
-        throw new HttpsError(
-          "invalid-argument",
-          "The practice start time is invalid."
-        );
-      }
-      startedAt = parsedDate;
-    }
-    const nowDate = new Date();
-    if (
-      startedAt.getTime() > nowDate.getTime() + 60000 ||
-      startedAt.getTime() < nowDate.getTime() - 24 * 60 * 60 * 1000
-    ) {
-      throw new HttpsError(
-        "invalid-argument",
-        "The practice start time is outside the allowed range."
-      );
-    }
+    const sessionRef = db.collection("mcq_practice_sessions").doc(sessionId);
     const userRef = db.collection("users").doc(userId);
-    const examSetRef = examSetId
-      ? db.collection("mcq_exam_sets").doc(examSetId)
-      : null;
-    const questionRefs = questionIds.map((id) =>
-      db.collection("mcqs").doc(id)
-    );
-    const answerKeyRefs = questionIds.map((id) =>
-      db.collection("mcq_answer_keys").doc(id)
-    );
     try {
       const result = await db.runTransaction(async (transaction) => {
+        const sessionSnapshot = await transaction.get(sessionRef);
+        if (!sessionSnapshot.exists) {
+          throw new HttpsError("not-found", "This practice session could not be found.");
+        }
+        const session = sessionSnapshot.data();
+        if (session.userId !== userId || session.status !== "active") {
+          throw new HttpsError("permission-denied", "This practice session is not available to your account.");
+        }
+        const nowDate = new Date();
+        const expiresAt = session.expiresAt?.toDate?.();
+        if (!expiresAt || nowDate.getTime() > expiresAt.getTime() + 120000) {
+          throw new HttpsError("deadline-exceeded", "The submission window for this practice has closed.");
+        }
+        const questionIds = session.questionIds;
+        if (!Array.isArray(questionIds) || questionIds.length < 1 || questionIds.length > 100) {
+          throw new HttpsError("failed-precondition", "The saved practice session is invalid.");
+        }
+        const allowedAnswerIds = new Set(questionIds);
+        for (const key of Object.keys(selectedAnswers)) {
+          if (!allowedAnswerIds.has(key)) {
+            throw new HttpsError("invalid-argument", "An answer was submitted for a question outside this session.");
+          }
+          const value = selectedAnswers[key];
+          if (value !== null && (!Number.isInteger(value) || value < 0 || value > 4)) {
+            throw new HttpsError("invalid-argument", "A selected option index is invalid.");
+          }
+        }
         const userSnapshot = await transaction.get(userRef);
         if (!userSnapshot.exists) {
-          throw new HttpsError(
-            "permission-denied",
-            "Your student profile could not be found."
-          );
+          throw new HttpsError("permission-denied", "Your student profile could not be found.");
         }
         const user = userSnapshot.data();
-        const expiry = user.subscriptionExpiryAt;
-        const subscriptionStillValid =
-          expiry &&
-          typeof expiry.toDate === "function" &&
-          expiry.toDate().getTime() > Date.now();
-        const permissions = user.subscriptionAccessPermissions || {};
-        if (
-          user.accessEnabled !== true ||
-          user.subscriptionStatus !== "active" ||
-          !subscriptionStillValid
-        ) {
-          throw new HttpsError(
-            "permission-denied",
-            "An active subscription is required to submit MCQ practice."
-          );
+        const subscriptionExpiry = user.subscriptionExpiryAt;
+        const subscriptionStillValid = subscriptionExpiry &&
+          typeof subscriptionExpiry.toDate === "function" &&
+          subscriptionExpiry.toDate().getTime() > Date.now();
+        if (user.accessEnabled !== true || user.subscriptionStatus !== "active" || !subscriptionStillValid) {
+          throw new HttpsError("permission-denied", "An active subscription is required to submit MCQ practice.");
         }
-        let requiredFeature = "mcqPractice";
+        const examSetId = typeof session.examSetId === "string" ? session.examSetId : "";
+        const examSetRef = examSetId ? db.collection("mcq_exam_sets").doc(examSetId) : null;
+        let examSetSnapshot = null;
         if (examSetRef) {
-          const examSetSnapshot = await transaction.get(examSetRef);
-          if (!examSetSnapshot.exists ||
-              examSetSnapshot.data().isPublished !== true) {
-            throw new HttpsError(
-              "not-found",
-              "This published exam set is no longer available."
-            );
+          examSetSnapshot = await transaction.get(examSetRef);
+          if (!examSetSnapshot.exists || examSetSnapshot.data().isPublished !== true) {
+            throw new HttpsError("failed-precondition", "This exam set is no longer published.");
           }
-          const examSet = examSetSnapshot.data();
-          requiredFeature = examSet.trackType === "licensing"
-            ? "examPathways"
-            : "mcqPractice";
+          const feature = examSetSnapshot.data().trackType === "licensing" ? "examPathways" : "mcqPractice";
+          if ((user.subscriptionAccessPermissions || {})[feature] !== true) {
+            throw new HttpsError("permission-denied", "Your subscription no longer includes this exam set.");
+          }
+        } else if ((user.subscriptionAccessPermissions || {}).mcqPractice !== true) {
+          throw new HttpsError("permission-denied", "Your subscription does not include MCQ practice.");
         }
-        if (permissions[requiredFeature] !== true) {
-          throw new HttpsError(
-            "permission-denied",
-            "Your subscription does not include access to this exam set."
-          );
-        }
+        const questionRefs = questionIds.map((id) => db.collection("mcqs").doc(id));
+        const answerKeyRefs = questionIds.map((id) => db.collection("mcq_answer_keys").doc(id));
         const questionSnapshots = [];
         for (let i = 0; i < questionRefs.length; i += 1) {
-          const questionSnapshot = await transaction.get(
-            questionRefs[i]
-          );
-          const answerKeySnapshot = await transaction.get(
-            answerKeyRefs[i]
-          );
-          if (
-            !questionSnapshot.exists ||
-            !answerKeySnapshot.exists
-          ) {
-            throw new HttpsError(
-              "failed-precondition",
-              "A question or its answer key is unavailable."
-            );
+          const questionSnapshot = await transaction.get(questionRefs[i]);
+          const answerKeySnapshot = await transaction.get(answerKeyRefs[i]);
+          if (!questionSnapshot.exists || !answerKeySnapshot.exists) {
+            throw new HttpsError("failed-precondition", "A question or its private answer key is unavailable.");
           }
           const question = questionSnapshot.data();
           const answerKey = answerKeySnapshot.data();
-          if (question.isPublished !== true) {
-            throw new HttpsError(
-              "failed-precondition",
-              "This practice contains an unpublished question."
-            );
-          }
-          if (examSetId && question.examSetId !== examSetId) {
-            throw new HttpsError(
-              "permission-denied",
-              "A question does not belong to the selected exam set."
-            );
+          if (question.isPublished !== true || (examSetId && question.examSetId !== examSetId)) {
+            throw new HttpsError("failed-precondition", "A question is unpublished or does not belong to this exam set.");
           }
           const options = question.options;
-          if (
-            !Array.isArray(options) ||
-            options.length < 4 ||
-            options.length > 5 ||
-            options.some(
-              (option) =>
-                typeof option !== "string" ||
-                option.trim().length === 0
-            )
-          ) {
-            throw new HttpsError(
-              "failed-precondition",
-              "A question has invalid options."
-            );
+          if (!Array.isArray(options) || options.length < 4 || options.length > 5 ||
+              options.some((option) => typeof option !== "string" || !option.trim())) {
+            throw new HttpsError("failed-precondition", "A question has invalid options.");
           }
-          const correctAnswer =
-            typeof answerKey.correctAnswer === "string"
-              ? answerKey.correctAnswer.trim().toUpperCase()
-              : "";
+          const correctAnswer = typeof answerKey.correctAnswer === "string"
+            ? answerKey.correctAnswer.trim().toUpperCase()
+            : "";
           const correctIndex = "ABCDE".indexOf(correctAnswer);
-          if (
-            correctIndex < 0 ||
-            correctIndex >= options.length
-          ) {
-            throw new HttpsError(
-              "failed-precondition",
-              "A question has an invalid private answer key."
-            );
+          if (correctIndex < 0 || correctIndex >= options.length) {
+            throw new HttpsError("failed-precondition", "A question has an invalid private answer key.");
           }
           questionSnapshots.push({
-            id: questionIds[i],
-            question,
-            options,
-            correctAnswer,
-            correctIndex,
-            explanation:
-              typeof answerKey.explanation === "string"
-                ? answerKey.explanation
-                : "",
+            id: questionIds[i], question, options, correctAnswer, correctIndex,
+            explanation: typeof answerKey.explanation === "string" ? answerKey.explanation : "",
           });
         }
         let correctAnswers = 0;
@@ -542,47 +511,24 @@ exports.submitMcqPractice = onCall(
         const topics = new Set();
         for (const item of questionSnapshots) {
           const question = item.question;
-          const selectedIndex =
-            selectedAnswers[item.id] === undefined
-              ? null
-              : selectedAnswers[item.id];
-          if (
-            selectedIndex !== null &&
-            selectedIndex >= item.options.length
-          ) {
-            throw new HttpsError(
-              "invalid-argument",
-              "A selected answer exceeds the available options."
-            );
+          const selectedIndex = selectedAnswers[item.id] === undefined ? null : selectedAnswers[item.id];
+          if (selectedIndex !== null && selectedIndex >= item.options.length) {
+            throw new HttpsError("invalid-argument", "A selected answer exceeds the available options.");
           }
           const isAnswered = selectedIndex !== null;
-          const isCorrect =
-            isAnswered && selectedIndex === item.correctIndex;
-          if (!isAnswered) {
-            unansweredQuestions += 1;
-          } else if (isCorrect) {
-            correctAnswers += 1;
-          } else {
-            incorrectAnswers += 1;
-          }
-          const subject =
-            typeof question.subject === "string"
-              ? question.subject.trim()
-              : "";
-          const topic =
-            typeof question.topic === "string"
-              ? question.topic.trim()
-              : "";
+          const isCorrect = isAnswered && selectedIndex === item.correctIndex;
+          if (!isAnswered) unansweredQuestions += 1;
+          else if (isCorrect) correctAnswers += 1;
+          else incorrectAnswers += 1;
+          const subject = typeof question.subject === "string" ? question.subject.trim() : "";
+          const topic = typeof question.topic === "string" ? question.topic.trim() : "";
           if (subject) subjects.add(subject);
           if (topic) topics.add(topic);
           answerSnapshots.push({
             questionId: item.id,
             question: question.question || "",
             options: item.options,
-            selectedAnswer:
-              selectedIndex === null
-                ? null
-                : String.fromCharCode(65 + selectedIndex),
+            selectedAnswer: selectedIndex === null ? null : String.fromCharCode(65 + selectedIndex),
             correctAnswer: item.correctAnswer,
             isAnswered,
             isCorrect,
@@ -594,12 +540,14 @@ exports.submitMcqPractice = onCall(
           });
         }
         const totalQuestions = questionSnapshots.length;
-        const percentage =
-          (correctAnswers / totalQuestions) * 100;
+        const percentage = (correctAnswers / totalQuestions) * 100;
         const attemptRef = db.collection("mcq_attempts").doc();
-        const attemptData = {
+        transaction.create(attemptRef, {
           userId,
           type: "practice",
+          examSetId: examSetId || null,
+          sessionId,
+          durationMinutes: session.durationMinutes || 60,
           totalQuestions,
           correctAnswers,
           incorrectAnswers,
@@ -611,12 +559,16 @@ exports.submitMcqPractice = onCall(
           topic: Array.from(topics).join(", "),
           subjects: Array.from(subjects),
           topics: Array.from(topics),
-          startedAt: Timestamp.fromDate(startedAt),
+          startedAt: session.startedAt,
           completedAt: FieldValue.serverTimestamp(),
           createdAt: FieldValue.serverTimestamp(),
           scoringMethod: "server",
-        };
-        transaction.create(attemptRef, attemptData);
+        });
+        transaction.update(sessionRef, {
+          status: "submitted",
+          submittedAt: FieldValue.serverTimestamp(),
+          attemptId: attemptRef.id,
+        });
         return {
           attemptId: attemptRef.id,
           totalQuestions,
@@ -626,22 +578,14 @@ exports.submitMcqPractice = onCall(
           percentage,
         };
       });
-      return {
-        success: true,
-        message: "Practice submitted successfully.",
-        ...result,
-      };
+      return { success: true, message: "Practice submitted successfully.", ...result };
     } catch (error) {
       if (error instanceof HttpsError) throw error;
       console.error("MCQ practice submission failed:", error);
-      throw new HttpsError(
-        "internal",
-        "Your practice could not be submitted. Please try again."
-      );
+      throw new HttpsError("internal", "Your practice could not be submitted. Please try again.");
     }
   }
 );
-// ==================================================
 // AUTOMATIC SUBSCRIPTION EXPIRY
 // Runs every day at 12:15 AM Pakistan time.
 // ==================================================
