@@ -43,8 +43,8 @@ jobs:
             echo "Missing repository secret: ANDROID_KEYSTORE_BASE64"
             exit 1
           fi
-          mkdir -p android/keystore
-          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/keystore/atlas-release.jks
+          mkdir -p android/app/keystore
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/keystore/atlas-release.jks
 
       - name: Build release APK
         env:
@@ -56,7 +56,7 @@ jobs:
 
       - name: Remove signing material
         if: always()
-        run: rm -rf android/keystore
+        run: rm -rf android/app/keystore
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
