@@ -10,6 +10,8 @@ import 'admin_students_screen.dart';
 import 'admin_subscription_plans_screen.dart';
 import 'admin_subscription_requests_screen.dart';
 import 'admin_payment_settings_screen.dart';
+import 'admin_notifications_screen.dart';
+import 'admin_analytics_screen.dart';
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
   Future<bool> _isAuthorizedAdmin() async {
@@ -122,7 +124,7 @@ class AdminDashboardScreen extends StatelessWidget {
                   const SizedBox(height: 17),
                   _buildManagementGrid(context),
                   const SizedBox(height: 27),
-                  _buildPlannedFeatures(),
+
                   const SizedBox(height: 30),
                   _buildFooter(),
                 ]),
@@ -423,6 +425,20 @@ class AdminDashboardScreen extends StatelessWidget {
         subtitle: 'Manage notes, PDFs and learning videos',
         color: AtlasColors.gold,
         page: const AdminAcademicScreen(),
+      ),
+      _AdminItem(
+        icon: Icons.campaign_rounded,
+        title: 'Notifications & Announcements',
+        subtitle: 'Publish and manage student announcements',
+        color: AtlasColors.brightBlue,
+        page: const AdminNotificationsScreen(),
+      ),
+      _AdminItem(
+        icon: Icons.insights_rounded,
+        title: 'Analytics & Reports',
+        subtitle: 'Live student, payment and content metrics',
+        color: AtlasColors.gold,
+        page: const AdminAnalyticsScreen(),
       ),
       _AdminItem(
         icon: Icons.quiz_rounded,
