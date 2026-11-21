@@ -373,7 +373,7 @@ class _StudentRegistrationScreenState
             content: const Text(
               'Your student account has been created. '
               'Please check your email and verify your email address. '
-              'Your account is now awaiting administrator approval.',
+              'After verifying your email, you can sign in and enter the student dashboard. An active subscription is required to access learning content.',
               textAlign: TextAlign.center,
             ),
             actions: [
