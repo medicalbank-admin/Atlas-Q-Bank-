@@ -67,7 +67,7 @@ class _StudentRegistrationScreenState
       'Imperial College London',
       'University College London',
       'University of Edinburgh',
-      'King\'s College London',
+      "King's College London",
     ],
     'United States': [
       'Harvard University',
@@ -201,7 +201,7 @@ class _StudentRegistrationScreenState
     final selected = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Theme.of(context).cardTheme.color,
+      backgroundColor: AtlasColors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(26),
@@ -226,7 +226,14 @@ class _StudentRegistrationScreenState
         context: context,
         builder: (dialogContext) {
           return AlertDialog(
-            title: const Text('Enter University Name'),
+            backgroundColor: AtlasColors.white,
+            title: const Text(
+              'Enter University Name',
+              style: TextStyle(
+                color: AtlasColors.navy,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
             content: TextField(
               controller: controller,
               autofocus: true,
@@ -348,16 +355,27 @@ class _StudentRegistrationScreenState
         barrierDismissible: false,
         builder: (dialogContext) {
           return AlertDialog(
+            backgroundColor: AtlasColors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(23),
+            ),
             icon: const Icon(
               Icons.mark_email_read_rounded,
-              color: AtlasColors.oceanTeal,
+              color: AtlasColors.royalBlue,
               size: 48,
             ),
-            title: const Text('Registration Successful'),
+            title: const Text(
+              'Registration Successful',
+              style: TextStyle(
+                color: AtlasColors.navy,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
             content: const Text(
               'Your student account has been created. '
               'Please check your email and verify your email address. '
               'Your account is now awaiting administrator approval.',
+              textAlign: TextAlign.center,
             ),
             actions: [
               ElevatedButton(
@@ -424,16 +442,25 @@ class _StudentRegistrationScreenState
             title,
             style: const TextStyle(
               fontSize: 18,
-              fontWeight: FontWeight.w800,
-              color: AtlasColors.deepTeal,
+              fontWeight: FontWeight.w900,
+              color: AtlasColors.navy,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 5),
           Text(
             subtitle,
             style: const TextStyle(
               fontSize: 12,
               color: AtlasColors.secondaryText,
+            ),
+          ),
+          const SizedBox(height: 11),
+          Container(
+            height: 3,
+            width: 42,
+            decoration: BoxDecoration(
+              color: AtlasColors.champagne,
+              borderRadius: BorderRadius.circular(10),
             ),
           ),
         ],
@@ -464,11 +491,32 @@ class _StudentRegistrationScreenState
           labelText: label,
           prefixIcon: Icon(
             icon,
-            color: AtlasColors.oceanTeal,
+            color: AtlasColors.royalBlue,
           ),
           suffixIcon: suffixIcon,
         ),
       ),
+    );
+  }
+
+  Widget _registrationCard({
+    required Widget child,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(19),
+      decoration: BoxDecoration(
+        color: AtlasColors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AtlasColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: AtlasColors.navy.withValues(alpha: 0.045),
+            blurRadius: 18,
+            offset: const Offset(0, 7),
+          ),
+        ],
+      ),
+      child: child,
     );
   }
 
@@ -479,7 +527,7 @@ class _StudentRegistrationScreenState
       appBar: AppBar(
         title: const Text('Student Registration'),
         backgroundColor: AtlasColors.ivory,
-        foregroundColor: AtlasColors.deepTeal,
+        foregroundColor: AtlasColors.navy,
         elevation: 0,
       ),
       body: SafeArea(
@@ -489,37 +537,72 @@ class _StudentRegistrationScreenState
             child: Form(
               key: _formKey,
               child: ListView(
-                padding: const EdgeInsets.all(22),
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
                 children: [
-                  const SizedBox(height: 10),
-                  const Icon(
-                    Icons.school_rounded,
-                    size: 42,
-                    color: AtlasColors.oceanTeal,
-                  ),
-                  const SizedBox(height: 10),
-                  const Text(
-                    'Join The Atlas Academy',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 25,
-                      fontWeight: FontWeight.w900,
-                      color: AtlasColors.deepTeal,
+                  // Premium registration header.
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 27,
+                    ),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [
+                          AtlasColors.navy,
+                          AtlasColors.deepNavy,
+                          AtlasColors.royalBlue,
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                    child: const Column(
+                      children: [
+                        Icon(
+                          Icons.school_rounded,
+                          size: 47,
+                          color: AtlasColors.champagne,
+                        ),
+                        SizedBox(height: 13),
+                        Text(
+                          'THE ATLAS ACADEMY',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            letterSpacing: 1.8,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        SizedBox(height: 12),
+                        Text(
+                          'Begin Your Medical Journey',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 23,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          'Create your student account and take the next step towards medical excellence.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                            height: 1.6,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Create your student account to begin your medical learning journey.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: AtlasColors.secondaryText,
-                    ),
-                  ),
-                  const SizedBox(height: 28),
 
-                  // Profile Picture
-                  AtlasCard(
+                  const SizedBox(height: 22),
+
+                  // Profile Picture.
+                  _registrationCard(
                     child: Column(
                       children: [
                         _sectionTitle(
@@ -537,10 +620,10 @@ class _StudentRegistrationScreenState
                     ),
                   ),
 
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 17),
 
-                  // Personal Information
-                  AtlasCard(
+                  // Personal Information.
+                  _registrationCard(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -578,10 +661,10 @@ class _StudentRegistrationScreenState
                     ),
                   ),
 
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 17),
 
-                  // Academic Information
-                  AtlasCard(
+                  // Academic Information.
+                  _registrationCard(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -615,7 +698,7 @@ class _StudentRegistrationScreenState
                               labelText: 'University *',
                               prefixIcon: Icon(
                                 Icons.account_balance_rounded,
-                                color: AtlasColors.oceanTeal,
+                                color: AtlasColors.royalBlue,
                               ),
                               suffixIcon: Icon(
                                 Icons.keyboard_arrow_down_rounded,
@@ -628,10 +711,8 @@ class _StudentRegistrationScreenState
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
                                 color: _selectedUniversity == null
-                                    ? Theme.of(context).hintColor
-                                    : Theme.of(context)
-                                        .colorScheme
-                                        .onSurface,
+                                    ? AtlasColors.secondaryText
+                                    : AtlasColors.charcoal,
                               ),
                             ),
                           ),
@@ -640,7 +721,7 @@ class _StudentRegistrationScreenState
                           const Padding(
                             padding: EdgeInsets.only(
                               left: 12,
-                              top: 5,
+                              top: 6,
                             ),
                             child: Text(
                               'Please select or enter your university.',
@@ -654,10 +735,10 @@ class _StudentRegistrationScreenState
                     ),
                   ),
 
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 17),
 
-                  // Account Security
-                  AtlasCard(
+                  // Account Security.
+                  _registrationCard(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -717,10 +798,10 @@ class _StudentRegistrationScreenState
                     ),
                   ),
 
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 17),
 
-                  // Terms and Conditions
-                  AtlasCard(
+                  // Terms and Conditions.
+                  _registrationCard(
                     child: CheckboxListTile(
                       value: _acceptedTerms,
                       onChanged: (value) {
@@ -731,10 +812,11 @@ class _StudentRegistrationScreenState
                       contentPadding: EdgeInsets.zero,
                       controlAffinity:
                           ListTileControlAffinity.leading,
-                      activeColor: AtlasColors.oceanTeal,
+                      activeColor: AtlasColors.navy,
                       title: const Text(
                         'I accept the Terms & Conditions and Privacy Policy.',
                         style: TextStyle(
+                          color: AtlasColors.charcoal,
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),
@@ -742,9 +824,8 @@ class _StudentRegistrationScreenState
                     ),
                   ),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 23),
 
-                  // Submit Button
                   AtlasPrimaryButton(
                     label: 'Create Student Account',
                     isLoading: _isSubmitting,
@@ -753,7 +834,7 @@ class _StudentRegistrationScreenState
                         : _submitRegistration,
                   ),
 
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 17),
 
                   TextButton(
                     onPressed: () {
@@ -762,13 +843,24 @@ class _StudentRegistrationScreenState
                     child: const Text(
                       'Already have an account? Sign In',
                       style: TextStyle(
-                        color: AtlasColors.oceanTeal,
-                        fontWeight: FontWeight.w700,
+                        color: AtlasColors.royalBlue,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
                   ),
 
-                  const SizedBox(height: 25),
+                  const SizedBox(height: 20),
+
+                  const Text(
+                    'EXCELLENCE IN MEDICAL EDUCATION',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: AtlasColors.secondaryText,
+                      fontSize: 9,
+                      letterSpacing: 1.2,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -827,14 +919,13 @@ class _UniversitySelectionSheetState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              const Text(
                 'Select University',
-                style: Theme.of(context)
-                    .textTheme
-                    .titleLarge
-                    ?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                style: TextStyle(
+                  color: AtlasColors.navy,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                ),
               ),
               const SizedBox(height: 18),
               TextField(
@@ -846,7 +937,10 @@ class _UniversitySelectionSheetState
                 },
                 decoration: const InputDecoration(
                   hintText: 'Search university...',
-                  prefixIcon: Icon(Icons.search_rounded),
+                  prefixIcon: Icon(
+                    Icons.search_rounded,
+                    color: AtlasColors.royalBlue,
+                  ),
                 ),
               ),
               const SizedBox(height: 14),
@@ -855,12 +949,18 @@ class _UniversitySelectionSheetState
                   children: [
                     ...filtered.map((university) {
                       return ListTile(
-                        title: Text(university),
+                        title: Text(
+                          university,
+                          style: const TextStyle(
+                            color: AtlasColors.charcoal,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                         trailing: university ==
                                 widget.selectedUniversity
                             ? const Icon(
                                 Icons.check_circle_rounded,
-                                color: AtlasColors.oceanTeal,
+                                color: AtlasColors.gold,
                               )
                             : null,
                         onTap: () {
@@ -872,11 +972,12 @@ class _UniversitySelectionSheetState
                     ListTile(
                       leading: const Icon(
                         Icons.edit_location_alt_rounded,
-                        color: AtlasColors.oceanTeal,
+                        color: AtlasColors.royalBlue,
                       ),
                       title: const Text(
                         'Other — Enter University Manually',
                         style: TextStyle(
+                          color: AtlasColors.navy,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
