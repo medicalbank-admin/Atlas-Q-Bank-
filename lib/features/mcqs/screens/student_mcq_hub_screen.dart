@@ -1,17 +1,9 @@
-
 import 'package:flutter/material.dart';
-
+import '../../../app/atlas_academy_app.dart';
 import 'student_mcq_practice_screen.dart';
 import 'student_mcq_history_screen.dart';
-
 class StudentMcqHubScreen extends StatelessWidget {
   const StudentMcqHubScreen({super.key});
-
-  static const Color navy = Color(0xFF123F46);
-  static const Color teal = Color(0xFF28777B);
-  static const Color gold = Color(0xFFD8B66B);
-  static const Color ivory = Color(0xFFF7F8F5);
-
   void _openPractice(BuildContext context) {
     Navigator.push(
       context,
@@ -20,7 +12,6 @@ class StudentMcqHubScreen extends StatelessWidget {
       ),
     );
   }
-
   void _openHistory(BuildContext context) {
     Navigator.push(
       context,
@@ -29,168 +20,332 @@ class StudentMcqHubScreen extends StatelessWidget {
       ),
     );
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: ivory,
+      backgroundColor: AtlasColors.ivory,
       appBar: AppBar(
-        backgroundColor: navy,
+        title: const Text('MCQ Learning Centre'),
+        backgroundColor: AtlasColors.navy,
         foregroundColor: Colors.white,
-        title: const Text(
-          'MCQ Learning Centre',
-          style: TextStyle(fontWeight: FontWeight.w800),
-        ),
+        elevation: 0,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(20, 18, 20, 35),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _heroCard(context),
-            const SizedBox(height: 28),
-            const Text(
-              'Your Learning Tools',
-              style: TextStyle(
-                color: navy,
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-              ),
+            const SizedBox(height: 29),
+            const _SectionHeading(
+              title: 'Your Learning Tools',
+              subtitle: 'Choose how you want to prepare today',
             ),
-            const SizedBox(height: 15),
-            _featureCard(
-              context: context,
+            const SizedBox(height: 16),
+            _FeatureCard(
               icon: Icons.play_circle_fill_rounded,
               title: 'Start MCQ Practice',
               description:
-                  'Practice medical questions and test your knowledge.',
+                  'Challenge yourself with medical questions and '
+                  'strengthen your subject knowledge.',
               buttonText: 'Start Practicing',
-              color: teal,
+              accent: AtlasColors.royalBlue,
               onTap: () => _openPractice(context),
             ),
             const SizedBox(height: 14),
-            _featureCard(
-              context: context,
+            _FeatureCard(
               icon: Icons.history_rounded,
               title: 'Practice History',
               description:
-                  'Review your previous scores and detailed answers.',
+                  'Revisit your previous attempts and review '
+                  'your performance and answers.',
               buttonText: 'View History',
-              color: navy,
+              accent: AtlasColors.gold,
               onTap: () => _openHistory(context),
             ),
-            const SizedBox(height: 22),
+            const SizedBox(height: 23),
             _tipCard(),
+            const SizedBox(height: 27),
+            const Center(
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.school_rounded,
+                    color: AtlasColors.champagne,
+                    size: 25,
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'THE ATLAS ACADEMY',
+                    style: TextStyle(
+                      color: AtlasColors.navy,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 10,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                  SizedBox(height: 5),
+                  Text(
+                    'EXCELLENCE IN MEDICAL EDUCATION',
+                    style: TextStyle(
+                      color: AtlasColors.secondaryText,
+                      fontSize: 8,
+                      letterSpacing: 1,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
     );
   }
-
   Widget _heroCard(BuildContext context) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(23),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [navy, teal],
+          colors: [
+            AtlasColors.navy,
+            AtlasColors.royalBlue,
+            AtlasColors.brightBlue,
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(25),
+        borderRadius: BorderRadius.circular(26),
         boxShadow: [
           BoxShadow(
-            color: navy.withValues(alpha: 0.18),
-            blurRadius: 18,
+            color: AtlasColors.navy.withValues(alpha: 0.18),
+            blurRadius: 22,
             offset: const Offset(0, 9),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
         children: [
-          Container(
-            padding: const EdgeInsets.all(13),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Icon(
-              Icons.school_rounded,
-              color: gold,
-              size: 31,
+          Positioned(
+            right: -15,
+            top: 5,
+            child: Icon(
+              Icons.psychology_rounded,
+              size: 125,
+              color: Colors.white.withValues(alpha: 0.06),
             ),
           ),
-          const SizedBox(height: 19),
-          const Text(
-            'Learn. Practice. Excel.',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 23,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          const SizedBox(height: 9),
-          const Text(
-            'Strengthen your medical knowledge with '
-            'focused MCQ practice and detailed explanations.',
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 14,
-              height: 1.6,
-            ),
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton(
-              onPressed: () => _openPractice(context),
-              style: FilledButton.styleFrom(
-                backgroundColor: gold,
-                foregroundColor: navy,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(13),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(13),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.12),
+                  ),
+                ),
+                child: const Icon(
+                  Icons.school_rounded,
+                  color: AtlasColors.champagne,
+                  size: 29,
                 ),
               ),
-              child: const Text(
-                'Begin Practice',
-                style: TextStyle(fontWeight: FontWeight.w800),
+              const SizedBox(height: 22),
+              const Text(
+                'Learn. Practice. Excel.',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 23,
+                  fontWeight: FontWeight.w900,
+                ),
               ),
+              const SizedBox(height: 10),
+              Text(
+                'Strengthen your medical knowledge through '
+                'focused MCQ practice and detailed review.',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.82),
+                  fontSize: 12,
+                  height: 1.7,
+                ),
+              ),
+              const SizedBox(height: 23),
+              SizedBox(
+                width: double.infinity,
+                height: 51,
+                child: FilledButton(
+                  onPressed: () => _openPractice(context),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AtlasColors.champagne,
+                    foregroundColor: AtlasColors.navy,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.play_arrow_rounded, size: 22),
+                      SizedBox(width: 7),
+                      Text(
+                        'Begin Practice',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+  Widget _tipCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AtlasColors.paleBlue,
+        borderRadius: BorderRadius.circular(19),
+        border: Border.all(
+          color: AtlasColors.royalBlue.withValues(alpha: 0.10),
+        ),
+      ),
+      child: const Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CircleAvatar(
+            radius: 20,
+            backgroundColor: Colors.white,
+            child: Icon(
+              Icons.lightbulb_outline_rounded,
+              color: AtlasColors.gold,
+              size: 22,
+            ),
+          ),
+          SizedBox(width: 13),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'A Study Tip',
+                  style: TextStyle(
+                    color: AtlasColors.navy,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 13,
+                  ),
+                ),
+                SizedBox(height: 6),
+                Text(
+                  'Read the explanation after every practice '
+                  'session. Understanding why an answer is correct '
+                  'is just as important as remembering it.',
+                  style: TextStyle(
+                    color: AtlasColors.secondaryText,
+                    fontSize: 11,
+                    height: 1.6,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
       ),
     );
   }
-
-  Widget _featureCard({
-    required BuildContext context,
-    required IconData icon,
-    required String title,
-    required String description,
-    required String buttonText,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
+}
+class _SectionHeading extends StatelessWidget {
+  const _SectionHeading({
+    required this.title,
+    required this.subtitle,
+  });
+  final String title;
+  final String subtitle;
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            color: AtlasColors.navy,
+            fontSize: 19,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const SizedBox(height: 5),
+        Text(
+          subtitle,
+          style: const TextStyle(
+            color: AtlasColors.secondaryText,
+            fontSize: 11,
+          ),
+        ),
+      ],
+    );
+  }
+}
+class _FeatureCard extends StatelessWidget {
+  const _FeatureCard({
+    required this.icon,
+    required this.title,
+    required this.description,
+    required this.buttonText,
+    required this.accent,
+    required this.onTap,
+  });
+  final IconData icon;
+  final String title;
+  final String description;
+  final String buttonText;
+  final Color accent;
+  final VoidCallback onTap;
+  @override
+  Widget build(BuildContext context) {
     return Material(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(19),
+      borderRadius: BorderRadius.circular(21),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(19),
-        child: Padding(
+        borderRadius: BorderRadius.circular(21),
+        child: Container(
           padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(21),
+            border: Border.all(color: AtlasColors.border),
+            boxShadow: [
+              BoxShadow(
+                color: AtlasColors.navy.withValues(alpha: 0.035),
+                blurRadius: 13,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
           child: Row(
             children: [
               Container(
                 width: 55,
                 height: 55,
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.09),
-                  borderRadius: BorderRadius.circular(16),
+                  color: accent.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(17),
                 ),
-                child: Icon(icon, color: color, size: 28),
+                child: Icon(
+                  icon,
+                  color: accent,
+                  size: 27,
+                ),
               ),
               const SizedBox(width: 15),
               Expanded(
@@ -200,83 +355,45 @@ class StudentMcqHubScreen extends StatelessWidget {
                     Text(
                       title,
                       style: const TextStyle(
-                        color: navy,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
+                        color: AtlasColors.navy,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w900,
                       ),
                     ),
-                    const SizedBox(height: 5),
+                    const SizedBox(height: 6),
                     Text(
                       description,
                       style: const TextStyle(
-                        color: Colors.black54,
-                        fontSize: 12,
-                        height: 1.4,
+                        color: AtlasColors.secondaryText,
+                        fontSize: 10,
+                        height: 1.5,
                       ),
                     ),
-                    const SizedBox(height: 10),
-                    Text(
-                      buttonText,
-                      style: TextStyle(
-                        color: color,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                      ),
+                    const SizedBox(height: 11),
+                    Row(
+                      children: [
+                        Text(
+                          buttonText,
+                          style: TextStyle(
+                            color: accent,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        const SizedBox(width: 5),
+                        Icon(
+                          Icons.arrow_forward_rounded,
+                          color: accent,
+                          size: 15,
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
-              Icon(
-                Icons.arrow_forward_ios_rounded,
-                color: color,
-                size: 16,
-              ),
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _tipCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(17),
-      decoration: BoxDecoration(
-        color: const Color(0xFFE5F1EF),
-        borderRadius: BorderRadius.circular(17),
-      ),
-      child: const Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(Icons.lightbulb_outline, color: teal, size: 23),
-          SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Study Tip',
-                  style: TextStyle(
-                    color: navy,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                SizedBox(height: 5),
-                Text(
-                  'Read the explanation after every practice '
-                  'session. Understanding why an answer is correct '
-                  'is just as important as remembering it.',
-                  style: TextStyle(
-                    color: navy,
-                    fontSize: 12,
-                    height: 1.5,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }
