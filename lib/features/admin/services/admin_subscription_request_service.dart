@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../subscriptions/models/subscription_request_model.dart';
+import '../../advanced_learning/services/push_notification_service.dart';
 
 class AdminSubscriptionRequestService {
   final FirebaseFirestore _firestore;
@@ -181,6 +182,12 @@ class AdminSubscriptionRequestService {
         'updatedAt': serverNow,
       });
     });
+    try {
+      final approved = await getRequest(id);
+      if (approved != null) {
+        await PushNotificationService().sendCampaign(notificationId: 'membership_approved_' + id, title: 'Membership approved', body: 'Your ' + approved.planName + ' membership is now active. Enjoy your academy access.', destination: 'membership', audience: 'selected', userIds: [approved.studentUid]);
+      }
+    } catch (_) {}
   }
 
   Future<void> rejectRequest({
