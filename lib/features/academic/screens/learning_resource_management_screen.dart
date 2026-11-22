@@ -75,7 +75,7 @@ class LearningResourceManagementScreen extends StatelessWidget {
                           decoration: const InputDecoration(
                             labelText: 'Resource type',
                           ),
-                          items: LearningResourceType.values.map((type) {
+                          items: LearningResourceType.values.where((type) => type != LearningResourceType.text).map((type) {
                             return DropdownMenuItem(
                               value: type,
                               child: Text(_typeLabel(type)),
@@ -276,7 +276,7 @@ class LearningResourceManagementScreen extends StatelessWidget {
                   DropdownButtonFormField<LearningResourceType>(
                     value: type,
                     decoration: const InputDecoration(labelText: 'Resource type'),
-                    items: LearningResourceType.values.map((item) =>
+                    items: LearningResourceType.values.where((item) => item != LearningResourceType.text).map((item) =>
                       DropdownMenuItem(value: item, child: Text(_typeLabel(item)))).toList(),
                     onChanged: saving ? null : (value) {
                       if (value != null) setDialogState(() => type = value);
