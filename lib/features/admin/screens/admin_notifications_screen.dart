@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../../app/atlas_academy_app.dart';
+import '../../advanced_learning/services/push_notification_service.dart';
 
 class AdminNotificationsScreen extends StatefulWidget {
  const AdminNotificationsScreen({super.key});
@@ -22,7 +23,7 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen>{
     if(link.isNotEmpty)'linkUrl':link,
     'createdBy':FirebaseAuth.instance.currentUser?.uid,
    });
-   _title.clear();_body.clear();_link.clear();if(mounted)_message('Announcement published.',false);
+   _title.clear();_body.clear();_link.clear();if(mounted)_message('Announcement published in the app.',false);try{final sent=await PushNotificationService().sendAnnouncement(title:_title.text.trim().isEmpty?'Academy announcement':_title.text.trim(),body:_body.text.trim());if(mounted)_message('Push notification sent to $sent devices.',false);}catch(e){if(mounted)_message('In-app announcement published; push delivery unavailable: $e',true);}
   }catch(e){if(mounted)_message('Could not publish: $e',true);}
   finally{if(mounted)setState(()=>_sending=false);}
  }
