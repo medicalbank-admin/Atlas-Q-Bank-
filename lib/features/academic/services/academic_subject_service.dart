@@ -19,13 +19,14 @@ class AcademicSubjectService {
   ) {
     return _subjects
         .where('yearId', isEqualTo: yearId)
-        .orderBy('displayOrder')
         .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
+        .map((snapshot) {
+          final subjects = snapshot.docs
               .map(AcademicSubjectModel.fromFirestore)
-              .toList(),
-        );
+              .toList();
+          subjects.sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
+          return subjects;
+        });
   }
 
   /// Creates a new subject.
