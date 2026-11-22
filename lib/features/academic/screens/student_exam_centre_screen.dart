@@ -100,7 +100,10 @@ class _StructuredExamList extends StatelessWidget {
         final x = doc.data(); final name = (x['categoryName'] ?? x['subjectName'] ?? 'Previously Published Exams').toString();
         groups.putIfAbsent(name, () => []).add(doc);
       }
-      return ListView(padding: const EdgeInsets.fromLTRB(16, 4, 16, 24), children: groups.entries.map((e) => _section(context, e.key, e.value)).toList());
+      return ListView(padding: const EdgeInsets.fromLTRB(16, 4, 16, 24), children: [
+        ...groups.entries.map((e) => _section(context, e.key, e.value)),
+        if (types.contains('subject_exam')) const _LegacyPublishedExams(),
+      ]);
     },
   );
 
@@ -123,4 +126,36 @@ class _StructuredExamList extends StatelessWidget {
       }).toList(),
     ));
   }
+}
+
+
+class _LegacyPublishedExams extends StatelessWidget {
+  const _LegacyPublishedExams();
+
+  @override
+  Widget build(BuildContext context) => StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+    stream: FirebaseFirestore.instance.collection('exams').where('isPublished', isEqualTo: true).snapshots(),
+    builder: (context, snapshot) {
+      if (snapshot.hasError || !snapshot.hasData || snapshot.data!.docs.isEmpty) return const SizedBox.shrink();
+      return Card(
+        color: Colors.white,
+        margin: const EdgeInsets.only(bottom: 14),
+        child: ExpansionTile(
+          title: const Text('Previously Published Exams', style: TextStyle(color: AtlasColors.navy, fontWeight: FontWeight.w900)),
+          subtitle: const Text('Existing exams retained during the new organization'),
+          children: snapshot.data!.docs.map((doc) {
+            final data = doc.data();
+            final title = (data['title'] ?? data['name'] ?? 'Examination').toString();
+            final setId = (data['examSetId'] ?? '').toString();
+            return ListTile(
+              title: Text(title, style: const TextStyle(color: AtlasColors.navy)),
+              subtitle: Text((data['subjectName'] ?? data['subject'] ?? '').toString()),
+              trailing: Icon(setId.isEmpty ? Icons.info_outline : Icons.play_circle_outline, color: AtlasColors.royalBlue),
+              onTap: setId.isEmpty ? null : () => Navigator.push(context, MaterialPageRoute(builder: (_) => StudentMcqPracticeScreen(examSetId: setId))),
+            );
+          }).toList(),
+        ),
+      );
+    },
+  );
 }
