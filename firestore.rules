@@ -199,7 +199,8 @@ service cloud.firestore {
       allow read: if isAdmin() || (
         resource.data.isPublished == true &&
         (
-          (resource.data.trackType == 'structured' &&
+          ((resource.data.trackType == 'structured' ||
+            resource.data.yearId == 'exam_centre') &&
             hasFeatureAccess('examinations')) ||
           (resource.data.trackType == 'past_paper' &&
             (hasFeatureAccess('pastPapers') ||
@@ -477,7 +478,8 @@ service cloud.firestore {
           !resource.data.keys().hasAny(['correctAnswer', 'explanation']) &&
           (
             // Structured academy exam questions.
-            (resource.data.trackType == 'structured' &&
+            ((resource.data.trackType == 'structured' ||
+              resource.data.yearId == 'exam_centre') &&
               (hasFeatureAccess('mcqPractice') ||
                 hasFeatureAccess('examinations'))) ||
             // Past-paper questions are restricted to the Past Papers entitlement.
