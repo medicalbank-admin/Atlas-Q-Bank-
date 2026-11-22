@@ -459,7 +459,7 @@ class _StudentRegistrationScreenState
             height: 3,
             width: 42,
             decoration: BoxDecoration(
-              color: AtlasColors.champagne,
+              color: AtlasColors.royalBlue,
               borderRadius: BorderRadius.circular(10),
             ),
           ),
@@ -511,8 +511,8 @@ class _StudentRegistrationScreenState
       padding: const EdgeInsets.all(19),
       decoration: BoxDecoration(
         color: AtlasColors.white,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AtlasColors.border),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE0EAF5)),
         boxShadow: [
           BoxShadow(
             color: AtlasColors.navy.withValues(alpha: 0.045),
@@ -528,10 +528,10 @@ class _StudentRegistrationScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AtlasColors.ivory,
+      backgroundColor: const Color(0xFFF3F7FF),
       appBar: AppBar(
         title: const Text('Student Registration'),
-        backgroundColor: AtlasColors.ivory,
+        backgroundColor: const Color(0xFFF3F7FF),
         foregroundColor: AtlasColors.navy,
         elevation: 0,
       ),
