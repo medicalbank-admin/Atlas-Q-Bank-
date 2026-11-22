@@ -83,6 +83,18 @@ class PushNotificationService {
     return Map<String, dynamic>.from(decoded);
   }
 
+  Future<void> sendForumReplyEvent({required String postId}) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    final token = await user.getIdToken();
+    if (token == null || token.isEmpty) return;
+    final endpoint = _apiUrl.endsWith('/') ? '${_apiUrl}event' : '$_apiUrl/event';
+    await http.post(Uri.parse(endpoint),
+      headers: {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'},
+      body: jsonEncode({'type': 'forum_reply', 'postId': postId}),
+    ).timeout(const Duration(seconds: 30));
+  }
+
   Future<void> registerDevice(BuildContext context) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
