@@ -147,7 +147,7 @@ class StudentExamCentreScreen extends StatelessWidget {
         onTap: () => Navigator.push(context, MaterialPageRoute(
           builder: (_) => StudentMcqPracticeScreen(examSetId: doc.id),
         )),
-      );
+      ));
     }).toList();
   }
 }
