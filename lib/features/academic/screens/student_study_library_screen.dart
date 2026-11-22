@@ -134,9 +134,30 @@ class _StudentStudyLibraryScreenState extends State<StudentStudyLibraryScreen> {
     LearningResourceType.presentation => Icons.slideshow_rounded,
     LearningResourceType.externalLink => Icons.open_in_new_rounded,
     LearningResourceType.document => Icons.description_rounded,
+    LearningResourceType.text => Icons.notes_rounded,
   };
 
   Future<void> _openResource(LearningResourceModel resource) async {
+    if (resource.type == LearningResourceType.text) {
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          backgroundColor: Colors.white,
+          title: Text(resource.title, style: const TextStyle(color: AtlasColors.navy, fontWeight: FontWeight.w900)),
+          content: SizedBox(
+            width: 520,
+            child: SingleChildScrollView(
+              child: SelectableText(
+                resource.textContent,
+                style: const TextStyle(color: AtlasColors.navy, height: 1.65, fontSize: 15),
+              ),
+            ),
+          ),
+          actions: [TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Close'))],
+        ),
+      );
+      return;
+    }
     final uri=Uri.tryParse(resource.resourceUrl);
     if(uri==null || !uri.hasScheme) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('This resource link is invalid.')));
