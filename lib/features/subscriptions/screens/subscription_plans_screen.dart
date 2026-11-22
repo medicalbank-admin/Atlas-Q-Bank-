@@ -189,6 +189,25 @@ class SubscriptionPlansScreen extends StatelessWidget {
     BuildContext context,
     SubscriptionPlanModel plan,
   ) {
+    const permissionLabels = {
+      'studyLibrary': 'Study Library & Learning Resources',
+      'mcqPractice': 'MCQ Practice',
+      'examinations': 'Examinations',
+      'pastPapers': 'Past Papers',
+      'examPathways': 'Exam Pathways',
+      'clinicalCases': 'Clinical Case-Based Learning',
+      'mistakesNotebook': 'Mistakes Notebook',
+      'mockPredictions': 'Mock Exam Readiness & Predictions',
+      'discussionForum': 'Student Discussion Forum',
+      'askTeacher': 'Ask a Teacher',
+      'pushNotifications': 'Push Notifications',
+    };
+    final benefits = <String>{
+      ...plan.features,
+      ...plan.accessPermissions.entries
+          .where((entry) => entry.value)
+          .map((entry) => permissionLabels[entry.key] ?? entry.key),
+    }.toList();
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -256,7 +275,7 @@ class SubscriptionPlansScreen extends StatelessWidget {
               fontSize: 12,
             ),
           ),
-          if (plan.features.isNotEmpty) ...[
+          if (benefits.isNotEmpty) ...[
             const SizedBox(height: 17),
             const Divider(),
             const SizedBox(height: 10),
@@ -269,7 +288,7 @@ class SubscriptionPlansScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
-            ...plan.features.map(
+            ...benefits.map(
               (feature) => Padding(
                 padding: const EdgeInsets.only(bottom: 9),
                 child: Row(
