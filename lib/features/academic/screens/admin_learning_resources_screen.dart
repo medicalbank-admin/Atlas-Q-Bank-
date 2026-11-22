@@ -38,8 +38,9 @@ class _AdminLearningResourcesScreenState
       backgroundColor: AtlasColors.ivory,
       appBar: AppBar(
         title: const Text('Learning Resources'),
-        backgroundColor: AtlasColors.navy,
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.white,
+        foregroundColor: AtlasColors.navy,
+        elevation: 0,
       ),
       body: ListView(
         padding: const EdgeInsets.all(18),
