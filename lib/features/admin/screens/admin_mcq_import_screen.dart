@@ -376,8 +376,12 @@ class _AdminMcqImportScreenState
     final result = _previewResult;
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF2F7FF),
       appBar: AppBar(
         title: const Text('Bulk MCQ Import'),
+        backgroundColor: const Color(0xFFF2F7FF),
+        foregroundColor: const Color(0xFF123B68),
+        elevation: 0,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -391,11 +395,11 @@ class _AdminMcqImportScreenState
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [
-                      Color(0xFF071B3D),
-                      Color(0xFF174A91),
+                      Color(0xFF123B68),
+                      Color(0xFF2563A6),
                     ],
                   ),
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(22),
                 ),
                 child: const Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
