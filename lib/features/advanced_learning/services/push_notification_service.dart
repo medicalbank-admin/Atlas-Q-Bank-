@@ -11,6 +11,7 @@ class PushNotificationService {
   static const String _apiUrl = String.fromEnvironment('PUSH_API_URL', defaultValue: 'https://atlas-academy-push-api.medicalbankadmin.workers.dev');
   StreamSubscription<String>? _refresh;
   StreamSubscription<RemoteMessage>? _foreground;
+  StreamSubscription<RemoteMessage>? _opened;
 
   Future<int> sendAnnouncement({
     required String title,
@@ -95,6 +96,21 @@ class PushNotificationService {
     ).timeout(const Duration(seconds: 30));
   }
 
+  Future<void> _recordOpen(RemoteMessage message) async {
+    final user = FirebaseAuth.instance.currentUser;
+    final notificationId = message.data['notificationId']?.toString() ?? '';
+    if (user == null || notificationId.isEmpty) return;
+    try {
+      await FirebaseFirestore.instance.collection('push_notification_events').add({
+        'notificationId': notificationId,
+        'userId': user.uid,
+        'event': 'opened',
+        'destination': message.data['destination']?.toString() ?? '',
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    } catch (_) {}
+  }
+
   Future<void> registerDevice(BuildContext context) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -119,6 +135,9 @@ class PushNotificationService {
           SnackBar(content: Text('$title: $body')),
         );
       });
+      _opened ??= FirebaseMessaging.onMessageOpenedApp.listen(_recordOpen);
+      final initialMessage = await messaging.getInitialMessage();
+      if (initialMessage != null) await _recordOpen(initialMessage);
     } catch (_) {
       // Push registration is optional if permission or network is unavailable.
     }
@@ -151,5 +170,7 @@ class PushNotificationService {
     _refresh = null;
     await _foreground?.cancel();
     _foreground = null;
+    await _opened?.cancel();
+    _opened = null;
   }
 }
