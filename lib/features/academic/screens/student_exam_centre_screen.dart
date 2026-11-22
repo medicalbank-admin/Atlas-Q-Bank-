@@ -13,6 +13,7 @@ class StudentExamCentreScreen extends StatelessWidget {
     'subject_mock': 'Subject Mocks',
     'system_mock': 'System Mocks',
     'grand_mock': 'Grand Mocks',
+    'mocks': 'Mock Exams',
   };
 
   @override
@@ -44,7 +45,7 @@ class StudentExamCentreScreen extends StatelessWidget {
             final category = (data['examCategory'] ?? '').toString();
             final isAcademyExam = data['yearId'] == 'exam_centre' ||
                 data['trackType'] == 'structured';
-            return isAcademyExam && category == section &&
+            return isAcademyExam && (section == 'mocks' ? category.endsWith('_mock') : category == section) &&
                 data['isActive'] != false;
           }).toList()
             ..sort((a, b) => (a.data()['name'] ?? '')
@@ -59,9 +60,34 @@ class StudentExamCentreScreen extends StatelessWidget {
             ));
           }
 
-          if (section.endsWith('_mock')) {
-            return _examList(context, docs);
+          if (section == 'mocks') {
+            const mockLabels = {
+              'subject_mock': 'Subject Mocks',
+              'system_mock': 'System Mocks',
+              'grand_mock': 'Grand Mocks',
+            };
+            return ListView(
+              padding: const EdgeInsets.all(16),
+              children: mockLabels.entries.map((entry) {
+                final group = docs.where((doc) =>
+                    doc.data()['examCategory'] == entry.key).toList();
+                return Card(
+                  color: Colors.white,
+                  margin: const EdgeInsets.only(bottom: 12),
+                  child: ExpansionTile(
+                    initiallyExpanded: true,
+                    leading: const Icon(Icons.fact_check_rounded,
+                        color: AtlasColors.royalBlue),
+                    title: Text(entry.value, style: const TextStyle(
+                        color: AtlasColors.navy, fontWeight: FontWeight.w900)),
+                    subtitle: Text('${group.length} mock(s)'),
+                    children: _tiles(context, group),
+                  ),
+                );
+              }).toList(),
+            );
           }
+          if (section.endsWith('_mock')) return _examList(context, docs);
 
           final groups = <String, List<QueryDocumentSnapshot<Map<String, dynamic>>>>{};
           for (final doc in docs) {
