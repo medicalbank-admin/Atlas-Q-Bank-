@@ -23,7 +23,7 @@ class StudentDashboardScreen extends StatefulWidget {
 class _StudentDashboardScreenState extends State<StudentDashboardScreen>{
  int selected=0;
  @override void initState(){super.initState();PushNotificationService().registerDevice();}
- Future<void> signOut()async{try{await StudentAuthService().signOut();if(mounted)Navigator.of(context).popUntil((r)=>r.isFirst);}catch(_){if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Unable to sign out.')));}}
+ Future<void> signOut()async{try{await PushNotificationService().unregisterCurrentDevice();await StudentAuthService().signOut();if(mounted)Navigator.of(context).popUntil((r)=>r.isFirst);}catch(_){if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Unable to sign out.')));}}
  Future<void> openFeature(String key)async{
   final u=FirebaseAuth.instance.currentUser;if(u==null)return;
   if(key=='profile'){await Navigator.push(context,MaterialPageRoute(builder:(_)=>const ProfileScreen()));return;}
@@ -42,6 +42,11 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen>{
    if(key=='mcqPractice')page=const StudentMcqHubScreen();
    if(key=='pastPapers')page=const StudentPastPapersScreen();
    if(key=='examinations'||key=='examPathways')page=StudentExamCentreScreen(pathwaysOnly:key=='examPathways');
+   if(key=='clinicalCases')page=const ClinicalCaseLearningScreen();
+   if(key=='mistakesNotebook')page=const MistakesNotebookScreen();
+   if(key=='mockPredictions')page=const MockExamPredictionScreen();
+   if(key=='discussionForum')page=const StudentDiscussionForumScreen();
+   if(key=='askTeacher')page=const AskTeacherScreen();
    if(page!=null)await Navigator.push(context,MaterialPageRoute(builder:(_)=>page!));
   }catch(_){if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Unable to check membership.')));}
  }
