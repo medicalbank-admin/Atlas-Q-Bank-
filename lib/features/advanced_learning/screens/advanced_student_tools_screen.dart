@@ -96,12 +96,31 @@ class MistakesNotebookScreen extends StatefulWidget{const MistakesNotebookScreen
 class _MistakesNotebookScreenState extends State<MistakesNotebookScreen>{
  final uid=FirebaseAuth.instance.currentUser?.uid;
  Future<void> importMistakes()async{
-  if(uid==null)return;final db=FirebaseFirestore.instance;
-  final attempts=await db.collection('mcq_attempts').where('userId',isEqualTo:uid).orderBy('completedAt',descending:true).limit(100).get();int added=0,queued=0;
-  var batch=db.batch();
-  for(final doc in attempts.docs){final answers=doc.data()['answers'];if(answers is! List)continue;for(var i=0;i<answers.length;i++){final raw=answers[i];if(raw is! Map)continue;final a=Map<String,dynamic>.from(raw);if(a['isCorrect']==true||a['question']==null)continue;final id='${doc.id}_$i';final ref=db.collection('mistake_notebook').doc('${uid}_$id');if((await ref.get()).exists)continue;batch.set(ref,{'userId':uid,'attemptId':doc.id,'questionIndex':i,'question':a['question'],'options':a['options']??[],'selectedAnswer':a['selectedAnswer'],'correctAnswer':a['correctAnswer'],'explanation':a['explanation']??'','subject':a['subject']??'','topic':a['topic']??'','isReviewed':false,'createdAt':FieldValue.serverTimestamp()});added++;queued++;if(queued>=400){await batch.commit();batch=db.batch();queued=0;}}
-  }
-  if(queued>0)await batch.commit();if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('$added incorrect or unanswered questions synced to your notebook.')));
+  if(uid==null)return;
+  final db=FirebaseFirestore.instance;
+  try{
+   // Do not order by completedAt: legacy attempts may lack this field or an index.
+   final attempts=await db.collection('mcq_attempts').where('userId',isEqualTo:uid).limit(500).get();
+   int added=0,queued=0,alreadySaved=0;var batch=db.batch();
+   for(final doc in attempts.docs){
+    final data=doc.data();dynamic rawAnswers=data['answers']??data['questionResults']??data['reviewAnswers'];
+    if(rawAnswers is Map)rawAnswers=rawAnswers.values.toList();
+    if(rawAnswers is! List)continue;
+    for(var i=0;i<rawAnswers.length;i++){
+     final raw=rawAnswers[i];if(raw is! Map)continue;final answer=Map<String,dynamic>.from(raw);
+     final question=(answer['question']??answer['questionText']??'').toString().trim();if(question.isEmpty)continue;
+     final selected=answer['selectedAnswer']??answer['userAnswer']??answer['chosenAnswer'];
+     final answered=answer['isAnswered']==true||(selected!=null&&selected.toString().trim().isNotEmpty);
+     if(answer['isCorrect']==true)continue;
+     final ref=db.collection('mistake_notebook').doc('${uid}_${doc.id}_$i');
+     if((await ref.get()).exists){alreadySaved++;continue;}
+     batch.set(ref,{'userId':uid,'attemptId':doc.id,'questionIndex':i,'question':question,'options':answer['options'] is List?answer['options']:<dynamic>[],'selectedAnswer':answered?selected:null,'correctAnswer':answer['correctAnswer']??'','explanation':answer['explanation']??'','subject':answer['subject']??data['subject']??'','topic':answer['topic']??data['topic']??'','status':answered?'incorrect':'skipped','isReviewed':false,'createdAt':FieldValue.serverTimestamp()});
+     added++;queued++;if(queued>=400){await batch.commit();batch=db.batch();queued=0;}
+    }
+   }
+   if(queued>0)await batch.commit();
+   if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(added>0?'$added incorrect or skipped questions added.':'No new mistakes found. ${alreadySaved>0?'$alreadySaved are already saved.':'Complete an exam first, then sync again.'}')));
+  }catch(error){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('Could not sync mistakes: $error')));}
  }
  Future<void> updateNote(String id,Map<String,dynamic> data)async{final c=TextEditingController(text:(data['personalNote']??'').toString());final v=await showDialog<String>(context:context,builder:(ctx)=>AlertDialog(title:const Text('Your revision note'),content:TextField(controller:c,minLines:3,maxLines:6,decoration:const InputDecoration(hintText:'Why was this difficult? What will you remember?')),actions:[TextButton(onPressed:()=>Navigator.pop(ctx),child:const Text('Cancel')),FilledButton(onPressed:()=>Navigator.pop(ctx,c.text),child:const Text('Save'))]));if(v!=null){await FirebaseFirestore.instance.collection('mistake_notebook').doc(id).update({'personalNote':v,'isReviewed':true,'reviewedAt':FieldValue.serverTimestamp()});}}
  @override Widget build(BuildContext context)=>Scaffold(backgroundColor:AtlasColors.ivory,appBar:AppBar(title:const Text('Mistakes Notebook'),actions:[IconButton(tooltip:'Sync incorrect answers from attempts',onPressed:importMistakes,icon:const Icon(Icons.sync_rounded))]),floatingActionButton:FloatingActionButton.extended(onPressed:importMistakes,icon:const Icon(Icons.download_rounded),label:const Text('Sync mistakes')),body:uid==null?const SizedBox():StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(stream:FirebaseFirestore.instance.collection('mistake_notebook').where('userId',isEqualTo:uid).snapshots(),builder:(c,s){if(s.hasError)return Center(child:Text('Unable to load notebook: ${s.error}'));if(!s.hasData)return const Center(child:CircularProgressIndicator());final docs=s.data!.docs;if(docs.isEmpty)return const _EmptyState('Your incorrect and unanswered questions will appear here. Tap Sync mistakes to import your exam history.',Icons.menu_book_rounded);return ListView(padding:const EdgeInsets.all(15),children:[Text('${docs.length} saved revision items',style:const TextStyle(color:AtlasColors.secondaryText,fontWeight:FontWeight.w700)),const SizedBox(height:12),...docs.map((doc){final d=doc.data();return Card(margin:const EdgeInsets.only(bottom:10),child:Padding(padding:const EdgeInsets.all(15),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Row(children:[Expanded(child:Text((d['subject']??'General').toString()+' • '+(d['topic']??'').toString(),style:const TextStyle(color:AtlasColors.royalBlue,fontSize:10,fontWeight:FontWeight.w900))),Chip(label:Text(d['isReviewed']==true?'Reviewed':'To review'),backgroundColor:d['isReviewed']==true?const Color(0xFFE8F5EC):const Color(0xFFFFF3D9))]),Text((d['question']??'').toString(),style:const TextStyle(color:AtlasColors.navy,fontWeight:FontWeight.w800,height:1.5)),const SizedBox(height:8),Text('Your answer: ${d['selectedAnswer']??'Skipped'}   •   Correct: ${d['correctAnswer']??'—'}',style:const TextStyle(color:AtlasColors.charcoal,fontSize:12)),if((d['explanation']??'').toString().isNotEmpty)Padding(padding:const EdgeInsets.only(top:8),child:Text(d['explanation'].toString(),style:const TextStyle(color:AtlasColors.secondaryText,height:1.5))),if((d['personalNote']??'').toString().isNotEmpty)Padding(padding:const EdgeInsets.only(top:8),child:Text('My note: ${d['personalNote']}',style:const TextStyle(color:AtlasColors.charcoal,fontStyle:FontStyle.italic))),Align(alignment:Alignment.centerRight,child:TextButton.icon(onPressed:()=>updateNote(doc.id,d),icon:const Icon(Icons.edit_note_rounded),label:const Text('Add revision note')))])));})]);}));
