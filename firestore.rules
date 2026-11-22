@@ -187,35 +187,23 @@ service cloud.firestore {
     }
 
     // ==================================================
-    // MCQ CURRICULUM METADATA
+    // EXAM CATEGORY METADATA
     // ==================================================
-    match /licensing_pathways/{pathwayId} {
-      allow read: if signedIn();
-      allow create, update, delete: if isAdmin();
-    }
-    match /licensing_pathway_subjects/{subjectId} {
-      allow read: if signedIn();
-      allow create, update, delete: if isAdmin();
-    }
     match /exam_categories/{categoryId} {
       allow read: if signedIn();
       allow create, update, delete: if isAdmin();
     }
 
     match /mcq_exam_sets/{examSetId} {
-      // Published MBBS sets and past papers require the Examinations feature.
-      // Published licensing sets require the Exam Pathways feature.
-      // Unknown or missing track types are never exposed to students.
+      // Structured academy exams and past papers are the only student exam tracks.
       allow read: if isAdmin() || (
         resource.data.isPublished == true &&
         (
-          (resource.data.trackType == 'mbbs' &&
+          (resource.data.trackType == 'structured' &&
             hasFeatureAccess('examinations')) ||
           (resource.data.trackType == 'past_paper' &&
             (hasFeatureAccess('pastPapers') ||
-              hasFeatureAccess('examinations'))) ||
-          (resource.data.trackType == 'licensing' &&
-            hasFeatureAccess('examPathways'))
+              hasFeatureAccess('examinations')))
         )
       );
       allow create, update, delete: if isAdmin();
@@ -488,14 +476,11 @@ service cloud.firestore {
           resource.data.isPublished == true &&
           !resource.data.keys().hasAny(['correctAnswer', 'explanation']) &&
           (
-            // MBBS practice questions.
-            (resource.data.trackType == 'mbbs' &&
+            // Structured academy exam questions.
+            (resource.data.trackType == 'structured' &&
               (hasFeatureAccess('mcqPractice') ||
                 hasFeatureAccess('examinations'))) ||
-            // Licensing questions are restricted to the pathway entitlement.
-            (resource.data.trackType == 'licensing' &&
-              hasFeatureAccess('examPathways')) ||
-            // Past-paper questions are restricted to the Examinations entitlement.
+            // Past-paper questions are restricted to the Past Papers entitlement.
             (resource.data.trackType == 'past_paper' &&
               (hasFeatureAccess('pastPapers') ||
                 hasFeatureAccess('examinations')))
