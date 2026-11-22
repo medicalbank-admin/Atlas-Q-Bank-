@@ -17,7 +17,7 @@ class _StudentStudyLibraryScreenState extends State<StudentStudyLibraryScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFFF3F7FF),
+    backgroundColor: const Color(0xFFF2F7FF),
     appBar: AppBar(title: const Text('Study Library'), backgroundColor: Colors.white, foregroundColor: AtlasColors.navy, elevation: 0, scrolledUnderElevation: 0),
     body: ListView(padding: const EdgeInsets.fromLTRB(16, 16, 16, 22), children: [
       _banner(),
