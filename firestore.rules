@@ -295,7 +295,18 @@ service cloud.firestore {
           isAdmin()
         );
 
-      allow update, delete: if false;
+      // Only a verified administrator may review a pending request.
+      // Students cannot edit or approve their own payment requests.
+      allow update: if isAdmin() &&
+        resource.data.status == 'pending' &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['status', 'adminNote', 'reviewedBy', 'reviewedAt', 'updatedAt']) &&
+        request.resource.data.status in ['approved', 'rejected'] &&
+        request.resource.data.reviewedBy == request.auth.uid &&
+        request.resource.data.reviewedAt is timestamp &&
+        request.resource.data.updatedAt is timestamp &&
+        request.resource.data.adminNote is string;
+      allow delete: if false;
     }
 
     // ==================================================
