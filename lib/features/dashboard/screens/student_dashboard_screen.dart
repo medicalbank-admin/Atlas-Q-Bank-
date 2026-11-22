@@ -469,12 +469,13 @@ class _Home extends StatelessWidget {
             const Expanded(child: Text('Study Smart.\nScore High.',
               style: TextStyle(color: Color(0xFF123B68), fontSize: 21,
                 height: 1.15, fontWeight: FontWeight.w900))),
-            Column(mainAxisAlignment: MainAxisAlignment.end, children: [
-              Icon(Icons.auto_stories_rounded, size: 48,
-                color: AtlasColors.royalBlue.withValues(alpha: .8)),
-              Icon(Icons.school_rounded, size: 43,
-                color: AtlasColors.navy.withValues(alpha: .85)),
-            ]),
+            SizedBox(
+              width: 160, height: 96,
+              child: SvgPicture.asset(
+                'assets/images/study_smart_banner.svg',
+                fit: BoxFit.contain,
+              ),
+            ),
           ]),
         ),
         const SizedBox(height: 16),
