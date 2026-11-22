@@ -33,6 +33,30 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen>{
   final key=destinations[destination];
   if(key!=null&&mounted)await openFeature(key);
  }
+ Widget _notificationBell(BuildContext context, int count) {
+  return Stack(clipBehavior: Clip.none, children: [
+    IconButton(
+      tooltip: 'Notifications',
+      onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => const StudentNotificationsScreen(),
+      )),
+      icon: const Icon(Icons.notifications_none_rounded,
+          size: 32, color: Color(0xFF123B68)),
+    ),
+    if (count > 0)
+      Positioned(right: 1, top: 0, child: Container(
+        constraints: const BoxConstraints(minWidth: 19, minHeight: 19),
+        padding: const EdgeInsets.symmetric(horizontal: 5),
+        alignment: Alignment.center,
+        decoration: const BoxDecoration(
+          color: Color(0xFFE34C55), shape: BoxShape.circle,
+        ),
+        child: Text(count > 9 ? '9+' : '$count',
+          style: const TextStyle(color: Colors.white,
+            fontSize: 10, fontWeight: FontWeight.w900)),
+      )),
+  ]);
+ }
  Future<void> signOut()async{try{await pushService.unregisterCurrentDevice();await StudentAuthService().signOut();if(mounted)Navigator.of(context).popUntil((r)=>r.isFirst);}catch(_){if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Unable to sign out.')));}}
  Future<void> openFeature(String key)async{
   final u=FirebaseAuth.instance.currentUser;if(u==null)return;
@@ -90,30 +114,18 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen>{
           stream: FirebaseFirestore.instance.collection('notifications')
               .where('audience', isEqualTo: 'all')
               .where('isActive', isEqualTo: true).limit(50).snapshots(),
-          builder: (context, noticeSnapshot) {
-            final count = noticeSnapshot.data?.docs.length ?? 0;
-            return Stack(clipBehavior: Clip.none, children: [
-              IconButton(
-                tooltip: 'Notifications',
-                onPressed: () => Navigator.of(context).push(MaterialPageRoute(
-                  builder: (_) => const StudentNotificationsScreen(),
-                )),
-                icon: const Icon(Icons.notifications_none_rounded,
-                    size: 32, color: Color(0xFF123B68)),
-              ),
-              if (count > 0)
-                Positioned(right: 1, top: 0, child: Container(
-                  constraints: const BoxConstraints(minWidth: 19, minHeight: 19),
-                  padding: const EdgeInsets.symmetric(horizontal: 5),
-                  alignment: Alignment.center,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFE34C55), shape: BoxShape.circle,
-                  ),
-                  child: Text(count > 9 ? '9+' : '$count',
-                    style: const TextStyle(color: Colors.white,
-                      fontSize: 10, fontWeight: FontWeight.w900)),
-                )),
-            ]);
+          builder: (context, globalSnapshot) {
+            final uid = FirebaseAuth.instance.currentUser?.uid;
+            if (uid == null) return _notificationBell(context, globalSnapshot.data?.docs.length ?? 0);
+            return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+              stream: FirebaseFirestore.instance.collection('notifications')
+                  .where('userId', isEqualTo: uid).limit(50).snapshots(),
+              builder: (context, personalSnapshot) {
+                final count = (globalSnapshot.data?.docs.length ?? 0) +
+                    (personalSnapshot.data?.docs.length ?? 0);
+                return _notificationBell(context, count);
+              },
+            );
           },
         ),
       ]),
