@@ -44,7 +44,7 @@ class _StudentMcqResultScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F7FF),
+      backgroundColor: const Color(0xFFF2F7FF),
       appBar: AppBar(
         title: const Text('Practice Result'),
         backgroundColor: Colors.white,
