@@ -181,6 +181,11 @@ service cloud.firestore {
       allow read: if signedIn();
       allow create, update, delete: if isAdmin();
     }
+    match /exam_categories/{categoryId} {
+      allow read: if signedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
     match /mcq_exam_sets/{examSetId} {
       // Published MBBS sets and past papers require the Examinations feature.
       // Published licensing sets require the Exam Pathways feature.
