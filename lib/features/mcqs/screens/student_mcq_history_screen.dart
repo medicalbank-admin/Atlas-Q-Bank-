@@ -26,8 +26,7 @@ class StudentMcqHistoryScreen extends StatelessWidget {
               stream: FirebaseFirestore.instance
                   .collection('mcq_attempts')
                   .where('userId', isEqualTo: user.uid)
-                  .orderBy('completedAt', descending: true)
-                  .limit(50)
+                  .limit(200)
                   .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
@@ -45,7 +44,15 @@ class StudentMcqHistoryScreen extends StatelessWidget {
                         'Please check your connection and try again later.',
                   );
                 }
-                final documents = snapshot.data?.docs ?? [];
+                final documents = [...(snapshot.data?.docs ?? [])]
+                  ..sort((a, b) {
+                    final aValue = a.data()['completedAt'] ?? a.data()['createdAt'];
+                    final bValue = b.data()['completedAt'] ?? b.data()['createdAt'];
+                    final aTime = aValue is Timestamp ? aValue : Timestamp(0, 0);
+                    final bTime = bValue is Timestamp ? bValue : Timestamp(0, 0);
+                    return bTime.compareTo(aTime);
+                  });
+                final recentDocuments = documents.take(50).toList();
                 if (documents.isEmpty) {
                   return const _HistoryMessage(
                     icon: Icons.auto_stories_rounded,
@@ -69,7 +76,7 @@ class StudentMcqHistoryScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 13),
-                    ...documents.map(
+                    ...recentDocuments.map(
                       (document) => _SessionCard(
                         attemptId: document.id,
                         data: document.data(),
