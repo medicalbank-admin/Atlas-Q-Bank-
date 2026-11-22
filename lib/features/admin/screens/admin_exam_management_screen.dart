@@ -35,7 +35,7 @@ class _AdminExamManagementScreenState extends State<AdminExamManagementScreen> {
   }
 
   Future<void> _createExam() async {
-    String type = widget.sectionType ?? 'subject_exam';
+    String type = widget.sectionType == 'mocks' ? 'subject_mock' : (widget.sectionType ?? 'subject_exam');
     String categoryId = '';
     String categoryName = '';
     final title = TextEditingController();
@@ -45,7 +45,7 @@ class _AdminExamManagementScreenState extends State<AdminExamManagementScreen> {
       title: const Text('Create examination'),
       content: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
         if (widget.sectionType == null)
-          DropdownButtonFormField<String>(value: type, decoration: const InputDecoration(labelText: 'Examination type'), items: types.entries.map((e) => DropdownMenuItem(value: e.key, child: Text(e.value))).toList(), onChanged: (v) { if (v != null) setDialogState(() { type = v; categoryId = ''; categoryName = ''; }); })
+          DropdownButtonFormField<String>(value: type, decoration: const InputDecoration(labelText: 'Examination type'), items: types.entries.where((e) => widget.sectionType != 'mocks' || e.key.endsWith('_mock')).map((e) => DropdownMenuItem(value: e.key, child: Text(e.value))).toList(), onChanged: (v) { if (v != null) setDialogState(() { type = v; categoryId = ''; categoryName = ''; }); })
         else
           Padding(padding: const EdgeInsets.only(bottom: 12), child: Align(alignment: Alignment.centerLeft, child: Text(types[type] ?? 'Examination', style: const TextStyle(fontWeight: FontWeight.w800)))),
         if (type != 'grand_mock') StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(stream: db.collection('exam_categories').where('categoryType', isEqualTo: type.startsWith('subject') ? 'subject' : 'system').snapshots(), builder: (c, s) {
@@ -140,9 +140,9 @@ class _AdminExamManagementScreenState extends State<AdminExamManagementScreen> {
         SizedBox(height: 6), Text('Manage subjects, systems, subject and system mocks, and grand mocks in one organized workspace.', style: TextStyle(color: Colors.white70, height: 1.5)),
       ])),
       const SizedBox(height: 14),
-      if (widget.sectionType == null || widget.sectionType == 'subject_exam' || widget.sectionType == 'subject_mock')
+      if (widget.sectionType == null || widget.sectionType == 'subject_exam' || widget.sectionType == 'subject_mock' || widget.sectionType == 'mocks')
         _categoryPanel('subject', 'Subject categories', Icons.menu_book_rounded),
-      if (widget.sectionType == null || widget.sectionType == 'system_exam' || widget.sectionType == 'system_mock')
+      if (widget.sectionType == null || widget.sectionType == 'system_exam' || widget.sectionType == 'system_mock' || widget.sectionType == 'mocks')
         _categoryPanel('system', 'System categories', Icons.account_tree_rounded),
       FilledButton.icon(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminMcqImportScreen())), icon: const Icon(Icons.upload_file_rounded), label: const Text('Import MCQs')),
       const SizedBox(height: 14),
@@ -152,7 +152,7 @@ class _AdminExamManagementScreenState extends State<AdminExamManagementScreen> {
         final visibleDocs = s.data!.docs.where((d) {
           final data = d.data();
           final structured = data['trackType'] == 'structured' || data['yearId'] == 'exam_centre';
-          return structured && (widget.sectionType == null || data['examCategory'] == widget.sectionType);
+          return structured && (widget.sectionType == null || (widget.sectionType == 'mocks' ? (data['examCategory'] ?? '').toString().endsWith('_mock') : data['examCategory'] == widget.sectionType));
         }).toList();
         if (visibleDocs.isEmpty) return const Center(child: Padding(padding: EdgeInsets.all(20), child: Text('No exams in this section yet. Create your first exam.')));
         return Column(children: visibleDocs.map((d) {
