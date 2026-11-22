@@ -117,7 +117,7 @@ class PushNotificationService {
     } catch (_) {}
   }
 
-  Future<void> registerDevice(BuildContext context) async {
+  Future<void> registerDevice(BuildContext context, {Future<void> Function(RemoteMessage message)? onNotificationTap}) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
     try {
@@ -141,9 +141,15 @@ class PushNotificationService {
           SnackBar(content: Text('$title: $body')),
         );
       });
-      _opened ??= FirebaseMessaging.onMessageOpenedApp.listen(_recordOpen);
+      _opened ??= FirebaseMessaging.onMessageOpenedApp.listen((message) {
+        _recordOpen(message);
+        onNotificationTap?.call(message);
+      });
       final initialMessage = await messaging.getInitialMessage();
-      if (initialMessage != null) await _recordOpen(initialMessage);
+      if (initialMessage != null) {
+        await _recordOpen(initialMessage);
+        await onNotificationTap?.call(initialMessage);
+      }
     } catch (_) {
       // Push registration is optional if permission or network is unavailable.
     }
