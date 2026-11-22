@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../app/atlas_academy_app.dart';
 import '../../../shared/widgets/atlas_logo.dart';
@@ -69,7 +70,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen>{
  @override Widget build(BuildContext context){
   final wide=MediaQuery.sizeOf(context).width>=850;final u=FirebaseAuth.instance.currentUser;final name=u?.displayName?.trim().isNotEmpty==true?u!.displayName!.trim():'Student';
   final pages=<Widget>[_Home(name:name,onMembership:()=>openFeature('membership'),onSubjectExams:()=>openFeature('subjectExams'),onSystemExams:()=>openFeature('systemExams'),onMockExams:()=>openFeature('mockExams')),_FeaturePage('Study Library',Icons.menu_book_rounded,()=>openFeature('studyLibrary')),_FeaturePage('MCQ Practice',Icons.quiz_rounded,()=>openFeature('mcqPractice')),_FeaturePage('Past Papers',Icons.history_edu_rounded,()=>openFeature('pastPapers')),_FeaturePage('Subject-Wise Exams',Icons.menu_book_rounded,()=>openFeature('subjectExams')),_FeaturePage('System-Wise Exams',Icons.account_tree_rounded,()=>openFeature('systemExams')),_FeaturePage('Mock Exams',Icons.fact_check_rounded,()=>openFeature('mockExams')),_FeaturePage('Exams History',Icons.history_rounded,()=>openFeature('examsHistory')),_FeaturePage('Clinical Cases',Icons.medical_services_rounded,()=>openFeature('clinicalCases')),_FeaturePage('Mistakes Notebook',Icons.bookmark_added_rounded,()=>openFeature('mistakesNotebook')),_FeaturePage('Mock Exam Readiness',Icons.insights_rounded,()=>openFeature('mockPredictions')),_FeaturePage('Discussion Forum',Icons.forum_rounded,()=>openFeature('discussionForum')),_FeaturePage('Ask a Teacher',Icons.support_agent_rounded,()=>openFeature('askTeacher')),_FeaturePage('Membership',Icons.workspace_premium_rounded,()=>openFeature('membership')),_FeaturePage('Account Status',Icons.verified_user_rounded,()=>openFeature('account'))];
-  return Scaffold(backgroundColor:AtlasColors.ivory,drawer:wide?null:Drawer(backgroundColor:AtlasColors.navy,child:_SideNav(selected:selected,onSelect:select,onSignOut:signOut,onProfile:()=>openFeature('profile'))),body:SafeArea(child:Row(children:[
+  return Scaffold(backgroundColor:const Color(0xFFF3F7FF),drawer:wide?null:Drawer(backgroundColor:AtlasColors.navy,child:_SideNav(selected:selected,onSelect:select,onSignOut:signOut,onProfile:()=>openFeature('profile'))),body:SafeArea(child:Row(children:[
    if(wide)SizedBox(width:265,child:_SideNav(selected:selected,onSelect:select,onSignOut:signOut,onProfile:()=>openFeature('profile'))),
    Expanded(child:Column(children:[
     Container(
@@ -351,20 +352,17 @@ class _Home extends StatelessWidget {
           height: 178,
           padding: const EdgeInsets.fromLTRB(18, 17, 8, 14),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(22),
             gradient: const LinearGradient(
               begin: Alignment.topLeft, end: Alignment.bottomRight,
               colors: [Color(0xFFE5F1FF), Color(0xFFD4E8FF), Color(0xFFF1F7FF)],
             ),
           ),
           child: Stack(children: [
-            Positioned(right: -12, top: 0, bottom: -15, child: Icon(
-              Icons.medical_services_rounded, size: 145,
-              color: AtlasColors.royalBlue.withValues(alpha: .22),
-            )),
-            Positioned(right: 28, top: 12, child: Icon(
-              Icons.health_and_safety_outlined, size: 75,
-              color: AtlasColors.royalBlue.withValues(alpha: .15),
+            Positioned(right: -4, top: -4, bottom: -8, child: SizedBox(
+              width: 150,
+              child: SvgPicture.asset('assets/images/clinical_stethoscope.svg',
+                fit: BoxFit.contain, colorFilter: const ColorFilter.mode(
+                  Color(0x6682B5E8), BlendMode.srcIn)),
             )),
             Align(alignment: Alignment.centerLeft, child: SizedBox(
               width: MediaQuery.sizeOf(context).width * .68,
