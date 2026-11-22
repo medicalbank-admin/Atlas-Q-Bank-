@@ -14,7 +14,7 @@ class _AdminSubscriptionPlansScreenState
   static const Color navy = Color(0xFF071B3D);
   static const Color teal = Color(0xFF174A91);
   static const Color gold = Color(0xFFE4BE68);
-  static const Color ivory = Color(0xFFF5F7FC);
+  static const Color ivory = Color(0xFFF2F7FF);
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
@@ -257,7 +257,7 @@ class _AdminSubscriptionPlansScreenState
       padding: const EdgeInsets.all(17),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(19),
+        borderRadius: BorderRadius.circular(21),
         border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
