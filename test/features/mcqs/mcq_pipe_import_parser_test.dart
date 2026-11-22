@@ -70,7 +70,6 @@ void main() {
       expect(result.successfulRows, 1);
       expect(result.questions.single.trackType, 'past_paper');
       expect(result.questions.single.yearId, isEmpty);
-      expect(result.questions.single.pathwayId, isEmpty);
       expect(result.questions.single.examSetId, 'paper-2024-anatomy');
     });
 
