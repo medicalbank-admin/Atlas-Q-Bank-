@@ -26,7 +26,6 @@ class McqManagementService {
     String? topic,
     bool? publishedOnly,
     String? trackType,
-    String? pathwayId,
     String? examSetId,
   }) async* {
     await _verifyAdmin();
@@ -41,7 +40,6 @@ class McqManagementService {
       query = query.where('topic', isEqualTo: topic);
     }
     if (trackType != null && trackType.isNotEmpty) query = query.where('trackType', isEqualTo: trackType);
-    if (pathwayId != null && pathwayId.isNotEmpty) query = query.where('pathwayId', isEqualTo: pathwayId);
     if (examSetId != null && examSetId.isNotEmpty) query = query.where('examSetId', isEqualTo: examSetId);
     if (publishedOnly == true) {
       query = query.where('isPublished', isEqualTo: true);
@@ -160,7 +158,7 @@ class McqManagementService {
           'correctAnswer': FieldValue.delete(),
           'explanation': FieldValue.delete(),
           'isPublished': true,
-          'trackType': publicData['trackType'] ?? 'mbbs',
+          'trackType': publicData['trackType'] == 'past_paper' ? 'past_paper' : 'structured',
           'updatedAt': FieldValue.serverTimestamp(),
         });
         await batch.commit();
@@ -169,7 +167,7 @@ class McqManagementService {
     }
     await document.update({
       'isPublished': isPublished,
-      if (isPublished) 'trackType': (snapshot.data()?['trackType'] ?? 'mbbs'),
+      if (isPublished) 'trackType': (snapshot.data()?['trackType'] == 'past_paper' ? 'past_paper' : 'structured'),
       'updatedAt': FieldValue.serverTimestamp(),
     });
   }
@@ -214,9 +212,7 @@ class McqManagementService {
       correctAnswer: correctAnswer,
       explanation: explanation,
       yearId: (publicData['yearId'] ?? '').toString(),
-      trackType: (publicData['trackType'] ?? 'mbbs').toString(),
-      pathwayId: (publicData['pathwayId'] ?? '').toString(),
-      pathwayName: (publicData['pathwayName'] ?? '').toString(),
+      trackType: (publicData['trackType'] == 'past_paper' ? 'past_paper' : 'structured'),
       subjectId: (publicData['subjectId'] ?? '').toString(),
       examSetId: (publicData['examSetId'] ?? '').toString(),
       examSetName: (publicData['examSetName'] ?? '').toString(),
@@ -255,14 +251,12 @@ class McqManagementService {
     if (question.question.trim().isEmpty) {
       throw Exception('Question cannot be empty.');
     }
-    if (question.trackType == 'mbbs' && question.yearId.trim().isEmpty) {
-      throw Exception('Academic year is required for MBBS questions.');
+    if (!['structured', 'past_paper'].contains(question.trackType)) {
+      throw Exception('Select a valid exam destination.');
     }
-    if (question.trackType == 'licensing' && question.pathwayId.trim().isEmpty) {
-      throw Exception('Licensing pathway is required.');
-    }
-    if (!['mbbs', 'licensing', 'past_paper'].contains(question.trackType)) {
-      throw Exception('Select a valid MCQ track.');
+    if (question.trackType == 'structured' &&
+        question.yearId.trim() != 'exam_centre') {
+      throw Exception('Select an examination category first.');
     }
     if (question.examSetId.trim().isEmpty) throw Exception('Exam set is required.');
     if (question.subject.trim().isEmpty) {
