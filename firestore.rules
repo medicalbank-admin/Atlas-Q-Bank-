@@ -191,7 +191,8 @@ service cloud.firestore {
           (resource.data.trackType == 'mbbs' &&
             hasFeatureAccess('examinations')) ||
           (resource.data.trackType == 'past_paper' &&
-            hasFeatureAccess('examinations')) ||
+            (hasFeatureAccess('pastPapers') ||
+              hasFeatureAccess('examinations'))) ||
           (resource.data.trackType == 'licensing' &&
             hasFeatureAccess('examPathways'))
         )
