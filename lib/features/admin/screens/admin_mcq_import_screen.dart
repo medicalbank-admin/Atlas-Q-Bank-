@@ -56,8 +56,6 @@ class _AdminMcqImportScreenState
       yearId: _destination!.yearId,
       adminUid: user.uid,
       trackType: _destination!.trackType,
-      pathwayId: _destination!.pathwayId,
-      pathwayName: _destination!.pathwayName,
       subjectId: _destination!.subjectId,
       examSetId: _destination!.examSetId,
       examSetName: _destination!.examSetName,
