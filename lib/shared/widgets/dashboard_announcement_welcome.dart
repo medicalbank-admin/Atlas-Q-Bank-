@@ -15,26 +15,46 @@ class DashboardAnnouncementWelcome extends StatefulWidget {
 class _DashboardAnnouncementWelcomeState
     extends State<DashboardAnnouncementWelcome> {
   static const _reminders = <({String kind, String text, String source})>[
-    (
-      kind: 'AYAT OF THE DAY',
-      text: 'My Lord, increase me in knowledge.',
-      source: 'Qur’an 20:114',
-    ),
-    (
-      kind: 'HADITH OF THE DAY',
-      text: 'Whoever follows a path in pursuit of knowledge, Allah will make easy for him a path to Paradise.',
-      source: 'Sahih Muslim 2699',
-    ),
-    (
-      kind: 'DAILY MOTIVATION',
-      text: 'Learn with purpose. Practice with consistency. Serve with excellence.',
-      source: 'A reminder for your medical journey',
-    ),
-    (
-      kind: 'AYAT OF THE DAY',
-      text: 'Are those who know equal to those who do not know?',
-      source: 'Qur’an 39:9',
-    ),
+    (kind: 'AYAT OF THE DAY', text: 'My Lord, increase me in knowledge.', source: 'Qur’an 20:114'),
+    (kind: 'HADITH OF THE DAY', text: 'Whoever follows a path seeking knowledge, Allah will make a path to Paradise easy for him.', source: 'Sahih Muslim 2699a'),
+    (kind: 'DAILY MOTIVATION', text: 'Learn with purpose. Practice with consistency. Serve with excellence.', source: 'A reminder for your medical journey'),
+    (kind: 'AYAT OF THE DAY', text: 'Are those who know equal to those who do not know?', source: 'Qur’an 39:9'),
+    (kind: 'HADITH OF THE DAY', text: 'The reward of deeds depends upon intentions.', source: 'Sahih al-Bukhari 1'),
+    (kind: 'DAILY MOTIVATION', text: 'Every expert was once a beginner who refused to give up.', source: 'A reminder for your medical journey'),
+    (kind: 'AYAT OF THE DAY', text: 'Indeed, Allah is with the patient.', source: 'Qur’an 2:153'),
+    (kind: 'HADITH OF THE DAY', text: 'The most beloved deeds to Allah are those done regularly, even if they are few.', source: 'Sahih al-Bukhari 6464'),
+    (kind: 'DAILY MOTIVATION', text: 'Small steps taken daily create remarkable progress.', source: 'A reminder for your medical journey'),
+    (kind: 'AYAT OF THE DAY', text: 'For indeed, with hardship comes ease.', source: 'Qur’an 94:5–6'),
+    (kind: 'HADITH OF THE DAY', text: 'The strong believer is better and more beloved to Allah; seek what benefits you and seek Allah’s help.', source: 'Sahih Muslim 2664'),
+    (kind: 'DAILY MOTIVATION', text: 'Let curiosity guide your study and compassion guide your care.', source: 'A reminder for your medical journey'),
+    (kind: 'AYAT OF THE DAY', text: 'Allah does not burden a soul beyond what it can bear.', source: 'Qur’an 2:286'),
+    (kind: 'HADITH OF THE DAY', text: 'The best among you are those with the best character.', source: 'Sahih al-Bukhari 6029'),
+    (kind: 'DAILY MOTIVATION', text: 'Consistency will carry you further than occasional intensity.', source: 'A reminder for your medical journey'),
+    (kind: 'AYAT OF THE DAY', text: 'Surely in the remembrance of Allah do hearts find comfort.', source: 'Qur’an 13:28'),
+    (kind: 'HADITH OF THE DAY', text: 'Make things easy and do not make them difficult; give good tidings.', source: 'Sahih al-Bukhari 69'),
+    (kind: 'DAILY MOTIVATION', text: 'Study not only to pass an exam, but to understand and help someone.', source: 'A reminder for your medical journey'),
+    (kind: 'AYAT OF THE DAY', text: 'If you are grateful, I will surely increase you.', source: 'Qur’an 14:7'),
+    (kind: 'HADITH OF THE DAY', text: 'The believers, in their mutual kindness and compassion, are like one body.', source: 'Sahih al-Bukhari 6011'),
+    (kind: 'DAILY MOTIVATION', text: 'A calm mind, a clear plan and a steady effort make a powerful combination.', source: 'A reminder for your medical journey'),
+    (kind: 'AYAT OF THE DAY', text: 'Do not lose heart or grieve; you will have the upper hand if you are believers.', source: 'Qur’an 3:139'),
+    (kind: 'HADITH OF THE DAY', text: 'Whoever seeks knowledge, Allah makes a path to Paradise easy for him.', source: 'Jami‘ at-Tirmidhi 2646 (Hasan)'),
+    (kind: 'DAILY MOTIVATION', text: 'Your future patients deserve the best of what you learn today.', source: 'A reminder for your medical journey'),
+    (kind: 'AYAT OF THE DAY', text: 'As for those who strive for Us, We will surely guide them to Our ways.', source: 'Qur’an 29:69'),
+    (kind: 'DAILY MOTIVATION', text: 'Progress is built one focused session, one question and one lesson at a time.', source: 'A reminder for your medical journey'),
+    (kind: 'AYAT OF THE DAY', text: 'Whoever puts their trust in Allah, then He is sufficient for them.', source: 'Qur’an 65:3'),
+    (kind: 'DAILY MOTIVATION', text: 'Be patient with the process and honest about the effort it requires.', source: 'A reminder for your medical journey'),
+    (kind: 'AYAT OF THE DAY', text: 'Do not despair of the mercy of Allah.', source: 'Qur’an 39:53'),
+    (kind: 'DAILY MOTIVATION', text: 'Mistakes are not the end of learning; they are invitations to understand better.', source: 'A reminder for your medical journey'),
+    (kind: 'AYAT OF THE DAY', text: 'Whoever does good, whether male or female, and is a believer, We will grant them a good life.', source: 'Qur’an 16:97'),
+    (kind: 'DAILY MOTIVATION', text: 'Let every difficult topic become a reason to ask better questions.', source: 'A reminder for your medical journey'),
+    (kind: 'DAILY MOTIVATION', text: 'Discipline is choosing the progress you want over the comfort you have now.', source: 'A reminder for your medical journey'),
+    (kind: 'DAILY MOTIVATION', text: 'You do not need to know everything today; you need to keep learning today.', source: 'A reminder for your medical journey'),
+    (kind: 'DAILY MOTIVATION', text: 'A thoughtful clinician listens carefully before reaching a conclusion.', source: 'A reminder for your medical journey'),
+    (kind: 'DAILY MOTIVATION', text: 'Make room for rest; a healthy rhythm supports lasting learning.', source: 'A reminder for your medical journey'),
+    (kind: 'DAILY MOTIVATION', text: 'Turn confusion into questions, and questions into understanding.', source: 'A reminder for your medical journey'),
+    (kind: 'DAILY MOTIVATION', text: 'Your effort today is an investment in someone else’s tomorrow.', source: 'A reminder for your medical journey'),
+    (kind: 'DAILY MOTIVATION', text: 'Stay humble enough to learn and confident enough to keep trying.', source: 'A reminder for your medical journey'),
+    (kind: 'DAILY MOTIVATION', text: 'Excellence is built through knowledge, integrity and compassion.', source: 'A reminder for your medical journey'),
   ];
 
   Timer? _timer;
@@ -189,17 +209,30 @@ class _DashboardAnnouncementWelcomeState
                 ),
                 const SizedBox(height: 10),
                 Row(
-                  children: List.generate(_reminders.length, (i) => Container(
-                    width: i == _index ? 17 : 5,
-                    height: 5,
-                    margin: const EdgeInsets.only(right: 4),
-                    decoration: BoxDecoration(
-                      color: i == _index
-                          ? const Color(0xFF2563A6)
-                          : const Color(0xFF9CBBDD),
-                      borderRadius: BorderRadius.circular(9),
+                  children: [
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: LinearProgressIndicator(
+                          value: (_index + 1) / _reminders.length,
+                          minHeight: 4,
+                          backgroundColor: const Color(0xFFBDD4ED),
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                            Color(0xFF2563A6),
+                          ),
+                        ),
+                      ),
                     ),
-                  )),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${(_index + 1).toString().padLeft(2, '0')} / 40',
+                      style: const TextStyle(
+                        color: Color(0xFF5D7897),
+                        fontSize: 9,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
