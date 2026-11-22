@@ -1,0 +1,38 @@
+name: Deploy Atlas Academy Cloud Functions
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "functions/**"
+      - "firebase.json"
+      - ".github/workflows/deploy-firebase-functions.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-functions:
+    name: Deploy Firebase Cloud Functions
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Authenticate with Firebase project
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+
+      - name: Install Cloud Functions dependencies
+        run: npm install --prefix functions
+
+      - name: Deploy Cloud Functions
+        run: npx --yes firebase-tools deploy --only functions --project the-atlas-academy-3fae0 --non-interactive
