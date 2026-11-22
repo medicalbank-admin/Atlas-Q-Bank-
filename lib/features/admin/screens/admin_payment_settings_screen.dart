@@ -100,10 +100,10 @@ class _AdminPaymentSettingsScreenState extends State<AdminPaymentSettingsScreen>
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(colors: [AtlasColors.navy, AtlasColors.royalBlue]),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(22),
               ),
               child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Icon(Icons.account_balance_rounded, color: AtlasColors.royalBlue, size: 30),
+                Icon(Icons.account_balance_rounded, color: Colors.white, size: 30),
                 SizedBox(height: 12),
                 Text('Academy Payment Details', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900)),
                 SizedBox(height: 6),
