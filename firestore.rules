@@ -353,7 +353,8 @@ service cloud.firestore {
               hasFeatureAccess('examPathways')) ||
             // Past-paper questions are restricted to the Examinations entitlement.
             (resource.data.trackType == 'past_paper' &&
-              hasFeatureAccess('examinations'))
+              (hasFeatureAccess('pastPapers') ||
+                hasFeatureAccess('examinations')))
           )
         );
 
