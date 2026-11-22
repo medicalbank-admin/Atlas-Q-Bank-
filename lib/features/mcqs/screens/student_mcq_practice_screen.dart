@@ -345,9 +345,10 @@ class _StudentMcqPracticeScreenState
     return Scaffold(
       backgroundColor: AtlasColors.ivory,
       appBar: AppBar(
-        backgroundColor: AtlasColors.navy,
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.white,
+        foregroundColor: AtlasColors.navy,
         elevation: 0,
+        scrolledUnderElevation: 1,
         title: const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
