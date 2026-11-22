@@ -23,7 +23,14 @@ class StudentDashboardScreen extends StatefulWidget {
 class _StudentDashboardScreenState extends State<StudentDashboardScreen>{
  int selected=0;
  final PushNotificationService pushService=PushNotificationService();
- @override void initState(){super.initState();pushService.registerDevice(context);}
+ @override void initState(){super.initState();pushService.registerDevice(context,onNotificationTap:_handleNotificationTap);}
+ Future<void> _handleNotificationTap(RemoteMessage message) async {
+  final destination=(message.data['destination']??'').toString();
+  if(destination.startsWith('forum_thread:')){await openFeature('discussionForum');return;}
+  const destinations={'study_library':'studyLibrary','mcq_practice':'mcqPractice','past_papers':'pastPapers','examinations':'examinations','exam_pathways':'examPathways','clinical_cases':'clinicalCases','mistakes_notebook':'mistakesNotebook','mock_predictions':'mockPredictions','discussion_forum':'discussionForum','ask_teacher':'askTeacher','membership':'membership'};
+  final key=destinations[destination];
+  if(key!=null&&mounted)await openFeature(key);
+ }
  Future<void> signOut()async{try{await pushService.unregisterCurrentDevice();await StudentAuthService().signOut();if(mounted)Navigator.of(context).popUntil((r)=>r.isFirst);}catch(_){if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Unable to sign out.')));}}
  Future<void> openFeature(String key)async{
   final u=FirebaseAuth.instance.currentUser;if(u==null)return;
