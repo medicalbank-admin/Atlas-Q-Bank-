@@ -8,144 +8,92 @@ class StudentExamCentreScreen extends StatelessWidget {
   const StudentExamCentreScreen({super.key, this.pathwaysOnly = false});
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    backgroundColor: AtlasColors.ivory,
-    appBar: AppBar(title: Text(pathwaysOnly ? 'Exam Pathways' : 'Examinations')),
-    body: ListView(padding: const EdgeInsets.all(18), children: [
-      Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(colors: [AtlasColors.navy, AtlasColors.royalBlue]),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Icon(pathwaysOnly ? Icons.route_rounded : Icons.assignment_rounded, color: AtlasColors.champagne, size: 30),
-          const SizedBox(height: 10),
-          Text(pathwaysOnly ? 'Choose your licensing pathway' : 'Your examination centre',
-            style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900)),
-          const SizedBox(height: 6),
-          Text(pathwaysOnly
-            ? 'Browse published question sets grouped by your selected medical licensing route.'
-            : 'Explore published academy examinations and practice sets.',
-            style: const TextStyle(color: Colors.white70, height: 1.5)),
-        ]),
-      ),
-      const SizedBox(height: 20),
-      if (pathwaysOnly) _pathways(context) else ...[
-        const Text('Published examinations', style: TextStyle(color: AtlasColors.navy, fontSize: 18, fontWeight: FontWeight.w900)),
-        const SizedBox(height: 10),
-        _examList(context),
-        const SizedBox(height: 22),
-        const Text('Practice exam sets', style: TextStyle(color: AtlasColors.navy, fontSize: 18, fontWeight: FontWeight.w900)),
-        const SizedBox(height: 10),
-        _setList(context, null),
-      ],
-    ]),
-  );
+  Widget build(BuildContext context) {
+    if (pathwaysOnly) return _pathwayScreen(context);
+    return DefaultTabController(length: 3, child: Scaffold(
+      backgroundColor: AtlasColors.ivory,
+      appBar: AppBar(title: const Text('Examination Centre'), bottom: const TabBar(isScrollable: true, tabs: [
+        Tab(text: 'Subject-Wise'), Tab(text: 'System-Wise'), Tab(text: 'Mock Exams'),
+      ])),
+      body: Column(children: [
+        Container(width: double.infinity, margin: const EdgeInsets.fromLTRB(16, 14, 16, 10), padding: const EdgeInsets.all(17), decoration: BoxDecoration(gradient: const LinearGradient(colors: [AtlasColors.navy, AtlasColors.royalBlue]), borderRadius: BorderRadius.circular(18)), child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('Your Examination Centre', style: TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.w900)),
+          SizedBox(height: 5), Text('Choose a subject, system or mock examination. Only exams published by the academy appear here.', style: TextStyle(color: Colors.white70, height: 1.45)),
+        ])),
+        const Expanded(child: TabBarView(children: [
+          _StructuredExamList(types: ['subject_exam'], heading: 'Subject-Wise Exams'),
+          _StructuredExamList(types: ['system_exam'], heading: 'System-Wise Exams'),
+          _StructuredExamList(types: ['subject_mock', 'system_mock', 'grand_mock'], heading: 'Mock Exams', showMockTypes: true),
+        ])),
+      ]),
+    ));
+  }
 
-  Widget _pathways(BuildContext context) => StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(
-    stream: FirebaseFirestore.instance.collection('licensing_pathways').where('isActive',isEqualTo:true).snapshots(),
-    builder: (c,s) {
-      if(s.hasError)return _message('Unable to load pathways. Please try again.');
-      if(!s.hasData)return const Center(child:CircularProgressIndicator());
-      final docs=s.data!.docs;
-      if(docs.isEmpty)return _message('No licensing pathways are available yet.');
-      return Column(children:docs.map((d) {
-        final data=d.data();
-        final name=(data['name']??'Licensing pathway').toString();
-        final desc=(data['description']??'').toString();
-        return Card(child:ExpansionTile(
-          leading:const Icon(Icons.route_rounded,color:AtlasColors.royalBlue),
-          title:Text(name,style:const TextStyle(color:AtlasColors.navy,fontWeight:FontWeight.w900)),
-          subtitle:Text(desc.isEmpty?'View subjects and published exam sets':desc,style:const TextStyle(color:AtlasColors.secondaryText)),
-          children:[_pathwaySubjects(context,d.id)],
-        ));
-      }).toList());
+  Widget _pathwayScreen(BuildContext context) => Scaffold(
+    backgroundColor: AtlasColors.ivory, appBar: AppBar(title: const Text('Exam Pathways')),
+    body: StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(stream: FirebaseFirestore.instance.collection('licensing_pathways').where('isActive',isEqualTo:true).snapshots(), builder: (c,s) {
+      if (s.hasError) return const Center(child: Text('Unable to load pathways.'));
+      if (!s.hasData) return const Center(child: CircularProgressIndicator());
+      if (s.data!.docs.isEmpty) return const Center(child: Text('No licensing pathways are available yet.'));
+      return ListView(padding: const EdgeInsets.all(16), children: s.data!.docs.map((d) => Card(child: ExpansionTile(title: Text((d.data()['name'] ?? 'Pathway').toString()), subtitle: Text((d.data()['description'] ?? '').toString()), children: [
+        StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(stream: FirebaseFirestore.instance.collection('mcq_exam_sets').where('pathwayId',isEqualTo:d.id).where('trackType',isEqualTo:'licensing').where('isPublished',isEqualTo:true).snapshots(), builder: (c2,s2) {
+          if (!s2.hasData) return const Padding(padding: EdgeInsets.all(12), child: CircularProgressIndicator());
+          final sets = s2.data!.docs;
+          if (sets.isEmpty) return const ListTile(title: Text('No published sets yet.'));
+          return Column(children: sets.map((set) => ListTile(title: Text((set.data()['name'] ?? 'Exam').toString()), trailing: const Icon(Icons.play_arrow), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => StudentMcqPracticeScreen(examSetId: set.id)))).toList());
+        }),
+      ])).toList());
+    }),
+  );
+}
+
+class _StructuredExamList extends StatelessWidget {
+  final List<String> types;
+  final String heading;
+  final bool showMockTypes;
+  const _StructuredExamList({required this.types, required this.heading, this.showMockTypes = false});
+
+  @override
+  Widget build(BuildContext context) => StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(
+    stream: FirebaseFirestore.instance.collection('mcq_exam_sets').where('isPublished', isEqualTo: true).snapshots(),
+    builder: (context, snapshot) {
+      if (snapshot.hasError) return Center(child: Padding(padding: const EdgeInsets.all(20), child: Text('Unable to load $heading. Please try again.')));
+      if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+      final docs = snapshot.data!.docs.where((d) => d.data()['yearId'] == 'exam_centre' && types.contains(d.data()['examCategory']) && d.data()['isActive'] != false).toList();
+      if (docs.isEmpty) return Center(child: Padding(padding: const EdgeInsets.all(28), child: Text('No published exams in this section yet.', style: const TextStyle(color: AtlasColors.secondaryText))));
+      if (showMockTypes) {
+        const labels = {'subject_mock': 'Subject Mocks', 'system_mock': 'System Mocks', 'grand_mock': 'Grand Mocks'};
+        return ListView(padding: const EdgeInsets.fromLTRB(16, 4, 16, 24), children: types.map((type) {
+          final group = docs.where((d) => d.data()['examCategory'] == type).toList();
+          return _section(context, labels[type] ?? 'Mocks', group);
+        }).toList());
+      }
+      final groups = <String, List<QueryDocumentSnapshot<Map<String,dynamic>>>>{};
+      for (final doc in docs) {
+        final name = (doc.data()['categoryName'] ?? 'Other').toString();
+        groups.putIfAbsent(name, () => []).add(doc);
+      }
+      return ListView(padding: const EdgeInsets.fromLTRB(16, 4, 16, 24), children: groups.entries.map((e) => _section(context, e.key, e.value)).toList());
     },
   );
 
-  Widget _pathwaySubjects(BuildContext context,String pathwayId) =>
-    StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(
-      stream:FirebaseFirestore.instance.collection('mcq_exam_sets')
-        .where('pathwayId',isEqualTo:pathwayId).where('trackType',isEqualTo:'licensing').where('isPublished',isEqualTo:true).snapshots(),
-      builder:(c,s){
-        if(s.hasError)return const ListTile(title:Text('Unable to load exam sets.',style:TextStyle(color:AtlasColors.error)));
-        if(!s.hasData)return const Padding(padding:EdgeInsets.all(12),child:CircularProgressIndicator());
-        if(s.data!.docs.isEmpty)return const ListTile(title:Text('No published exam sets in this pathway yet.',style:TextStyle(color:AtlasColors.secondaryText)));
-        final grouped=<String,List<QueryDocumentSnapshot<Map<String,dynamic>>>>{};
-        for(final d in s.data!.docs){final subject=(d.data()['subjectName']??'Other subjects').toString();grouped.putIfAbsent(subject,()=>[]).add(d);}
-        return Column(children:grouped.entries.map((e)=>ExpansionTile(
-          title:Text(e.key,style:const TextStyle(color:AtlasColors.navy,fontWeight:FontWeight.w800)),
-          children:e.value.map((d)=>_setTile(context,d)).toList(),
-        )).toList());
-      },
-    );
-
-  Widget _setList(BuildContext context,String? pathwayId) =>
-    StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(
-      stream:FirebaseFirestore.instance.collection('mcq_exam_sets').where('trackType',isEqualTo:'mbbs').where('isPublished',isEqualTo:true).snapshots(),
-      builder:(c,s){
-        if(s.hasError)return _message('Unable to load published practice sets.');
-        if(!s.hasData)return const Center(child:CircularProgressIndicator());
-        final docs=s.data!.docs;
-        if(docs.isEmpty)return _message('No practice sets have been published yet.');
-        final groups=<String,List<QueryDocumentSnapshot<Map<String,dynamic>>>>{};
-        for(final d in docs){final x=d.data();final group=x['trackType']=='licensing'?(x['pathwayName']??'Licensing'):(x['yearName']??'MBBS');groups.putIfAbsent(group.toString(),()=>[]).add(d);}
-        return Column(children:groups.entries.map((g)=>ExpansionTile(
-          title:Text(g.key,style:const TextStyle(color:AtlasColors.navy,fontWeight:FontWeight.w900)),
-          children:g.value.map((d)=>_setTile(context,d)).toList(),
-        )).toList());
-      },
-    );
-
-  Widget _examList(BuildContext context) =>
-    StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(
-      stream:FirebaseFirestore.instance.collection('exams').where('isPublished',isEqualTo:true).snapshots(),
-      builder:(c,s){
-        if(s.hasError)return _message('Unable to load examinations. Please try again.');
-        if(!s.hasData)return const Center(child:CircularProgressIndicator());
-        if(s.data!.docs.isEmpty)return _message('No examinations have been published yet.');
-        return Column(children:s.data!.docs.map((d){
-          final x=d.data();
-          final title=(x['title']??x['name']??'Examination').toString();
-          final description=(x['description']??'').toString();
-          final duration=x['durationMinutes']??x['duration']??0;
-          final count=x['totalQuestions']??(x['questions'] is List?(x['questions'] as List).length:0);
-          return Card(child:ListTile(
-            leading:const CircleAvatar(backgroundColor:AtlasColors.paleBlue,child:Icon(Icons.assignment_turned_in_rounded,color:AtlasColors.royalBlue)),
-            title:Text(title,style:const TextStyle(color:AtlasColors.navy,fontWeight:FontWeight.w900)),
-            subtitle:Text([description,'$duration minutes','$count questions'].where((v)=>v.isNotEmpty).join(' • '),style:const TextStyle(color:AtlasColors.secondaryText)),
-            isThreeLine:description.isNotEmpty,
-            trailing:Icon(x['examSetId'] is String ? Icons.play_circle_fill_rounded : Icons.info_outline_rounded,color:AtlasColors.royalBlue),
-            onTap:() {
-              final examSetId=(x['examSetId']??'').toString().trim();
-              if(examSetId.isNotEmpty) {
-                Navigator.push(context,MaterialPageRoute(builder:(_)=>StudentMcqPracticeScreen(examSetId:examSetId)));
-                return;
-              }
-              showDialog<void>(context:context,builder:(ctx)=>AlertDialog(
-              title:Text(title,style:const TextStyle(color:AtlasColors.navy)),
-              content:Text(description.isEmpty?'This examination is published by the academy. Contact your administrator for its instructions.':description,style:const TextStyle(color:AtlasColors.charcoal)),
-              actions:[TextButton(onPressed:()=>Navigator.pop(ctx),child:const Text('Close'))],
-            ));
-            },
-          ));
-        }).toList());
-      },
-    );
-
-  Widget _setTile(BuildContext context,QueryDocumentSnapshot<Map<String,dynamic>> d) {
-    final x=d.data();
-    final name=(x['name']??'Practice set').toString();
-    final subject=(x['subjectName']??'Subject').toString();
-    return ListTile(
-      leading:const Icon(Icons.quiz_rounded,color:AtlasColors.royalBlue),
-      title:Text(name,style:const TextStyle(color:AtlasColors.navy,fontWeight:FontWeight.w800)),
-      subtitle:Text(subject,style:const TextStyle(color:AtlasColors.secondaryText)),
-      trailing:const Icon(Icons.play_circle_outline_rounded,color:AtlasColors.royalBlue),
-      onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>StudentMcqPracticeScreen(examSetId: d.id))),
-    );
+  Widget _section(BuildContext context, String title, List<QueryDocumentSnapshot<Map<String,dynamic>>> docs) {
+    final sorted = [...docs]..sort((a,b) => (a.data()['name'] ?? '').toString().compareTo((b.data()['name'] ?? '').toString()));
+    return Card(color: Colors.white, margin: const EdgeInsets.only(bottom: 12), child: ExpansionTile(
+      initiallyExpanded: true,
+      leading: const Icon(Icons.folder_open_rounded, color: AtlasColors.royalBlue),
+      title: Text(title, style: const TextStyle(color: AtlasColors.navy, fontWeight: FontWeight.w900)),
+      subtitle: Text('${docs.length} exam(s)', style: const TextStyle(color: AtlasColors.secondaryText)),
+      children: sorted.map((d) {
+        final x = d.data();
+        return ListTile(
+          leading: const CircleAvatar(backgroundColor: AtlasColors.paleBlue, child: Icon(Icons.assignment_turned_in_rounded, color: AtlasColors.royalBlue)),
+          title: Text((x['name'] ?? 'Exam').toString(), style: const TextStyle(color: AtlasColors.navy, fontWeight: FontWeight.w800)),
+          subtitle: Text('${x['durationMinutes'] ?? 60} minutes', style: const TextStyle(color: AtlasColors.secondaryText)),
+          trailing: const Icon(Icons.play_circle_fill_rounded, color: AtlasColors.royalBlue),
+          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => StudentMcqPracticeScreen(examSetId: d.id))),
+        );
+      }).toList(),
+    ));
   }
-
-  Widget _message(String text)=>Container(padding:const EdgeInsets.all(20),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(16)),child:Text(text,style:const TextStyle(color:AtlasColors.secondaryText)));
 }
