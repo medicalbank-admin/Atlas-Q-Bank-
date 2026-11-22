@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../../app/atlas_academy_app.dart';
+import '../services/push_notification_service.dart';
 
 class ClinicalCaseLearningScreen extends StatelessWidget {
   const ClinicalCaseLearningScreen({super.key});
@@ -274,7 +275,7 @@ class _StudentDiscussionForumScreenState extends State<StudentDiscussionForumScr
   }
 }
 class ForumThreadScreen extends StatefulWidget{final String postId;final Map<String,dynamic> data;const ForumThreadScreen({super.key,required this.postId,required this.data});@override State<ForumThreadScreen> createState()=>_ForumThreadScreenState();}
-class _ForumThreadScreenState extends State<ForumThreadScreen>{final reply=TextEditingController();Future<void> send()async{final u=FirebaseAuth.instance.currentUser;if(u==null||reply.text.trim().isEmpty)return;await FirebaseFirestore.instance.collection('forum_posts').doc(widget.postId).collection('replies').add({'userId':u.uid,'authorName':u.displayName??'Student','body':reply.text.trim(),'createdAt':FieldValue.serverTimestamp()});reply.clear();}
+class _ForumThreadScreenState extends State<ForumThreadScreen>{final reply=TextEditingController();Future<void> send()async{final u=FirebaseAuth.instance.currentUser;if(u==null||reply.text.trim().isEmpty)return;await FirebaseFirestore.instance.collection('forum_posts').doc(widget.postId).collection('replies').add({'userId':u.uid,'authorName':u.displayName??'Student','body':reply.text.trim(),'createdAt':FieldValue.serverTimestamp()});try{await PushNotificationService().sendForumReplyEvent(postId:widget.postId);}catch(_){}reply.clear();}
  @override Widget build(BuildContext context)=>Scaffold(backgroundColor:AtlasColors.ivory,appBar:AppBar(title:const Text('Discussion')),body:Column(children:[Expanded(child:ListView(padding:const EdgeInsets.all(16),children:[Card(child:Padding(padding:const EdgeInsets.all(17),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text((widget.data['title']??'').toString(),style:const TextStyle(color:AtlasColors.navy,fontSize:18,fontWeight:FontWeight.w900)),const SizedBox(height:9),Text((widget.data['body']??'').toString(),style:const TextStyle(color:AtlasColors.charcoal,height:1.5))])),),const SizedBox(height:12),StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(stream:FirebaseFirestore.instance.collection('forum_posts').doc(widget.postId).collection('replies').orderBy('createdAt').snapshots(),builder:(c,s)=>Column(children:(s.data?.docs??[]).map((d)=>Card(child:ListTile(title:Text((d.data()['authorName']??'Student').toString()),subtitle:Text((d.data()['body']??'').toString())))).toList()))])),SafeArea(child:Padding(padding:const EdgeInsets.all(10),child:Row(children:[Expanded(child:TextField(controller:reply,decoration:const InputDecoration(hintText:'Write a reply…'))),IconButton(onPressed:send,icon:const Icon(Icons.send_rounded,color:AtlasColors.royalBlue))])))]));
 }
 
