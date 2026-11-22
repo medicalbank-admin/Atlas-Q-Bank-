@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../app/atlas_academy_app.dart';
 
 import '../models/learning_resource_model.dart';
 import '../services/learning_resource_service.dart';
@@ -19,10 +20,10 @@ class LearningResourceManagementScreen extends StatelessWidget {
     required this.topicTitle,
   });
 
-  static const Color deepTeal = Color(0xFF10233F);
-  static const Color oceanTeal = Color(0xFF2859A8);
-  static const Color ivory = Color(0xFFF5F7FC);
-  static const Color champagne = Color(0xFFD8B66B);
+  static const Color deepTeal = AtlasColors.navy;
+  static const Color oceanTeal = AtlasColors.royalBlue;
+  static const Color ivory = AtlasColors.ivory;
+  static const Color champagne = AtlasColors.champagne;
 
   Future<void> _addResource(BuildContext context) async {
     final formKey = GlobalKey<FormState>();
