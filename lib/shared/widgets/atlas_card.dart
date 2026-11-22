@@ -8,10 +8,10 @@ class AtlasCard extends StatelessWidget {
   const AtlasCard({
     super.key,
     required this.child,
-    this.padding = const EdgeInsets.all(20),
+    this.padding = const EdgeInsets.all(21),
     this.margin,
     this.backgroundColor,
-    this.borderRadius = AtlasRadius.lg,
+    this.borderRadius = 22,
     this.showShadow = true,
     this.border,
     this.onTap,
@@ -31,13 +31,12 @@ class AtlasCard extends StatelessWidget {
     return Container(
       margin: margin,
       decoration: BoxDecoration(
-        color: backgroundColor ??
-            Theme.of(context).cardTheme.color,
+        color: backgroundColor ?? Colors.white,
         borderRadius: BorderRadius.circular(borderRadius),
         border: border ??
             Border.all(
-              color: Theme.of(context).dividerColor,
-              width: 0.7,
+              color: const Color(0xFFE0EAF5),
+              width: 0.9,
             ),
         boxShadow: showShadow
             ? AtlasShadows.soft
@@ -124,7 +123,7 @@ class AtlasStatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AtlasCard(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(19),
       onTap: onTap,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
