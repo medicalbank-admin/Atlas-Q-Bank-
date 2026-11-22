@@ -15,6 +15,7 @@ import 'admin_subscription_requests_screen.dart';
 import 'admin_payment_settings_screen.dart';
 import 'admin_notifications_screen.dart';
 import 'admin_analytics_screen.dart';
+import 'admin_advanced_learning_screens.dart';
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
   Future<bool> _isAuthorizedAdmin() async {
@@ -456,6 +457,20 @@ class AdminDashboardScreen extends StatelessWidget {
         subtitle: 'Create, import, publish and manage past papers',
         color: AtlasColors.brightBlue,
         page: const AdminPastPapersScreen(),
+      ),
+      _AdminItem(
+        icon: Icons.medical_services_rounded,
+        title: 'Clinical Case Management',
+        subtitle: 'Author patient scenarios, investigations and decision questions',
+        color: AtlasColors.royalBlue,
+        page: const AdminClinicalCasesScreen(),
+      ),
+      _AdminItem(
+        icon: Icons.forum_rounded,
+        title: 'Student Community & Support',
+        subtitle: 'Answer teacher questions and moderate discussions',
+        color: AtlasColors.gold,
+        page: const AdminStudentSupportScreen(),
       ),
       _AdminItem(
         icon: Icons.quiz_rounded,
