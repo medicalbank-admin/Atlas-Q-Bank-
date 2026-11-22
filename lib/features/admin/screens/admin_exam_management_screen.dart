@@ -116,7 +116,7 @@ class _AdminExamManagementScreenState extends State<AdminExamManagementScreen> {
 
   Widget _categoryPanel(String type, String title, IconData icon) => Container(
     margin: const EdgeInsets.only(bottom: 14), padding: const EdgeInsets.all(15),
-    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18), border: Border.all(color: AtlasColors.border)),
+    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18), border: Border.all(color: const Color(0xFFE0EAF5))),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Row(children: [Icon(icon, color: AtlasColors.royalBlue), const SizedBox(width: 9), Expanded(child: Text(title, style: const TextStyle(color: AtlasColors.navy, fontWeight: FontWeight.w900))), TextButton.icon(onPressed: () => _addCategory(type), icon: const Icon(Icons.add), label: const Text('Add'))]),
       StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(stream: db.collection('exam_categories').where('categoryType', isEqualTo: type).snapshots(), builder: (c, s) {
@@ -130,12 +130,12 @@ class _AdminExamManagementScreenState extends State<AdminExamManagementScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: AtlasColors.ivory,
+    backgroundColor: const Color(0xFFF3F7FF),
     appBar: AppBar(title: Text(widget.sectionType == null ? 'Examination Management' : widget.sectionType == 'mocks' ? 'Mock Exams Management' : (types[widget.sectionType] ?? 'Exam Management'))),
     floatingActionButton: FloatingActionButton.extended(onPressed: _createExam, icon: const Icon(Icons.add), label: const Text('Create exam')),
     body: ListView(padding: const EdgeInsets.all(16), children: [
       Container(padding: const EdgeInsets.all(19), decoration: BoxDecoration(gradient: const LinearGradient(colors: [AtlasColors.navy, AtlasColors.royalBlue]), borderRadius: BorderRadius.circular(20)), child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Icon(Icons.account_tree_rounded, color: AtlasColors.champagne, size: 30), SizedBox(height: 10),
+        Icon(Icons.account_tree_rounded, color: AtlasColors.royalBlue, size: 30), SizedBox(height: 10),
         Text('Examination Control Centre', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900)),
         SizedBox(height: 6), Text('Manage subjects, systems, subject and system mocks, and grand mocks in one organized workspace.', style: TextStyle(color: Colors.white70, height: 1.5)),
       ])),
