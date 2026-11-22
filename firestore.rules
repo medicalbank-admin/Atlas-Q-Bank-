@@ -215,6 +215,112 @@ service cloud.firestore {
     }
 
     // ==================================================
+    // ==================================================
+    // CLINICAL CASE-BASED LEARNING
+    // ==================================================
+    match /clinical_cases/{caseId} {
+      allow read: if isAdmin() || (
+        resource.data.isPublished == true &&
+        hasFeatureAccess('clinicalCases')
+      );
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ==================================================
+    // STUDENT MISTAKES NOTEBOOK
+    // ==================================================
+    match /mistake_notebook/{mistakeId} {
+      allow read: if signedIn() && (
+        resource.data.userId == request.auth.uid || isAdmin()
+      ) && (isAdmin() || hasFeatureAccess('mistakesNotebook'));
+      allow create: if signedIn() &&
+        request.resource.data.userId == request.auth.uid &&
+        hasFeatureAccess('mistakesNotebook') &&
+        request.resource.data.question is string &&
+        request.resource.data.question.size() <= 5000;
+      allow update: if signedIn() &&
+        resource.data.userId == request.auth.uid &&
+        request.resource.data.userId == request.auth.uid &&
+        hasFeatureAccess('mistakesNotebook') &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['personalNote','isReviewed','reviewedAt']);
+      allow delete: if signedIn() &&
+        resource.data.userId == request.auth.uid &&
+        hasFeatureAccess('mistakesNotebook');
+    }
+
+    // ==================================================
+    // STUDENT DISCUSSION FORUM
+    // ==================================================
+    match /forum_posts/{postId} {
+      allow read: if isAdmin() || (
+        signedIn() && (
+          resource.data.status == 'published' ||
+          resource.data.userId == request.auth.uid
+        ) && hasFeatureAccess('discussionForum')
+      );
+      allow create: if signedIn() &&
+        hasFeatureAccess('discussionForum') &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.title is string &&
+        request.resource.data.title.size() > 0 &&
+        request.resource.data.title.size() <= 180 &&
+        request.resource.data.body is string &&
+        request.resource.data.body.size() > 0 &&
+        request.resource.data.body.size() <= 8000 &&
+        request.resource.data.status == 'published';
+      allow update, delete: if isAdmin();
+      match /replies/{replyId} {
+        allow read: if isAdmin() || (
+          signedIn() &&
+          get(/databases/$(database)/documents/forum_posts/$(postId)).data.status == 'published' &&
+          hasFeatureAccess('discussionForum')
+        );
+        allow create: if signedIn() &&
+          hasFeatureAccess('discussionForum') &&
+          get(/databases/$(database)/documents/forum_posts/$(postId)).data.status == 'published' &&
+          request.resource.data.userId == request.auth.uid &&
+          request.resource.data.body is string &&
+          request.resource.data.body.size() > 0 &&
+          request.resource.data.body.size() <= 4000;
+        allow update, delete: if isAdmin();
+      }
+    }
+
+    // ==================================================
+    // ASK A TEACHER / DOUBT RESOLUTION
+    // ==================================================
+    match /teacher_questions/{questionId} {
+      allow create: if signedIn() &&
+        hasFeatureAccess('askTeacher') &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.subject is string &&
+        request.resource.data.question is string &&
+        request.resource.data.question.size() > 0 &&
+        request.resource.data.question.size() <= 8000 &&
+        request.resource.data.status == 'open';
+      allow read: if isAdmin() || (
+        signedIn() &&
+        resource.data.userId == request.auth.uid &&
+        hasFeatureAccess('askTeacher')
+      );
+      allow update, delete: if isAdmin();
+    }
+
+    // ==================================================
+    // FCM DEVICE REGISTRATIONS
+    // ==================================================
+    match /user_device_tokens/{tokenId} {
+      allow create, update: if signedIn() &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.token is string &&
+        request.resource.data.token.size() <= 4096;
+      allow read: if isAdmin();
+      allow delete: if isAdmin() || (
+        signedIn() && resource.data.userId == request.auth.uid
+      );
+    }
+
     // SUBSCRIPTION PLANS
     // ==================================================
 
