@@ -432,8 +432,8 @@ class AdminDashboardScreen extends StatelessWidget {
       ),
       _AdminItem(
         icon: Icons.campaign_rounded,
-        title: 'Notifications & Announcements',
-        subtitle: 'Publish and manage student announcements',
+        title: 'Push Notification Center',
+        subtitle: 'Target, schedule, send and track student alerts',
         color: AtlasColors.brightBlue,
         page: const AdminNotificationsScreen(),
       ),
