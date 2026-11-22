@@ -50,7 +50,7 @@ class AdminPastPapersScreen extends StatelessWidget {
       await batch.commit();
     }
     await firestore.collection('mcq_exam_sets').doc(id).update({'isPublished':!published,'updatedAt':FieldValue.serverTimestamp()});
-    if (!published) { try { await PushNotificationService().sendCampaign(notificationId: 'past_paper_' + id, title: 'New past paper available', body: 'A new past paper is ready: ' + (await firestore.collection('mcq_exam_sets').doc(id).get()).data()?['name'].toString() + '.', destination: 'past_papers', audience: 'all'); } catch (_) {} }
+    if (!published) { try { await PushNotificationService().sendCampaign(notificationId: 'past_paper_' + id, title: 'New past paper available', body: 'A new past paper is ready: ' + ((await firestore.collection('mcq_exam_sets').doc(id).get()).data()?['name']?.toString() ?? 'a past paper') + '.', destination: 'past_papers', audience: 'all'); } catch (_) {} }
   }
   Future<void> _delete(BuildContext context,String id) async {
     final yes=await showDialog<bool>(context:context,builder:(c)=>AlertDialog(title:const Text('Delete past paper?'),content:const Text('The paper will be removed from students. Imported MCQs will remain in the question bank and must be deleted separately.'),actions:[TextButton(onPressed:()=>Navigator.pop(c,false),child:const Text('Cancel')),FilledButton(onPressed:()=>Navigator.pop(c,true),child:const Text('Delete'))]));
