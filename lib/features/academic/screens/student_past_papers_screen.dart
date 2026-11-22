@@ -9,7 +9,7 @@ class StudentPastPapersScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F7FF),
+      backgroundColor: const Color(0xFFF2F7FF),
       appBar: AppBar(title: const Text('Past Papers'), backgroundColor: Colors.white, foregroundColor: AtlasColors.navy, elevation: 0, scrolledUnderElevation: 0),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 22),
