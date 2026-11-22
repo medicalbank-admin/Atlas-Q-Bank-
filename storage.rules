@@ -65,6 +65,21 @@ service firebase.storage {
     }
 
     // -----------------------------------------
+    // ADMIN LEARNING MATERIALS
+    // PDFs and videos uploaded by administrators.
+    // -----------------------------------------
+    match /learning_resources/{yearId}/{subjectId}/{topicId}/{fileName} {
+      allow read: if isSignedIn();
+      allow create, update: if isAdmin()
+        && request.resource != null
+        && request.resource.size < 200 * 1024 * 1024
+        && request.resource.contentType.matches(
+          '(application/pdf|video/mp4|video/quicktime|video/webm)'
+        );
+      allow delete: if isAdmin();
+    }
+
+    // -----------------------------------------
     // DEFAULT DENY
     // -----------------------------------------
 
