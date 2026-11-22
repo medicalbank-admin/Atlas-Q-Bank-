@@ -22,10 +22,10 @@ class _AdminSubscriptionRequestsScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F7FF),
+      backgroundColor: const Color(0xFFF2F7FF),
       appBar: AppBar(
         title: const Text('Payment Management'),
-        backgroundColor: const Color(0xFFF3F7FF),
+        backgroundColor: const Color(0xFFF2F7FF),
         foregroundColor: AtlasColors.navy,
         elevation: 0,
       ),
@@ -175,7 +175,7 @@ class _AdminSubscriptionRequestsScreenState
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(21),
         border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
