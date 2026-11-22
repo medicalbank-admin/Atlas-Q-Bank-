@@ -127,7 +127,7 @@ class _StudentMcqPracticeScreenState
       builder: (dialogContext) => AlertDialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(20),
         ),
         title: Text(
           unanswered > 0
@@ -214,7 +214,7 @@ class _StudentMcqPracticeScreenState
   void _showQuestionNavigator() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AtlasColors.ivory,
+      backgroundColor: const Color(0xFFF3F7FF),
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
@@ -343,7 +343,7 @@ class _StudentMcqPracticeScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AtlasColors.ivory,
+      backgroundColor: const Color(0xFFF3F7FF),
       appBar: AppBar(
         backgroundColor: Colors.white,
         foregroundColor: AtlasColors.navy,
@@ -635,7 +635,7 @@ class _StudentMcqPracticeScreenState
       padding: const EdgeInsets.all(21),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AtlasColors.border),
         boxShadow: [
           BoxShadow(
