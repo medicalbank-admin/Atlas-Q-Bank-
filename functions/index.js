@@ -167,8 +167,9 @@ exports.approveSubscriptionRequest = onCall(async (request) => {
         ...configuredPermissions,
         // Past Papers use the examinations entitlement in Firestore rules,
         // while retaining a dedicated permission for dashboard and plan UI.
-        if (configuredPermissions.pastPapers === true) 'pastPapers': true,
-        if (configuredPermissions.pastPapers === true) 'examinations': true,
+        ...(configuredPermissions.pastPapers === true
+          ? { pastPapers: true, examinations: true }
+          : {}),
       };
       if (
         !Number.isInteger(durationDays) ||
