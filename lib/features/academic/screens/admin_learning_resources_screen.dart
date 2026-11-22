@@ -35,7 +35,7 @@ class _AdminLearningResourcesScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AtlasColors.ivory,
+      backgroundColor: const Color(0xFFF3F7FF),
       appBar: AppBar(
         title: const Text('Learning Resources'),
         backgroundColor: Colors.white,
@@ -51,13 +51,13 @@ class _AdminLearningResourcesScreenState
               gradient: const LinearGradient(
                 colors: [AtlasColors.navy, AtlasColors.royalBlue],
               ),
-              borderRadius: BorderRadius.circular(22),
+              borderRadius: BorderRadius.circular(20),
             ),
             child: const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Icon(Icons.video_library_rounded,
-                    color: AtlasColors.champagne, size: 32),
+                    color: AtlasColors.royalBlue, size: 32),
                 SizedBox(height: 12),
                 Text('Resource Centre',
                     style: TextStyle(color: Colors.white,
