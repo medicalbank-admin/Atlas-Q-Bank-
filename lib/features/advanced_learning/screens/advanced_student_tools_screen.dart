@@ -37,7 +37,38 @@ class ClinicalCaseDetailScreen extends StatefulWidget {
   @override State<ClinicalCaseDetailScreen> createState()=>_ClinicalCaseDetailScreenState();
 }
 class _ClinicalCaseDetailScreenState extends State<ClinicalCaseDetailScreen>{
-  final Map<int,String> selected={}; bool submitted=false;
+  final Map<int,String> selected={};
+  bool submitted=false;
+  bool submitting=false;
+  Future<void> submitCase(List<Map<String,dynamic>> questions) async {
+    final user=FirebaseAuth.instance.currentUser;
+    if(user==null||submitted||submitting)return;
+    setState(()=>submitting=true);
+    final correct=questions.asMap().entries.where((entry)=>selected[entry.key]==entry.value['correctAnswer']).length;
+    final answers=questions.asMap().entries.map((entry)=>({
+      'question':entry.value['question']??'',
+      'selectedAnswer':selected[entry.key],
+      'correctAnswer':entry.value['correctAnswer']??'',
+      'isCorrect':selected[entry.key]==entry.value['correctAnswer'],
+      'subject':widget.data['specialty']??'',
+      'explanation':entry.value['explanation']??'',
+    })).toList();
+    try{
+      await FirebaseFirestore.instance.collection('clinical_case_attempts').add({
+        'userId':user.uid,
+        'caseId':widget.caseId,
+        'caseTitle':widget.data['title']??'Clinical case',
+        'totalQuestions':questions.length,
+        'correctAnswers':correct,
+        'percentage':questions.isEmpty?0:(correct/questions.length*100),
+        'answers':answers,
+        'completedAt':FieldValue.serverTimestamp(),
+      });
+      if(mounted)setState(()=>submitted=true);
+    }catch(error){
+      if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('Could not save your case attempt: $error')));
+    }finally{if(mounted)setState(()=>submitting=false);}
+  }
   @override Widget build(BuildContext context){
     final d=widget.data; final questions=d['questions'] is List?List<Map<String,dynamic>>.from((d['questions'] as List).whereType<Map>().map((e)=>Map<String,dynamic>.from(e))):<Map<String,dynamic>>[];
     return Scaffold(backgroundColor:AtlasColors.ivory,appBar:AppBar(title:const Text('Case Investigation')),body:ListView(padding:const EdgeInsets.all(17),children:[
@@ -52,7 +83,7 @@ class _ClinicalCaseDetailScreenState extends State<ClinicalCaseDetailScreen>{
         ...List.generate(opts.length,(j)=>RadioListTile<String>(dense:true,contentPadding:EdgeInsets.zero,title:Text(opts[j],style:const TextStyle(color:AtlasColors.charcoal,fontSize:13)),value:String.fromCharCode(65+j),groupValue:selected[i],onChanged:submitted?null:(v)=>setState(()=>selected[i]=v!))),
         if(submitted)Container(width:double.infinity,padding:const EdgeInsets.all(11),decoration:BoxDecoration(color:selected[i]==q['correctAnswer']?const Color(0xFFE8F5EC):const Color(0xFFFFEEEE),borderRadius:BorderRadius.circular(12)),child:Text('Correct answer: ${q['correctAnswer']??'Not supplied'}\n${q['explanation']??''}',style:const TextStyle(color:AtlasColors.charcoal,height:1.5)))
       ])));}),
-      if(questions.isNotEmpty)Padding(padding:const EdgeInsets.only(top:16),child:FilledButton.icon(onPressed:()=>setState(()=>submitted=true),icon:const Icon(Icons.fact_check_rounded),label:Text(submitted?'Review completed':'Submit clinical decisions'))),
+      if(questions.isNotEmpty)Padding(padding:const EdgeInsets.only(top:16),child:FilledButton.icon(onPressed:submitted||submitting?null:()=>submitCase(questions),icon:const Icon(Icons.fact_check_rounded),label:Text(submitting?'Saving…':submitted?'Review completed':'Submit clinical decisions'))),
       if((d['management']??'').toString().isNotEmpty)_CasePanel(title:'Management and debrief',icon:Icons.health_and_safety_rounded,body:d['management'].toString()),
       const SizedBox(height:24),
     ]));
