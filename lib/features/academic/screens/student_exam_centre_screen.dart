@@ -20,7 +20,7 @@ class StudentExamCentreScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final title = _titles[section] ?? 'Examinations';
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F7FF),
+      backgroundColor: const Color(0xFFF2F7FF),
       appBar: AppBar(title: Text(title), backgroundColor: Colors.white, foregroundColor: AtlasColors.navy, elevation: 0, scrolledUnderElevation: 0),
       body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         // Restrict the stream to the new structured exam model.
