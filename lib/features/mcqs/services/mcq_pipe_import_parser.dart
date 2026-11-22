@@ -56,7 +56,7 @@ class McqPipeImportParser {
     final cleanYearId = yearId.trim();
     final cleanAdminUid = adminUid.trim();
 
-    if ((trackType == 'mbbs' && cleanYearId.isEmpty) || cleanAdminUid.isEmpty || examSetId.trim().isEmpty || subjectId.trim().isEmpty || (trackType == 'licensing' && pathwayId.trim().isEmpty)) {
+    if (!['mbbs', 'licensing', 'past_paper'].contains(trackType) || (trackType == 'mbbs' && cleanYearId.isEmpty) || cleanAdminUid.isEmpty || examSetId.trim().isEmpty || subjectId.trim().isEmpty || (trackType == 'licensing' && pathwayId.trim().isEmpty)) {
       return const McqImportResult(
         questions: [],
         errors: [
