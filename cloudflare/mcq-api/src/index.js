@@ -50,7 +50,11 @@ async function verifyFirebaseToken(token) {
   if (!firebaseKeysCache || firebaseKeysCache.expiresAt < Date.now()) {
     const result = await fetch(FIREBASE_KEYS_URL);
     if (!result.ok) throw new Error("Unable to verify sign-in.");
-    const keys = await result.json();
+    const keySet = await result.json();
+    const keys = Array.isArray(keySet) ? keySet : keySet.keys;
+    if (!Array.isArray(keys) || keys.length === 0) {
+      throw new Error("Firebase returned an invalid signing-key set. Please retry shortly.");
+    }
     firebaseKeysCache = { keys, expiresAt: Date.now() + 3600000 };
   }
   const jwk = firebaseKeysCache.keys.find((item) => item.kid === header.kid);
