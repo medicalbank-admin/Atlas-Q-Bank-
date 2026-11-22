@@ -162,7 +162,14 @@ exports.approveSubscriptionRequest = onCall(async (request) => {
       }
       validatePaymentDetails(requestData, plan);
       const durationDays = Number(plan.durationDays);
-      const permissions = plan.accessPermissions;
+      const configuredPermissions = plan.accessPermissions;
+      const permissions = {
+        ...configuredPermissions,
+        // Past Papers use the examinations entitlement in Firestore rules,
+        // while retaining a dedicated permission for dashboard and plan UI.
+        if (configuredPermissions.pastPapers === true) 'pastPapers': true,
+        if (configuredPermissions.pastPapers === true) 'examinations': true,
+      };
       if (
         !Number.isInteger(durationDays) ||
         durationDays < 1 ||
