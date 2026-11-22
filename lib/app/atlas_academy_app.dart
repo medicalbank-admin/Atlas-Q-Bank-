@@ -4,18 +4,18 @@ import '../features/auth/screens/auth_gate.dart';
 
 /// The single source of truth for The Atlas Academy visual identity.
 class AtlasColors {
-  static const Color navy = Color(0xFF071B3D);
-  static const Color deepNavy = Color(0xFF0B2450);
-  static const Color royalBlue = Color(0xFF174A91);
-  static const Color brightBlue = Color(0xFF2868C7);
-  static const Color paleBlue = Color(0xFFEAF1FC);
-  static const Color champagne = Color(0xFFE4BE68);
-  static const Color gold = Color(0xFFC69A3B);
-  static const Color ivory = Color(0xFFF5F7FC);
+  static const Color navy = Color(0xFF123B68);
+  static const Color deepNavy = Color(0xFF164B7A);
+  static const Color royalBlue = Color(0xFF2563A6);
+  static const Color brightBlue = Color(0xFF3B82C4);
+  static const Color paleBlue = Color(0xFFEAF4FC);
+  static const Color champagne = Color(0xFF9CC9ED);
+  static const Color gold = Color(0xFF5A9BD5);
+  static const Color ivory = Color(0xFFF5F9FD);
   static const Color white = Color(0xFFFFFFFF);
-  static const Color charcoal = Color(0xFF17243A);
-  static const Color secondaryText = Color(0xFF71809A);
-  static const Color border = Color(0xFFE1E8F3);
+  static const Color charcoal = Color(0xFF1D344A);
+  static const Color secondaryText = Color(0xFF71869A);
+  static const Color border = Color(0xFFDCE8F2);
   static const Color success = Color(0xFF21865A);
   static const Color error = Color(0xFFD64F5B);
   static const Color warning = Color(0xFFB7791F);
