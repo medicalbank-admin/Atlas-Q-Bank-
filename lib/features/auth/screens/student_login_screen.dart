@@ -233,7 +233,7 @@ class _StudentLoginScreenState extends State<StudentLoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AtlasColors.ivory,
+      backgroundColor: const Color(0xFFF3F7FF),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -276,7 +276,7 @@ class _StudentLoginScreenState extends State<StudentLoginScreen> {
                         color: Colors.white.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(25),
                         border: Border.all(
-                          color: AtlasColors.champagne.withValues(
+                          color: AtlasColors.royalBlue.withValues(
                             alpha: 0.7,
                           ),
                         ),
@@ -297,7 +297,7 @@ class _StudentLoginScreenState extends State<StudentLoginScreen> {
                     const Text(
                       'LEARN  •  PREPARE  •  EXCEL',
                       style: TextStyle(
-                        color: AtlasColors.champagne,
+                        color: AtlasColors.royalBlue,
                         fontSize: 10,
                         letterSpacing: 1.8,
                         fontWeight: FontWeight.w800,
