@@ -113,7 +113,7 @@ exports.approveSubscriptionRequest = onCall(async (request) => {
       if (!requestSnapshot.exists) {
         throw new HttpsError(
           "not-found",
-          "The subscription request could not be found."
+          "The subscription request $requestId could not be found by Cloud Functions. The app and deployed Functions may be connected to different Firebase projects or databases."
         );
       }
       const requestData = requestSnapshot.data();
