@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/learning_resource_model.dart';
 import '../services/learning_resource_service.dart';
 import 'learning_resource_upload_dialog.dart';
+import '../../advanced_learning/services/push_notification_service.dart';
 
 class LearningResourceManagementScreen extends StatelessWidget {
   final String yearId;
@@ -502,6 +503,17 @@ class LearningResourceManagementScreen extends StatelessWidget {
                         resourceId: resource.id,
                         isPublished: !resource.isPublished,
                       );
+                      if (!resource.isPublished) {
+                        try {
+                          await PushNotificationService().sendCampaign(
+                            notificationId: 'resource_' + resource.id,
+                            title: 'New study resource available',
+                            body: resource.title + ' has been published in your Study Library.',
+                            destination: 'study_library',
+                            audience: 'all',
+                          );
+                        } catch (_) {}
+                      }
                     } catch (error) {
                       if (!context.mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
