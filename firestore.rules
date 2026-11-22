@@ -182,11 +182,18 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
     match /mcq_exam_sets/{examSetId} {
+      // Published MBBS sets and past papers require the Examinations feature.
+      // Published licensing sets require the Exam Pathways feature.
+      // Unknown or missing track types are never exposed to students.
       allow read: if isAdmin() || (
         resource.data.isPublished == true &&
         (
-          (resource.data.trackType == 'licensing' && hasFeatureAccess('examPathways')) ||
-          (resource.data.trackType != 'licensing' && hasFeatureAccess('examinations'))
+          (resource.data.trackType == 'mbbs' &&
+            hasFeatureAccess('examinations')) ||
+          (resource.data.trackType == 'past_paper' &&
+            hasFeatureAccess('examinations')) ||
+          (resource.data.trackType == 'licensing' &&
+            hasFeatureAccess('examPathways'))
         )
       );
       allow create, update, delete: if isAdmin();
@@ -298,7 +305,13 @@ service cloud.firestore {
     match /student_resource_progress/{progressId} {
       allow read: if signedIn() &&
         (resource.data.userId == request.auth.uid || isAdmin());
-      allow create, update: if signedIn() &&
+      allow create: if signedIn() &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.resourceId is string &&
+        request.resource.data.completed is bool;
+      // On updates, the existing record must already belong to this student.
+      allow update: if signedIn() &&
+        resource.data.userId == request.auth.uid &&
         request.resource.data.userId == request.auth.uid &&
         request.resource.data.resourceId is string &&
         request.resource.data.completed is bool;
@@ -319,8 +332,16 @@ service cloud.firestore {
           resource.data.isPublished == true &&
           !resource.data.keys().hasAny(['correctAnswer', 'explanation']) &&
           (
-            (resource.data.trackType == 'licensing' && hasFeatureAccess('examPathways')) ||
-            (resource.data.trackType != 'licensing' && (hasFeatureAccess('mcqPractice') || hasFeatureAccess('examinations')))
+            // MBBS practice questions.
+            (resource.data.trackType == 'mbbs' &&
+              (hasFeatureAccess('mcqPractice') ||
+                hasFeatureAccess('examinations'))) ||
+            // Licensing questions are restricted to the pathway entitlement.
+            (resource.data.trackType == 'licensing' &&
+              hasFeatureAccess('examPathways')) ||
+            // Past-paper questions are restricted to the Examinations entitlement.
+            (resource.data.trackType == 'past_paper' &&
+              hasFeatureAccess('examinations'))
           )
         );
 
