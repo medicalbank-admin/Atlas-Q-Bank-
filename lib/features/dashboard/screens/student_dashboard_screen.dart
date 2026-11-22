@@ -16,6 +16,7 @@ import '../../academic/screens/student_past_papers_screen.dart';
 import '../../subscriptions/screens/subscription_plans_screen.dart';
 import '../../advanced_learning/screens/advanced_student_tools_screen.dart';
 import '../../advanced_learning/services/push_notification_service.dart';
+import 'student_notifications_screen.dart';
 
 class StudentDashboardScreen extends StatefulWidget {
  const StudentDashboardScreen({super.key});
@@ -73,34 +74,48 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen>{
    Expanded(child:Column(children:[
     Container(
       color: const Color(0xFFF2F8FF),
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 9),
+      padding: const EdgeInsets.fromLTRB(18, 7, 17, 8),
       child: Row(children: [
-        if (!wide)
-          Builder(builder: (c) => IconButton(
-            onPressed: () => Scaffold.of(c).openDrawer(),
-            icon: const Icon(Icons.menu_rounded, color: AtlasColors.navy),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints.tightFor(width: 34, height: 42),
-          )),
-        const AtlasLogo(size: 58),
-        const SizedBox(width: 9),
+        const AtlasLogo(size: 86),
+        const SizedBox(width: 5),
         const Expanded(child: Text(
-          'The Atlas\nAcademy',
+          'The Atlas\\nAcademy',
           style: TextStyle(
             color: Color(0xFF123B68), fontFamily: 'Georgia',
-            fontSize: 21, height: 1.02, fontWeight: FontWeight.w700,
+            fontSize: 25, height: .98, fontWeight: FontWeight.w700,
+            letterSpacing: -.55,
           ),
         )),
-        Stack(clipBehavior: Clip.none, children: [
-          IconButton(
-            onPressed: () => openFeature('account'),
-            icon: const Icon(Icons.notifications_none_rounded, size: 28, color: AtlasColors.navy),
-          ),
-          Positioned(right: 8, top: 7, child: Container(
-            width: 9, height: 9,
-            decoration: const BoxDecoration(color: Color(0xFFE34C55), shape: BoxShape.circle),
-          )),
-        ]),
+        StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+          stream: FirebaseFirestore.instance.collection('notifications')
+              .where('audience', isEqualTo: 'all')
+              .where('isActive', isEqualTo: true).limit(50).snapshots(),
+          builder: (context, noticeSnapshot) {
+            final count = noticeSnapshot.data?.docs.length ?? 0;
+            return Stack(clipBehavior: Clip.none, children: [
+              IconButton(
+                tooltip: 'Notifications',
+                onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => const StudentNotificationsScreen(),
+                )),
+                icon: const Icon(Icons.notifications_none_rounded,
+                    size: 32, color: Color(0xFF123B68)),
+              ),
+              if (count > 0)
+                Positioned(right: 1, top: 0, child: Container(
+                  constraints: const BoxConstraints(minWidth: 19, minHeight: 19),
+                  padding: const EdgeInsets.symmetric(horizontal: 5),
+                  alignment: Alignment.center,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFE34C55), shape: BoxShape.circle,
+                  ),
+                  child: Text(count > 9 ? '9+' : '$count',
+                    style: const TextStyle(color: Colors.white,
+                      fontSize: 10, fontWeight: FontWeight.w900)),
+                )),
+            ]);
+          },
+        ),
       ]),
     ),
     Expanded(child:IndexedStack(index:selected,children:pages)),
@@ -138,7 +153,7 @@ class _AtlasBottomNavigationBar extends StatelessWidget {
     decoration: const BoxDecoration(color: Colors.white, boxShadow: [
       BoxShadow(color: Color(0x160E315A), blurRadius: 12, offset: Offset(0, -3)),
     ]),
-    child: SafeArea(top: false, child: SizedBox(height: 64, child: Row(children: [
+    child: SafeArea(top: false, child: SizedBox(height: 72, child: Row(children: [
       _NavItem(icon: Icons.home_rounded, label: 'Home', active: true, onTap: onHome),
       _NavItem(icon: Icons.edit_note_rounded, label: 'Exams', onTap: onExams),
       _NavItem(icon: Icons.menu_book_rounded, label: 'Resources', onTap: onResources),
@@ -155,7 +170,7 @@ class _NavItem extends StatelessWidget {
       Icon(icon, color: active ? const Color(0xFF1768D1) : const Color(0xFF263B59), size: 24),
       const SizedBox(height: 3),
       Text(label, style: TextStyle(color: active ? const Color(0xFF1768D1) : const Color(0xFF263B59),
-        fontSize: 10, fontWeight: active ? FontWeight.w900 : FontWeight.w600)),
+        fontSize: 11, fontWeight: active ? FontWeight.w900 : FontWeight.w600)),
     ]),
   ));
 }
@@ -411,10 +426,9 @@ class _Home extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 91),
-        const SizedBox(height: 17),
         GridView.count(
           crossAxisCount: 2, crossAxisSpacing: 12, mainAxisSpacing: 12,
-          childAspectRatio: 1.24, shrinkWrap: true,
+          childAspectRatio: 1.43, shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           children: [
             _ClinicalExamTile(title: 'Subject-Wise\nExams', icon: Icons.menu_book_rounded,
@@ -587,7 +601,7 @@ class _ActivitySummary extends StatelessWidget {
                 Text('$attempted MCQs attempted so far',
                   style: const TextStyle(color: Color(0xFF52647C), fontSize: 11)),
               ])),
-            const Icon(Icons.trending_up_rounded, color: Color(0xFF159A85), size: 27),
+            const Icon(Icons.bar_chart_rounded, color: Color(0xFF159A85), size: 29),
           ]),
         );
       },
