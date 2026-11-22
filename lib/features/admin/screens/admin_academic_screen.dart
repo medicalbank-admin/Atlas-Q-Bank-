@@ -50,7 +50,7 @@ class _AdminAcademicScreenState extends State<AdminAcademicScreen> {
     if (!_authorized) {
       return Scaffold(
         backgroundColor: const Color(0xFFF2F7FF),
-        appBar: AppBar(title: const Text('Academic Management')),
+        appBar: AppBar(title: const Text('Academic Management'), backgroundColor: const Color(0xFFF2F7FF), foregroundColor: AtlasColors.navy, elevation: 0),
         body: const Center(
           child: Text('Administrator access required.'),
         ),
@@ -68,8 +68,8 @@ class _AdminAcademicScreenState extends State<AdminAcademicScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _showAddYearDialog,
-        backgroundColor: const Color(0xFFF2F7FF),
-        foregroundColor: AtlasColors.navy,
+        backgroundColor: AtlasColors.royalBlue,
+        foregroundColor: Colors.white,
         icon: const Icon(Icons.add_rounded),
         label: const Text('Add Academic Year'),
       ),
