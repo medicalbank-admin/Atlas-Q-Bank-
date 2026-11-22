@@ -41,6 +41,7 @@ class LearningResourceService {
     required LearningResourceType type,
     required String resourceUrl,
     String description = '',
+    String textContent = '',
     String? thumbnailUrl,
     int displayOrder = 0,
     bool isFree = false,
@@ -52,9 +53,9 @@ class LearningResourceService {
         subjectId.trim().isEmpty ||
         topicId.trim().isEmpty ||
         title.trim().isEmpty ||
-        resourceUrl.trim().isEmpty) {
+        (resourceUrl.trim().isEmpty && textContent.trim().isEmpty)) {
       throw ArgumentError(
-        'Year, subject, topic, title and resource URL are required.',
+        'Year, subject, topic, title and either a resource URL or text content are required.',
       );
     }
 
