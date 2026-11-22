@@ -1,0 +1,43 @@
+name: Deploy Atlas Academy Firestore Security Rules
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "firestore.rules"
+      - "firebase.json"
+      - ".github/workflows/deploy-firestore-rules.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-rules:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Configure Firebase service account
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          if [ -z "$FIREBASE_SERVICE_ACCOUNT" ]; then
+            echo "Missing repository secret: FIREBASE_SERVICE_ACCOUNT"
+            exit 1
+          fi
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/firebase-service-account.json"
+          node -e "JSON.parse(require('fs').readFileSync(process.env.RUNNER_TEMP + '/firebase-service-account.json', 'utf8'))"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/firebase-service-account.json" >> "$GITHUB_ENV"
+      - name: Install Firebase CLI
+        run: npm install --global firebase-tools
+      - name: Deploy Firestore security rules
+        run: firebase deploy --only firestore:rules --project the-atlas-academy-3fae0 --non-interactive
+      - name: Remove temporary credentials
+        if: always()
+        run: rm -f "$RUNNER_TEMP/firebase-service-account.json"
