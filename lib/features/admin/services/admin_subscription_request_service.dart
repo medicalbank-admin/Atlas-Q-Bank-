@@ -89,6 +89,16 @@ class AdminSubscriptionRequestService {
       throw Exception('Invalid subscription request.');
     }
 
+    // Confirm the request is present in the same Firestore project used by
+    // the admin app before invoking the trusted approval function.
+    final requestSnapshot = await _requests.doc(requestId.trim()).get();
+    if (!requestSnapshot.exists) {
+      throw Exception(
+        'This payment request is no longer present in the app database. '
+        'Refresh the request list and try again.',
+      );
+    }
+
     try {
       final callable =
           _functions.httpsCallable('approveSubscriptionRequest');
