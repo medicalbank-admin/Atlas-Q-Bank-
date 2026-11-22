@@ -8,7 +8,7 @@ class ClinicalCaseLearningScreen extends StatelessWidget {
   const ClinicalCaseLearningScreen({super.key});
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFFF3F7FF),
+    backgroundColor: const Color(0xFFF2F7FF),
     appBar: AppBar(title: const Text('Clinical Case-Based Learning')),
     body: StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(
       stream: FirebaseFirestore.instance.collection('clinical_cases').where('isPublished',isEqualTo:true).snapshots(),
@@ -136,7 +136,7 @@ class MockExamPredictionScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F7FF),
+      backgroundColor: const Color(0xFFF2F7FF),
       appBar: AppBar(title: const Text('Mock Exam Readiness')),
       body: uid == null ? const SizedBox() : StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: FirebaseFirestore.instance.collection('mcq_attempts').where('userId', isEqualTo: uid).snapshots(),
@@ -251,7 +251,7 @@ class _StudentDiscussionForumScreenState extends State<StudentDiscussionForumScr
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F7FF),
+      backgroundColor: const Color(0xFFF2F7FF),
       appBar: AppBar(title: const Text('Student Discussion Forum')),
       body: ListView(
         padding: const EdgeInsets.all(16),
