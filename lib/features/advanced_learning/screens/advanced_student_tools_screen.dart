@@ -111,7 +111,11 @@ class _MistakesNotebookScreenState extends State<MistakesNotebookScreen>{
      final question=(answer['question']??answer['questionText']??'').toString().trim();if(question.isEmpty)continue;
      final selected=answer['selectedAnswer']??answer['userAnswer']??answer['chosenAnswer'];
      final answered=answer['isAnswered']==true||(selected!=null&&selected.toString().trim().isNotEmpty);
-     if(answer['isCorrect']==true)continue;
+     final correctRaw=(answer['correctAnswer']??'').toString().trim().toUpperCase();
+     final selectedRaw=(selected??'').toString().trim().toUpperCase();
+     final derivedCorrect=selectedRaw.isNotEmpty&&correctRaw.isNotEmpty&&selectedRaw==correctRaw;
+     final isCorrect=answer['isCorrect']==true||(answer['isCorrect']==null&&derivedCorrect);
+     if(isCorrect)continue;
      final ref=db.collection('mistake_notebook').doc('${uid}_${doc.id}_$i');
      if((await ref.get()).exists){alreadySaved++;continue;}
      batch.set(ref,{'userId':uid,'attemptId':doc.id,'questionIndex':i,'question':question,'options':answer['options'] is List?answer['options']:<dynamic>[],'selectedAnswer':answered?selected:null,'correctAnswer':answer['correctAnswer']??'','explanation':answer['explanation']??'','subject':answer['subject']??data['subject']??'','topic':answer['topic']??data['topic']??'','status':answered?'incorrect':'skipped','isReviewed':false,'createdAt':FieldValue.serverTimestamp()});
