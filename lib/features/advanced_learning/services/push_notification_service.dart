@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// Device registration is client-side; FCM message delivery is server-side.
 class PushNotificationService {
@@ -100,6 +101,11 @@ class PushNotificationService {
     final user = FirebaseAuth.instance.currentUser;
     final notificationId = message.data['notificationId']?.toString() ?? '';
     if (user == null || notificationId.isEmpty) return;
+    final destination = message.data['destination']?.toString() ?? '';
+    if (destination.startsWith('https://') || destination.startsWith('http://')) {
+      final uri = Uri.tryParse(destination);
+      if (uri != null) { try { await launchUrl(uri, mode: LaunchMode.externalApplication); } catch (_) {} }
+    }
     try {
       await FirebaseFirestore.instance.collection('push_notification_events').add({
         'notificationId': notificationId,
