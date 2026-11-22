@@ -420,7 +420,11 @@ class _AdminMcqBankScreenState extends State<AdminMcqBankScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF2F7FF),
       appBar: AppBar(
+        backgroundColor: const Color(0xFFF2F7FF),
+        foregroundColor: AtlasColors.navy,
+        elevation: 0,
         title: const Text('MCQ Question Bank'),
         actions: [
           IconButton(
