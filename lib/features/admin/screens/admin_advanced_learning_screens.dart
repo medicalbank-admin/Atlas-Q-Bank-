@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../../app/atlas_academy_app.dart';
+import '../../advanced_learning/services/push_notification_service.dart';
 
 class AdminClinicalCasesScreen extends StatefulWidget {
   const AdminClinicalCasesScreen({super.key});
@@ -135,6 +136,9 @@ class _AdminClinicalCasesScreenState extends State<AdminClinicalCasesScreen> {
                     await db.collection('clinical_cases').add(payload);
                   } else {
                     await db.collection('clinical_cases').doc(id).update(payload);
+                  }
+                  if (published && existing['isPublished'] != true) {
+                    try { await PushNotificationService().sendCampaign(notificationId: 'clinical_case_' + (id ?? 'new'), title: 'New clinical case available', body: title.text.trim() + ' is now available in Clinical Case-Based Learning.', destination: 'clinical_cases', audience: 'all'); } catch (_) {}
                   }
                   if (dialogContext.mounted) Navigator.pop(dialogContext);
                   if (mounted) {
@@ -312,6 +316,10 @@ class _AdminStudentSupportScreenState extends State<AdminStudentSupportScreen> {
         'repliedAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
+      final studentUid = (data['userId'] ?? '').toString();
+      if (studentUid.isNotEmpty) {
+        try { await PushNotificationService().sendCampaign(notificationId: 'teacher_reply_' + id, title: 'Your teacher has replied', body: 'Open Ask a Teacher to read the response to your question.', destination: 'ask_teacher', audience: 'selected', userIds: [studentUid]); } catch (_) {}
+      }
     }
   }
 
