@@ -210,19 +210,29 @@ class AdminDashboardScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
-        IconButton(
-          tooltip: 'Notifications',
-          onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminNotificationsScreen())),
-          style: IconButton.styleFrom(
-            backgroundColor: Colors.white,
-            foregroundColor: AtlasColors.navy,
-            fixedSize: const Size(43, 43),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-              side: const BorderSide(color: AtlasColors.border),
-            ),
-          ),
-          icon: const Icon(Icons.notifications_none_rounded, size: 23),
+        PopupMenuButton<String>(
+          tooltip: 'Notifications and account',
+          icon: const Icon(Icons.notifications_none_rounded, size: 25),
+          color: Colors.white,
+          onSelected: (value) {
+            if (value == 'notifications') {
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => const AdminNotificationsScreen(),
+              ));
+            } else if (value == 'signout') {
+              _confirmSignOut(context);
+            }
+          },
+          itemBuilder: (context) => const [
+            PopupMenuItem(value: 'notifications', child: ListTile(
+              dense: true, leading: Icon(Icons.notifications_none_rounded),
+              title: Text('Notifications'),
+            )),
+            PopupMenuItem(value: 'signout', child: ListTile(
+              dense: true, leading: Icon(Icons.logout_rounded),
+              title: Text('Sign Out'),
+            )),
+          ],
         ),
       ],
     );
