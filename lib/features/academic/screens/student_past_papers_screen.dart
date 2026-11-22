@@ -42,7 +42,7 @@ class StudentPastPapersScreen extends StatelessWidget {
                 .snapshots(),
             builder: (context, snapshot) {
               if (snapshot.hasError) {
-                return const Text('Past papers could not be loaded. Please try again.');
+                return Padding(padding: const EdgeInsets.all(18), child: Text('Past papers could not be loaded: ${snapshot.error}', style: const TextStyle(color: AtlasColors.error)));
               }
               if (!snapshot.hasData) {
                 return const Center(child: CircularProgressIndicator());
