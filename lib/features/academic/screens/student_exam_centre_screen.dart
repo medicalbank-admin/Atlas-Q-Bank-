@@ -59,7 +59,7 @@ class _StructuredExamList extends StatelessWidget {
     builder: (context, snapshot) {
       if (snapshot.hasError) return Center(child: Padding(padding: const EdgeInsets.all(20), child: Text('Unable to load $heading. Please try again.')));
       if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-      final docs = snapshot.data!.docs.where((d) => d.data()['yearId'] == 'exam_centre' && types.contains(d.data()['examCategory']) && d.data()['isActive'] != false).toList();
+      final docs = snapshot.data!.docs.where((d) { final x = d.data(); final category = (x['examCategory'] ?? '').toString(); final isNewStructure = x['yearId'] == 'exam_centre' && types.contains(category); final isLegacySubjectSet = types.contains('subject_exam') && x['trackType'] == 'mbbs' && x['yearId'] != 'exam_centre' && category.isEmpty; return (isNewStructure || isLegacySubjectSet) && x['isActive'] != false; }).toList();
       if (docs.isEmpty) return Center(child: Padding(padding: const EdgeInsets.all(28), child: Text('No published exams in this section yet.', style: const TextStyle(color: AtlasColors.secondaryText))));
       if (showMockTypes) {
         const labels = {'subject_mock': 'Subject Mocks', 'system_mock': 'System Mocks', 'grand_mock': 'Grand Mocks'};
@@ -70,7 +70,7 @@ class _StructuredExamList extends StatelessWidget {
       }
       final groups = <String, List<QueryDocumentSnapshot<Map<String,dynamic>>>>{};
       for (final doc in docs) {
-        final name = (doc.data()['categoryName'] ?? 'Other').toString();
+        final x = doc.data(); final name = (x['categoryName'] ?? x['subjectName'] ?? 'Previously Published Exams').toString();
         groups.putIfAbsent(name, () => []).add(doc);
       }
       return ListView(padding: const EdgeInsets.fromLTRB(16, 4, 16, 24), children: groups.entries.map((e) => _section(context, e.key, e.value)).toList());
