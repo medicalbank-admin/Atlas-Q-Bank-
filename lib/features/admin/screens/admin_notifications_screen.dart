@@ -13,17 +13,18 @@ class _AdminNotificationsScreenState extends State<AdminNotificationsScreen>{
  bool _sending=false;
  Future<void> _publish() async {
   if(_title.text.trim().isEmpty||_body.text.trim().isEmpty){_message('Enter both a title and message.',true);return;}
+  final publishedTitle=_title.text.trim();final publishedBody=_body.text.trim();
   final link=_link.text.trim();
   if(link.isNotEmpty){final uri=Uri.tryParse(link);if(uri==null||!['https','http'].contains(uri.scheme)){_message('Enter a valid http or https link.',true);return;}}
   setState(()=>_sending=true);
   try{
    await FirebaseFirestore.instance.collection('notifications').add({
-    'title':_title.text.trim(),'body':_body.text.trim(),'audience':'all',
+    'title':publishedTitle,'body':publishedBody,'audience':'all',
     'isActive':true,'createdAt':FieldValue.serverTimestamp(),
     if(link.isNotEmpty)'linkUrl':link,
     'createdBy':FirebaseAuth.instance.currentUser?.uid,
    });
-   _title.clear();_body.clear();_link.clear();if(mounted)_message('Announcement published in the app.',false);try{final sent=await PushNotificationService().sendAnnouncement(title:_title.text.trim().isEmpty?'Academy announcement':_title.text.trim(),body:_body.text.trim());if(mounted)_message('Push notification sent to $sent devices.',false);}catch(e){if(mounted)_message('In-app announcement published; push delivery unavailable: $e',true);}
+   try{final sent=await PushNotificationService().sendAnnouncement(title:publishedTitle,body:publishedBody);if(mounted)_message('Announcement and push notification sent to $sent devices.',false);}catch(e){if(mounted)_message('Announcement published in the app; push delivery unavailable: $e',true);}_title.clear();_body.clear();_link.clear();
   }catch(e){if(mounted)_message('Could not publish: $e',true);}
   finally{if(mounted)setState(()=>_sending=false);}
  }
