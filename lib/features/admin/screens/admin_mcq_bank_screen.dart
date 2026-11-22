@@ -125,12 +125,12 @@ class _AdminMcqBankScreenState extends State<AdminMcqBankScreen> {
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: isCorrect
-                        ? const Color(0xFFEAF1FC)
+                        ? const AtlasColors.paleBlue
                         : Colors.grey.withValues(alpha: 0.07),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
                       color: isCorrect
-                          ? const Color(0xFF174A91)
+                          ? const AtlasColors.royalBlue
                           : Colors.grey.withValues(alpha: 0.2),
                     ),
                   ),
@@ -146,7 +146,7 @@ class _AdminMcqBankScreenState extends State<AdminMcqBankScreen> {
                       if (isCorrect)
                         const Icon(
                           Icons.check_circle,
-                          color: Color(0xFF174A91),
+                          color: AtlasColors.royalBlue,
                         ),
                     ],
                   ),
@@ -248,11 +248,11 @@ class _AdminMcqBankScreenState extends State<AdminMcqBankScreen> {
               children: [
                 CircleAvatar(
                   radius: 16,
-                  backgroundColor: const Color(0xFFEAF1FC),
+                  backgroundColor: const AtlasColors.paleBlue,
                   child: Text(
                     '${index + 1}',
                     style: const TextStyle(
-                      color: Color(0xFF071B3D),
+                      color: AtlasColors.navy,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -265,14 +265,14 @@ class _AdminMcqBankScreenState extends State<AdminMcqBankScreen> {
                     children: [
                       _tag(
                         question.difficulty,
-                        const Color(0xFFEAF1FC),
+                        const AtlasColors.paleBlue,
                       ),
                       _tag(
                         question.isPublished
                             ? 'Published'
                             : 'Unpublished',
                         question.isPublished
-                            ? const Color(0xFFE5F4EC)
+                            ? const Color(0xFFEAF6F0)
                             : const Color(0xFFFFF6E5),
                       ),
                     ],
@@ -332,7 +332,7 @@ class _AdminMcqBankScreenState extends State<AdminMcqBankScreen> {
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: correct
-                            ? const Color(0xFF174A91)
+                            ? const AtlasColors.royalBlue
                             : null,
                       ),
                     ),
@@ -341,7 +341,7 @@ class _AdminMcqBankScreenState extends State<AdminMcqBankScreen> {
                         question.options[optionIndex],
                         style: TextStyle(
                           color: correct
-                              ? const Color(0xFF174A91)
+                              ? const AtlasColors.royalBlue
                               : null,
                           fontWeight: correct
                               ? FontWeight.w600
@@ -353,7 +353,7 @@ class _AdminMcqBankScreenState extends State<AdminMcqBankScreen> {
                       const Icon(
                         Icons.check_circle,
                         size: 17,
-                        color: Color(0xFF174A91),
+                        color: AtlasColors.royalBlue,
                       ),
                   ],
                 ),
