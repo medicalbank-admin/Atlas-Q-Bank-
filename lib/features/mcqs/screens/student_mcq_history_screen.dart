@@ -9,7 +9,7 @@ class StudentMcqHistoryScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F7FF),
+      backgroundColor: const Color(0xFFF2F7FF),
       appBar: AppBar(
         title: const Text('Practice History'),
         backgroundColor: Colors.white,
