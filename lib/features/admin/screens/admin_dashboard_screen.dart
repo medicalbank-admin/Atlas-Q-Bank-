@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../../app/atlas_academy_app.dart';
 import '../../../shared/widgets/atlas_logo.dart';
 import '../../profile/screens/profile_screen.dart';
@@ -142,7 +143,7 @@ class AdminDashboardScreen extends StatelessWidget {
   Widget _buildHeader(BuildContext context) {
     return Row(
       children: [
-        const AtlasLogo(size: 58),
+        const AtlasLogo(size: 78),
         /*
           decoration: BoxDecoration(
             gradient: const LinearGradient(
@@ -174,8 +175,8 @@ class AdminDashboardScreen extends StatelessWidget {
                 style: TextStyle(
                   color: AtlasColors.navy,
                   fontFamily: 'Georgia',
-                  fontSize: 19,
-                  height: 1.05,
+                  fontSize: 24,
+                  height: 1.0,
                   fontWeight: FontWeight.w900,
                 ),
               ),
@@ -246,18 +247,22 @@ class AdminDashboardScreen extends StatelessWidget {
           colors: [Color(0xFFE4F0FF), Color(0xFFD5E8FF), Color(0xFFF1F7FF)],
           begin: Alignment.topLeft, end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(21),
-        border: Border.all(color: const Color(0xFFDCE9F8)),
+        borderRadius: BorderRadius.circular(0),
       ),
       child: Stack(
         children: [
           Positioned(
             right: -20,
             top: -22,
-            child: Icon(
-              Icons.admin_panel_settings_rounded,
-              size: 155,
-              color: AtlasColors.royalBlue.withValues(alpha: 0.07),
+            child: SizedBox(
+              width: 150, height: 155,
+              child: SvgPicture.asset(
+                'assets/images/clinical_stethoscope.svg',
+                fit: BoxFit.contain,
+                colorFilter: const ColorFilter.mode(
+                  Color(0x6682B5E8), BlendMode.srcIn,
+                ),
+              ),
             ),
           ),
           Column(
@@ -530,7 +535,7 @@ class AdminDashboardScreen extends StatelessWidget {
             crossAxisCount: columns,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
-            childAspectRatio: columns == 3 ? 1.12 : 0.94,
+            childAspectRatio: columns == 3 ? 1.24 : 1.12,
           ),
           itemBuilder: (context, index) {
             final item = items[index];
@@ -649,8 +654,8 @@ class _AdminManagementCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: const Color(0xFFF8FBFF),
-      borderRadius: BorderRadius.circular(20),
+      color: item.color.withValues(alpha: 0.075),
+      borderRadius: BorderRadius.circular(19),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(21),
@@ -691,8 +696,8 @@ class _AdminManagementCard extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   color: AtlasColors.navy,
-                  fontSize: 12,
-                  height: 1.3,
+                  fontSize: 13,
+                  height: 1.25,
                   fontWeight: FontWeight.w900,
                 ),
               ),
@@ -703,8 +708,8 @@ class _AdminManagementCard extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   color: AtlasColors.secondaryText,
-                  fontSize: 9,
-                  height: 1.45,
+                  fontSize: 10,
+                  height: 1.4,
                 ),
               ),
             ],
