@@ -10,17 +10,17 @@ class StudentPastPapersScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF2F7FF),
-      appBar: AppBar(title: const Text('Past Papers'), backgroundColor: Colors.white, foregroundColor: AtlasColors.navy, elevation: 0, scrolledUnderElevation: 0),
+      appBar: AppBar(title: const Text('Past Papers'), backgroundColor: const Color(0xFFF2F7FF), foregroundColor: AtlasColors.navy, elevation: 0, scrolledUnderElevation: 0),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 22),
         children: [
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(22),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 colors: [Color(0xFFE4F0FF), Color(0xFFD5E8FF)],
               ),
-              borderRadius: BorderRadius.circular(19),
+              borderRadius: BorderRadius.circular(22),
             ),
             child: const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -63,10 +63,10 @@ class StudentPastPapersScreen extends StatelessWidget {
                   return Card(
                     color: Colors.white,
                     elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(17), side: const BorderSide(color: AtlasColors.border)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(21), side: const BorderSide(color: Color(0xFFE0EAF5))),
                     child: ListTile(
                       leading: const CircleAvatar(
-                        backgroundColor: AtlasColors.paleBlue,
+                        backgroundColor: const Color(0xFFE5F1FF),
                         child: Icon(Icons.description_rounded, color: AtlasColors.royalBlue),
                       ),
                       title: Text(title, style: const TextStyle(color: AtlasColors.navy, fontWeight: FontWeight.w900)),
