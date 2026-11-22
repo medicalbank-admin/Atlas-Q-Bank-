@@ -184,7 +184,16 @@ async function firestoreRequest(env, path, options = {}) {
   });
   const text = await result.text();
   let data = {};
-  try { data = text ? JSON.parse(text) : {}; } catch {}
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch {
+    // Firestore batchGet may stream one JSON response per line.
+    try {
+      data = text.trim().split(/\\r?\\n/).filter(Boolean).map((line) => JSON.parse(line));
+    } catch {
+      data = {};
+    }
+  }
   if (!result.ok) {
     const message = data.error?.message || "Database request failed.";
     const error = new Error(message);
