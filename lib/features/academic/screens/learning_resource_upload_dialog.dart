@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
@@ -63,7 +64,7 @@ class _LearningResourceUploadDialogState extends State<LearningResourceUploadDia
       _message('Choose a file before saving.');
       return;
     }
-    if (_type == LearningResourceType.text && _text.text.trim().length > 700000) {
+    if (_type == LearningResourceType.text && utf8.encode(_text.text.trim()).length > 700000) {
       _message('Text notes must be shorter than 700,000 characters.');
       return;
     }
