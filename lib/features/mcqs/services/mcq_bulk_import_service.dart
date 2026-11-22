@@ -208,9 +208,9 @@ class McqBulkImportService {
         'An MCQ answer refers to an option that does not exist.',
       );
     }
-    if (!['mbbs', 'licensing', 'past_paper'].contains(question.trackType) ||
-        (question.trackType == 'mbbs' && question.yearId.trim().isEmpty) ||
-        (question.trackType == 'licensing' && question.pathwayId.trim().isEmpty) ||
+    if (!['structured', 'past_paper'].contains(question.trackType) ||
+        (question.trackType == 'structured' &&
+            question.yearId.trim() != 'exam_centre') ||
         question.examSetId.trim().isEmpty ||
         question.subject.trim().isEmpty ||
         question.topic.trim().isEmpty) {
