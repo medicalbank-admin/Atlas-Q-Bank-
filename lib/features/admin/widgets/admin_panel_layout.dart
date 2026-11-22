@@ -21,15 +21,15 @@ class AdminPanelLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AtlasColors.ivory,
+      backgroundColor: const Color(0xFFF3F7FF),
       appBar: AppBar(
         backgroundColor: Colors.white,
         foregroundColor: AtlasColors.navy,
         elevation: 0,
         scrolledUnderElevation: 1,
         shadowColor: AtlasColors.navy.withValues(alpha: .08),
-        titleSpacing: 8,
-        title: Text(title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AtlasColors.navy)),
+        titleSpacing: 14,
+        title: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AtlasColors.navy)),
         actions: [...actions, const SizedBox(width: 8)],
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
@@ -37,16 +37,16 @@ class AdminPanelLayout extends StatelessWidget {
         ),
       ),
       drawer: SizedBox(
-        width: 300,
+        width: 292,
         child: AdminNavigationDrawer(selectedRoute: selectedRoute, onDestinationSelected: onDestinationSelected),
       ),
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final horizontalPadding = constraints.maxWidth >= 1000 ? 32.0 : 16.0;
+            final horizontalPadding = constraints.maxWidth >= 1000 ? 30.0 : 16.0;
             return SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
-              padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 22),
+              padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 16),
               child: Center(
                 child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 1500), child: child),
               ),
