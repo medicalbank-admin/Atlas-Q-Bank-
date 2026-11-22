@@ -47,9 +47,11 @@ class StudentDashboardScreen extends StatelessWidget {
       );
       final expiry = data['subscriptionExpiryAt'];
       final notExpired = expiry is Timestamp && expiry.toDate().isAfter(DateTime.now());
-      final permissionKey = feature == 'pastPapers' ? 'examinations' : feature;
+      final hasFeaturePermission = feature == 'pastPapers'
+          ? (permissions['pastPapers'] == true || permissions['examinations'] == true)
+          : permissions[feature] == true;
       final hasAccess = data['subscriptionStatus'] == 'active' &&
-          data['accessEnabled'] == true && notExpired && permissions[permissionKey] == true;
+          data['accessEnabled'] == true && notExpired && hasFeaturePermission;
       if (!context.mounted) return;
       if (!hasAccess) {
         Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SubscriptionPlansScreen()));
@@ -242,13 +244,6 @@ class StudentDashboardScreen extends StatelessWidget {
           subtitle: 'Practice and review',
           accent: AtlasColors.gold,
           onTap: () => _openProtectedFeature(context, 'mcqPractice'),
-        ),
-        _LearningTile(
-          icon: Icons.history_edu_rounded,
-          title: 'Past Papers',
-          subtitle: 'Solve previous exam papers',
-          accent: AtlasColors.gold,
-          onTap: () => _openProtectedFeature(context, 'pastPapers'),
         ),
         _LearningTile(
           icon: Icons.history_edu_rounded,
