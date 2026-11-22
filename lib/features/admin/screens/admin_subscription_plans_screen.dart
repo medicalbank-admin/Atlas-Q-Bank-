@@ -48,7 +48,6 @@ class _AdminSubscriptionPlansScreenState
     'mockPredictions': 'Mock Exam Readiness & Predictions',
     'discussionForum': 'Student Discussion Forum',
     'askTeacher': 'Ask a Teacher',
-    'pushNotifications': 'Push Notifications',
   };
 
   @override
