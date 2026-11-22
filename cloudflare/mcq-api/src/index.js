@@ -53,7 +53,7 @@ async function verifyFirebaseToken(token) {
     const keys = await result.json();
     firebaseKeysCache = { keys, expiresAt: Date.now() + 3600000 };
   }
-  const jwk = firebaseKeysCache.keys[header.kid];
+  const jwk = firebaseKeysCache.keys.find((item) => item.kid === header.kid);
   if (!jwk) throw new Error("Sign-in token key is no longer valid. Please sign in again.");
   const key = await crypto.subtle.importKey(
     "jwk", jwk, { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, false, ["verify"],
@@ -160,7 +160,15 @@ function encodeValue(value) {
 
 function encodeFields(fields) {
   const result = {};
-  for (const [key, value] of Object.entries(fields)) result[key] = encodeValue(value);
+  const timestampFields = new Set([
+    "startedAt", "expiresAt", "createdAt", "completedAt",
+    "submittedAt", "updatedAt", "reviewedAt",
+  ]);
+  for (const [key, value] of Object.entries(fields)) {
+    result[key] = timestampFields.has(key) && typeof value === "string"
+      ? { timestampValue: value }
+      : encodeValue(value);
+  }
   return result;
 }
 
