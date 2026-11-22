@@ -14,10 +14,10 @@ class AcademicSubjectManagementScreen extends StatelessWidget {
     required this.yearName,
   });
 
-  static const Color deepTeal = Color(0xFF10233F);
-  static const Color oceanTeal = Color(0xFF2859A8);
-  static const Color ivory = Color(0xFFF5F7FC);
-  static const Color champagne = Color(0xFFD8B66B);
+  static const Color deepTeal = Color(0xFF123B68);
+  static const Color oceanTeal = Color(0xFF2563A6);
+  static const Color ivory = Color(0xFFF2F7FF);
+  static const Color champagne = Color(0xFF9CC9ED);
 
   Future<void> _showSubjectDialog(
     BuildContext context, {
@@ -429,7 +429,7 @@ class AcademicSubjectManagementScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: ivory,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: ivory,
         foregroundColor: deepTeal,
         title: Text(
           yearName,
@@ -447,7 +447,7 @@ class AcademicSubjectManagementScreen extends StatelessWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: deepTeal,
+        backgroundColor: oceanTeal,
         foregroundColor: champagne,
         onPressed: () => _showSubjectDialog(context),
         icon: const Icon(Icons.add_rounded),
@@ -515,7 +515,7 @@ class AcademicSubjectManagementScreen extends StatelessWidget {
                       icon: const Icon(Icons.add),
                       label: const Text('Add First Subject'),
                       style: FilledButton.styleFrom(
-                        backgroundColor: deepTeal,
+                        backgroundColor: oceanTeal,
                       ),
                     ),
                   ],
