@@ -126,12 +126,12 @@ class _AdminMcqBankScreenState extends State<AdminMcqBankScreen> {
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: isCorrect
-                        ? const AtlasColors.paleBlue
+                        ? AtlasColors.paleBlue
                         : Colors.grey.withValues(alpha: 0.07),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
                       color: isCorrect
-                          ? const AtlasColors.royalBlue
+                          ? AtlasColors.royalBlue
                           : Colors.grey.withValues(alpha: 0.2),
                     ),
                   ),
@@ -249,7 +249,7 @@ class _AdminMcqBankScreenState extends State<AdminMcqBankScreen> {
               children: [
                 CircleAvatar(
                   radius: 16,
-                  backgroundColor: const AtlasColors.paleBlue,
+                  backgroundColor: AtlasColors.paleBlue,
                   child: Text(
                     '${index + 1}',
                     style: const TextStyle(
@@ -266,7 +266,7 @@ class _AdminMcqBankScreenState extends State<AdminMcqBankScreen> {
                     children: [
                       _tag(
                         question.difficulty,
-                        const AtlasColors.paleBlue,
+                        AtlasColors.paleBlue,
                       ),
                       _tag(
                         question.isPublished
@@ -333,7 +333,7 @@ class _AdminMcqBankScreenState extends State<AdminMcqBankScreen> {
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: correct
-                            ? const AtlasColors.royalBlue
+                            ? AtlasColors.royalBlue
                             : null,
                       ),
                     ),
@@ -342,7 +342,7 @@ class _AdminMcqBankScreenState extends State<AdminMcqBankScreen> {
                         question.options[optionIndex],
                         style: TextStyle(
                           color: correct
-                              ? const AtlasColors.royalBlue
+                              ? AtlasColors.royalBlue
                               : null,
                           fontWeight: correct
                               ? FontWeight.w600
