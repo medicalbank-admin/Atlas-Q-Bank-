@@ -21,15 +21,15 @@ class AdminPanelLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F7FF),
+      backgroundColor: const Color(0xFFF2F7FF),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFFF2F7FF),
         foregroundColor: AtlasColors.navy,
         elevation: 0,
         scrolledUnderElevation: 1,
         shadowColor: AtlasColors.navy.withValues(alpha: .08),
-        titleSpacing: 14,
-        title: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AtlasColors.navy)),
+        titleSpacing: 18,
+        title: Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: AtlasColors.navy)),
         actions: [...actions, const SizedBox(width: 8)],
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
@@ -46,7 +46,7 @@ class AdminPanelLayout extends StatelessWidget {
             final horizontalPadding = constraints.maxWidth >= 1000 ? 30.0 : 16.0;
             return SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
-              padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 16),
+              padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 19),
               child: Center(
                 child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 1500), child: child),
               ),
