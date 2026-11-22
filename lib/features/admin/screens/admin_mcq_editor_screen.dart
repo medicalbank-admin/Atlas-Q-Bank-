@@ -177,7 +177,7 @@ class _AdminMcqEditorScreenState
           Radio<String>(
             value: letter,
             groupValue: _correctAnswer,
-            activeColor: const Color(0xFF174A91),
+            activeColor: const Color(0xFF2563A6),
             onChanged: _saving
                 ? null
                 : (value) {
@@ -240,7 +240,11 @@ class _AdminMcqEditorScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF2F7FF),
       appBar: AppBar(
+        backgroundColor: const Color(0xFFF2F7FF),
+        foregroundColor: AtlasColors.navy,
+        elevation: 0,
         title: Text(
           _isEditing ? 'Edit MCQ' : 'Create MCQ',
         ),
@@ -256,11 +260,11 @@ class _AdminMcqEditorScreenState
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [
-                      Color(0xFF071B3D),
+                      Color(0xFF123B68),
                       Color(0xFF174A91),
                     ],
                   ),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(22),
                 ),
                 child: Text(
                   _isEditing
