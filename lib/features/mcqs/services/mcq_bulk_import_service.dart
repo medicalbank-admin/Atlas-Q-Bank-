@@ -222,7 +222,6 @@ class McqBulkImportService {
   String _questionKey(McqModel question) {
     return [
       question.trackType,
-      question.pathwayId.trim().toLowerCase(),
       question.yearId.trim().toLowerCase(),
       question.examSetId.trim().toLowerCase(),
       question.subject.trim().toLowerCase(),
