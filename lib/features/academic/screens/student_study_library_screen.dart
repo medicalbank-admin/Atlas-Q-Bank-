@@ -18,7 +18,7 @@ class _StudentStudyLibraryScreenState extends State<StudentStudyLibraryScreen> {
   @override
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: const Color(0xFFF2F7FF),
-    appBar: AppBar(title: const Text('Study Library'), backgroundColor: Colors.white, foregroundColor: AtlasColors.navy, elevation: 0, scrolledUnderElevation: 0),
+    appBar: AppBar(title: const Text('Study Library'), backgroundColor: const Color(0xFFF2F7FF), foregroundColor: AtlasColors.navy, elevation: 0, scrolledUnderElevation: 0),
     body: ListView(padding: const EdgeInsets.fromLTRB(16, 16, 16, 22), children: [
       _banner(),
       const SizedBox(height: 18),
@@ -33,7 +33,7 @@ class _StudentStudyLibraryScreenState extends State<StudentStudyLibraryScreen> {
     padding: const EdgeInsets.all(20),
     decoration: BoxDecoration(
       gradient: const LinearGradient(colors: [Color(0xFFE4F0FF), Color(0xFFD5E8FF)]),
-      borderRadius: BorderRadius.circular(19),
+      borderRadius: BorderRadius.circular(22),
     ),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       const Icon(Icons.local_library_rounded, color: AtlasColors.royalBlue, size: 30),
@@ -218,12 +218,33 @@ class _StudentStudyLibraryScreenState extends State<StudentStudyLibraryScreen> {
     }
   }
 
-  Widget _tile(String title,String subtitle,IconData icon,VoidCallback tap)=>Card(
-    child: ListTile(onTap:tap,contentPadding:const EdgeInsets.symmetric(horizontal:16,vertical:7),
-      leading:CircleAvatar(backgroundColor:AtlasColors.paleBlue,child:Icon(icon,color:AtlasColors.royalBlue)),
-      title:Text(title,style:const TextStyle(color:AtlasColors.navy,fontWeight:FontWeight.w800)),
-      subtitle:Text(subtitle,style:const TextStyle(color:AtlasColors.secondaryText),maxLines:2,overflow:TextOverflow.ellipsis),
-      trailing:const Icon(Icons.chevron_right_rounded,color:AtlasColors.royalBlue)),
+  Widget _tile(String title,String subtitle,IconData icon,VoidCallback tap)=>Container(
+    margin: const EdgeInsets.only(bottom: 11),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(21),
+      border: Border.all(color: const Color(0xFFE0EAF5)),
+      boxShadow: const [BoxShadow(color: Color(0x0D123B68), blurRadius: 13, offset: Offset(0, 4))],
+    ),
+    child: Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(21),
+      child: InkWell(
+        onTap: tap,
+        borderRadius: BorderRadius.circular(21),
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 17, vertical: 9),
+          leading: Container(
+            width: 47, height: 47,
+            decoration: BoxDecoration(color: const Color(0xFFE5F1FF), borderRadius: BorderRadius.circular(15)),
+            child: Icon(icon, color: AtlasColors.royalBlue, size: 23),
+          ),
+          title: Text(title, style: const TextStyle(color: AtlasColors.navy, fontWeight: FontWeight.w900)),
+          subtitle: Text(subtitle, style: const TextStyle(color: AtlasColors.secondaryText), maxLines: 2, overflow: TextOverflow.ellipsis),
+          trailing: const Icon(Icons.arrow_forward_rounded, color: AtlasColors.royalBlue),
+        ),
+      ),
+    ),
   );
 
   Widget _back(String label,VoidCallback action)=>Align(alignment:Alignment.centerLeft,child:TextButton.icon(onPressed:action,icon:const Icon(Icons.arrow_back),label:Text('Back to $label')));
