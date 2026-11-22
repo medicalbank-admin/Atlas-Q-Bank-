@@ -49,9 +49,25 @@ service cloud.firestore {
         get(
           /databases/$(database)/documents/users/$(request.auth.uid)
         ).data.subscriptionExpiryAt > request.time &&
-        get(
-          /databases/$(database)/documents/users/$(request.auth.uid)
-        ).data.subscriptionAccessPermissions[feature] == true;
+        (
+          get(
+            /databases/$(database)/documents/users/$(request.auth.uid)
+          ).data.subscriptionAccessPermissions[feature] == true ||
+          (
+            feature == 'mistakesNotebook' &&
+            !get(
+              /databases/$(database)/documents/users/$(request.auth.uid)
+            ).data.subscriptionAccessPermissions.keys().hasAny(['mistakesNotebook']) &&
+            (
+              get(
+                /databases/$(database)/documents/users/$(request.auth.uid)
+              ).data.subscriptionAccessPermissions['mcqPractice'] == true ||
+              get(
+                /databases/$(database)/documents/users/$(request.auth.uid)
+              ).data.subscriptionAccessPermissions['examinations'] == true
+            )
+          )
+        );
     }
 
     function validSubscriptionPlan(planId) {
