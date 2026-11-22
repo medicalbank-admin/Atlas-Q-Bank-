@@ -105,11 +105,12 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen>{
       color: const Color(0xFFF2F8FF),
       padding: const EdgeInsets.fromLTRB(8, 5, 12, 5),
       child: Row(children: [
-        Builder(builder: (headerContext) => IconButton(
-          tooltip: 'Open navigation menu',
-          onPressed: () => Scaffold.of(headerContext).openDrawer(),
-          icon: const Icon(Icons.menu_rounded, size: 29, color: Color(0xFF123B68)),
-        )),
+        if (!wide)
+          Builder(builder: (headerContext) => IconButton(
+            tooltip: 'Open navigation menu',
+            onPressed: () => Scaffold.of(headerContext).openDrawer(),
+            icon: const Icon(Icons.menu_rounded, size: 29, color: Color(0xFF123B68)),
+          )),
         const SizedBox(width: 3),
         const Expanded(child: Align(
           alignment: Alignment.centerLeft,
@@ -233,17 +234,7 @@ class _SideNav extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const AtlasLogo(size: 58),
-                  const SizedBox(height: 14),
-                  const Text(
-                    'THE ATLAS ACADEMY',
-                    style: TextStyle(
-                      color: AtlasColors.navy,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 13,
-                      letterSpacing: 1,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
+                  const SizedBox(height: 10),
                   const Text(
                     'YOUR MEDICAL LEARNING SPACE',
                     style: TextStyle(
