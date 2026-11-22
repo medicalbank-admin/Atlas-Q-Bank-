@@ -64,7 +64,7 @@ color: AtlasColors.royalBlue,
     if (snapshot.data != true) {
       return Scaffold(
         backgroundColor: const Color(0xFFF2F7FF),
-        appBar: AppBar(title: const Text('Student Management')),
+        appBar: AppBar(title: const Text('Student Management'), backgroundColor: const Color(0xFFF2F7FF), foregroundColor: AtlasColors.navy, elevation: 0),
         body: const Center(
           child: Text('Administrator access required.'),
         ),
