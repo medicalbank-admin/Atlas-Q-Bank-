@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../../app/atlas_academy_app.dart';
 import '../../advanced_learning/services/push_notification_service.dart';
@@ -9,43 +8,43 @@ class AdminNotificationsScreen extends StatefulWidget {
  @override State<AdminNotificationsScreen> createState()=>_AdminNotificationsScreenState();
 }
 class _AdminNotificationsScreenState extends State<AdminNotificationsScreen>{
- final _title=TextEditingController(),_body=TextEditingController(),_link=TextEditingController();
- bool _sending=false;
- Future<void> _publish() async {
-  if(_title.text.trim().isEmpty||_body.text.trim().isEmpty){_message('Enter both a title and message.',true);return;}
-  final publishedTitle=_title.text.trim();final publishedBody=_body.text.trim();
-  final link=_link.text.trim();
-  if(link.isNotEmpty){final uri=Uri.tryParse(link);if(uri==null||!['https','http'].contains(uri.scheme)){_message('Enter a valid http or https link.',true);return;}}
-  setState(()=>_sending=true);
+ final db=FirebaseFirestore.instance;
+ final title=TextEditingController(),body=TextEditingController(),image=TextEditingController(),destination=TextEditingController(),userIds=TextEditingController(),plan=TextEditingController(),pathway=TextEditingController();
+ String audience='all',subscriptionStatus='active';DateTime? scheduledAt;bool busy=false;
+ @override void dispose(){title.dispose();body.dispose();image.dispose();destination.dispose();userIds.dispose();plan.dispose();pathway.dispose();super.dispose();}
+ void toast(String s,[bool error=false]){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(s),backgroundColor:error?AtlasColors.error:AtlasColors.success));}
+ Widget field(TextEditingController c,String label,{int lines=1})=>Padding(padding:const EdgeInsets.only(bottom:10),child:TextField(controller:c,minLines:lines,maxLines:lines,decoration:InputDecoration(labelText:label)));
+ Future<void> chooseTime()async{final now=DateTime.now();final d=await showDatePicker(context:context,initialDate:now.add(const Duration(days:1)),firstDate:now,lastDate:now.add(const Duration(days:365)));if(d==null||!mounted)return;final t=await showTimePicker(context:context,initialTime:TimeOfDay.fromDateTime(now.add(const Duration(hours:1))));if(t!=null)setState(()=>scheduledAt=DateTime(d.year,d.month,d.day,t.hour,t.minute));}
+ Future<void> save({required String mode})async{
+  if(title.text.trim().isEmpty||body.text.trim().isEmpty){toast('Enter a title and message.',true);return;}
+  for(final s in [image.text.trim(),destination.text.trim()]){if(s.isNotEmpty){final u=Uri.tryParse(s);if(u==null||!['https','http'].contains(u.scheme)){toast('Image and destination must be valid http/https URLs.',true);return;}}}
+  if(audience=='selected'&&userIds.text.trim().isEmpty){toast('Enter student UIDs.',true);return;}
+  if(mode=='scheduled'&&(scheduledAt==null||!scheduledAt!.isAfter(DateTime.now()))){toast('Choose a future date and time.',true);return;}
+  setState(()=>busy=true);
   try{
-   await FirebaseFirestore.instance.collection('notifications').add({
-    'title':publishedTitle,'body':publishedBody,'audience':'all',
-    'isActive':true,'createdAt':FieldValue.serverTimestamp(),
-    if(link.isNotEmpty)'linkUrl':link,
-    'createdBy':FirebaseAuth.instance.currentUser?.uid,
-   });
-   try{final sent=await PushNotificationService().sendAnnouncement(title:publishedTitle,body:publishedBody);if(mounted)_message('Announcement and push notification sent to $sent devices.',false);}catch(e){if(mounted)_message('Announcement published in the app; push delivery unavailable: $e',true);}_title.clear();_body.clear();_link.clear();
-  }catch(e){if(mounted)_message('Could not publish: $e',true);}
-  finally{if(mounted)setState(()=>_sending=false);}
+   final ref=await db.collection('push_notifications').add({'title':title.text.trim(),'body':body.text.trim(),'imageUrl':image.text.trim(),'destination':destination.text.trim(),'audience':audience,'selectedUserIds':userIds.text.split(RegExp(r'[,\\n]')).map((v)=>v.trim()).where((v)=>v.isNotEmpty).toList(),'membershipPlan':plan.text.trim(),'medicalPathway':pathway.text.trim(),'subscriptionStatus':subscriptionStatus,'status':mode,'scheduledAt':scheduledAt==null?null:Timestamp.fromDate(scheduledAt!),'createdAt':FieldValue.serverTimestamp(),'updatedAt':FieldValue.serverTimestamp()});
+   if(mode=='sending'){
+    final result=await PushNotificationService().sendCampaign(notificationId:ref.id,title:title.text.trim(),body:body.text.trim(),imageUrl:image.text.trim(),destination:destination.text.trim(),audience:audience,membershipPlan:plan.text.trim(),medicalPathway:pathway.text.trim(),subscriptionStatus:subscriptionStatus,userIds:userIds.text.split(RegExp(r'[,\\n]')).map((v)=>v.trim()).where((v)=>v.isNotEmpty).toList());
+    await ref.update({'status':'sent','sentCount':result['sent']??0,'failedCount':result['failed']??0,'deviceCount':result['devices']??0,'sentAt':FieldValue.serverTimestamp()});
+    toast('Push sent. Devices: '+(result['sent']??0).toString()+'; failed: '+(result['failed']??0).toString());
+   }else{toast(mode=='draft'?'Draft saved.':'Notification scheduled.');}
+   title.clear();body.clear();image.clear();destination.clear();userIds.clear();setState(()=>scheduledAt=null);
+  }catch(e){toast('Notification failed: '+e.toString(),true);}finally{if(mounted)setState(()=>busy=false);}
  }
- Future<void> _toggle(String id,bool active) async{
-  try{await FirebaseFirestore.instance.collection('notifications').doc(id).update({'isActive':!active,'updatedAt':FieldValue.serverTimestamp()});}
-  catch(e){_message('Unable to update announcement: $e',true);}
- }
- Future<void> _delete(String id) async{
-  final yes=await showDialog<bool>(context:context,builder:(c)=>AlertDialog(title:const Text('Delete announcement?'),content:const Text('This cannot be undone.'),actions:[TextButton(onPressed:()=>Navigator.pop(c,false),child:const Text('Cancel')),FilledButton(onPressed:()=>Navigator.pop(c,true),child:const Text('Delete'))]));
-  if(yes==true){try{await FirebaseFirestore.instance.collection('notifications').doc(id).delete();}catch(e){_message('Delete failed: $e',true);}}
- }
- void _message(String s,bool error)=>ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(s),backgroundColor:error?AtlasColors.error:AtlasColors.success));
- @override void dispose(){_title.dispose();_body.dispose();_link.dispose();super.dispose();}
- @override Widget build(BuildContext context)=>Scaffold(backgroundColor:AtlasColors.ivory,appBar:AppBar(title:const Text('Notifications & Announcements')),body:ListView(padding:const EdgeInsets.all(18),children:[
- Container(padding:const EdgeInsets.all(20),decoration:BoxDecoration(gradient:const LinearGradient(colors:[AtlasColors.navy,AtlasColors.royalBlue]),borderRadius:BorderRadius.circular(22)),child:const Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Icon(Icons.campaign_rounded,color:AtlasColors.champagne,size:30),SizedBox(height:10),Text('Academy Announcements',style:TextStyle(color:Colors.white,fontSize:21,fontWeight:FontWeight.w900)),SizedBox(height:6),Text('Publish notices for students. You can pause or remove an announcement at any time.',style:TextStyle(color:Colors.white70,height:1.5))])),
- const SizedBox(height:20),const Text('Create Announcement',style:TextStyle(color:AtlasColors.navy,fontWeight:FontWeight.w900,fontSize:17)),const SizedBox(height:12),
- TextField(controller:_title,decoration:const InputDecoration(labelText:'Announcement title',prefixIcon:Icon(Icons.title_rounded))),
- const SizedBox(height:12),TextField(controller:_body,minLines:3,maxLines:6,decoration:const InputDecoration(labelText:'Message for students',alignLabelWithHint:true,prefixIcon:Icon(Icons.notes_rounded))),
- const SizedBox(height:12),TextField(controller:_link,keyboardType:TextInputType.url,decoration:const InputDecoration(labelText:'Optional action link (https://...)',prefixIcon:Icon(Icons.link_rounded))),
- const SizedBox(height:12),SizedBox(height:50,child:FilledButton.icon(onPressed:_sending?null:_publish,icon:const Icon(Icons.send_rounded),label:Text(_sending?'Publishing…':'Publish to Students'))),
- const SizedBox(height:25),const Text('Published Announcements',style:TextStyle(color:AtlasColors.navy,fontWeight:FontWeight.w900,fontSize:17)),const SizedBox(height:10),
- StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(stream:FirebaseFirestore.instance.collection('notifications').orderBy('createdAt',descending:true).snapshots(),builder:(context,snapshot){if(snapshot.hasError)return Text('Unable to load announcements: ${snapshot.error}');if(!snapshot.hasData)return const Center(child:CircularProgressIndicator());final docs=snapshot.data!.docs.where((d)=>d.data()['audience']=='all'||d.data()['userId']==null).toList();if(docs.isEmpty)return const Padding(padding:EdgeInsets.all(25),child:Text('No announcements have been published yet.',textAlign:TextAlign.center));return Column(children:docs.map((d){final data=d.data();final active=data['isActive']!=false;return Card(color:Colors.white,margin:const EdgeInsets.only(bottom:10),child:ListTile(title:Text((data['title']??'Announcement').toString(),style:const TextStyle(color:AtlasColors.navy,fontWeight:FontWeight.w800)),subtitle:Text((data['body']??'').toString(),maxLines:3,overflow:TextOverflow.ellipsis),leading:Icon(active?Icons.notifications_active_rounded:Icons.notifications_off_rounded,color:active?AtlasColors.royalBlue:AtlasColors.secondaryText),trailing:PopupMenuButton<String>(onSelected:(v){if(v=='toggle')_toggle(d.id,active);if(v=='delete')_delete(d.id);},itemBuilder:(_)=>[PopupMenuItem(value:'toggle',child:Text(active?'Pause':'Activate')),const PopupMenuItem(value:'delete',child:Text('Delete'))])));}).toList());})
- ]));
+ @override Widget build(BuildContext context)=>DefaultTabController(length:3,child:Scaffold(backgroundColor:AtlasColors.ivory,appBar:AppBar(title:const Text('Push Notification Center'),bottom:const TabBar(isScrollable:true,tabs:[Tab(text:'Compose'),Tab(text:'Scheduled & Drafts'),Tab(text:'History')])),body:TabBarView(children:[
+  ListView(padding:const EdgeInsets.all(16),children:[
+   Container(padding:const EdgeInsets.all(18),decoration:BoxDecoration(gradient:const LinearGradient(colors:[AtlasColors.navy,AtlasColors.royalBlue]),borderRadius:BorderRadius.circular(20)),child:const Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Icon(Icons.notifications_active,color:AtlasColors.champagne,size:30),SizedBox(height:8),Text('Targeted student communications',style:TextStyle(color:Colors.white,fontSize:19,fontWeight:FontWeight.w900)),SizedBox(height:5),Text('Compose, target, schedule and review campaigns.',style:TextStyle(color:Colors.white70))])),
+   const SizedBox(height:16),field(title,'Notification title'),field(body,'Message',lines:3),field(image,'Image URL (optional)'),field(destination,'Destination URL (optional)'),
+   DropdownButtonFormField<String>(value:audience,decoration:const InputDecoration(labelText:'Audience'),items:const [DropdownMenuItem(value:'all',child:Text('All students')),DropdownMenuItem(value:'selected',child:Text('Selected students')),DropdownMenuItem(value:'plan',child:Text('Membership plan')),DropdownMenuItem(value:'pathway',child:Text('Medical pathway')),DropdownMenuItem(value:'status',child:Text('Subscription status'))],onChanged:(v)=>setState(()=>audience=v??'all')),
+   if(audience=='selected')field(userIds,'Student UIDs (comma separated)',lines:3),
+   if(audience=='plan')field(plan,'Exact membership plan name'),
+   if(audience=='pathway')field(pathway,'Exact medical pathway name'),
+   if(audience=='status')DropdownButtonFormField<String>(value:subscriptionStatus,decoration:const InputDecoration(labelText:'Subscription status'),items:const [DropdownMenuItem(value:'active',child:Text('Active')),DropdownMenuItem(value:'expired',child:Text('Expired')),DropdownMenuItem(value:'pending',child:Text('Pending')),DropdownMenuItem(value:'inactive',child:Text('Inactive'))],onChanged:(v)=>setState(()=>subscriptionStatus=v??'active')),
+   const SizedBox(height:10),OutlinedButton.icon(onPressed:busy?null:chooseTime,icon:const Icon(Icons.schedule),label:const Text('Choose schedule date and time')),
+   Wrap(spacing:8,children:[OutlinedButton(onPressed:busy?null:()=>save(mode:'draft'),child:const Text('Save draft')),OutlinedButton(onPressed:busy?null:()=>save(mode:'scheduled'),child:const Text('Schedule')),FilledButton(onPressed:busy||scheduledAt!=null?null:()=>save(mode:'sending'),child:Text(busy?'Working…':'Send now'))])
+  ]),
+  list(['scheduled','draft'],'Scheduled notifications and drafts'),
+  list(['sent','failed','sending'],'Sent notification history')
+ ])));
+ Widget list(List<String> states,String label)=>StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(stream:db.collection('push_notifications').orderBy('createdAt',descending:true).limit(100).snapshots(),builder:(c,s){if(s.hasError)return Center(child:Text('Unable to load '+label+': '+s.error.toString()));if(!s.hasData)return const Center(child:CircularProgressIndicator());final docs=s.data!.docs.where((d)=>states.contains((d.data()['status']??'').toString())).toList();if(docs.isEmpty)return Center(child:Text('No '+label+' yet.'));return ListView(padding:const EdgeInsets.all(14),children:docs.map((d){final x=d.data();return Card(child:ListTile(title:Text((x['title']??'Notification').toString(),style:const TextStyle(color:AtlasColors.navy,fontWeight:FontWeight.w900)),subtitle:Text((x['body']??'').toString()+'\\nStatus: '+(x['status']??'').toString()+' • Sent: '+(x['sentCount']??0).toString()+' • Failed: '+(x['failedCount']??0).toString()),trailing:PopupMenuButton<String>(onSelected:(v){if(v=='delete')db.collection('push_notifications').doc(d.id).delete();},itemBuilder:(_)=>const [PopupMenuItem(value:'delete',child:Text('Delete'))])));}).toList());});
 }
