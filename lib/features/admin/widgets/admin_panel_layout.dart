@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../app/atlas_academy_app.dart';
+import '../../../shared/widgets/atlas_logo.dart';
 import 'admin_navigation_drawer.dart';
 
 class AdminPanelLayout extends StatelessWidget {
@@ -29,7 +30,12 @@ class AdminPanelLayout extends StatelessWidget {
         scrolledUnderElevation: 1,
         shadowColor: AtlasColors.navy.withValues(alpha: .08),
         titleSpacing: 18,
-        title: Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: AtlasColors.navy)),
+        title: Row(children: [
+          const AtlasLogo(size: 38),
+          const SizedBox(width: 10),
+          Expanded(child: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w900, color: AtlasColors.navy))),
+        ]),
         actions: [...actions, const SizedBox(width: 8)],
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
