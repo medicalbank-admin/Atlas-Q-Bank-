@@ -30,20 +30,47 @@ class StudentExamCentreScreen extends StatelessWidget {
   }
 
   Widget _pathwayScreen(BuildContext context) => Scaffold(
-    backgroundColor: AtlasColors.ivory, appBar: AppBar(title: const Text('Exam Pathways')),
-    body: StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(stream: FirebaseFirestore.instance.collection('licensing_pathways').where('isActive',isEqualTo:true).snapshots(), builder: (c,s) {
-      if (s.hasError) return const Center(child: Text('Unable to load pathways.'));
-      if (!s.hasData) return const Center(child: CircularProgressIndicator());
-      if (s.data!.docs.isEmpty) return const Center(child: Text('No licensing pathways are available yet.'));
-      return ListView(padding: const EdgeInsets.all(16), children: s.data!.docs.map((d) => Card(child: ExpansionTile(title: Text((d.data()['name'] ?? 'Pathway').toString()), subtitle: Text((d.data()['description'] ?? '').toString()), children: [
-        StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(stream: FirebaseFirestore.instance.collection('mcq_exam_sets').where('pathwayId',isEqualTo:d.id).where('trackType',isEqualTo:'licensing').where('isPublished',isEqualTo:true).snapshots(), builder: (c2,s2) {
-          if (!s2.hasData) return const Padding(padding: EdgeInsets.all(12), child: CircularProgressIndicator());
-          final sets = s2.data!.docs;
-          if (sets.isEmpty) return const ListTile(title: Text('No published sets yet.'));
-          return Column(children: sets.map((set) => ListTile(title: Text((set.data()['name'] ?? 'Exam').toString()), trailing: const Icon(Icons.play_arrow), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => StudentMcqPracticeScreen(examSetId: set.id)))).toList());
-        }),
-      ])).toList());
-    }),
+    backgroundColor: AtlasColors.ivory,
+    appBar: AppBar(title: const Text('Exam Pathways')),
+    body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance.collection('licensing_pathways').where('isActive', isEqualTo: true).snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) return const Center(child: Text('Unable to load pathways.'));
+        if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+        if (snapshot.data!.docs.isEmpty) return const Center(child: Text('No licensing pathways are available yet.'));
+        return ListView(
+          padding: const EdgeInsets.all(16),
+          children: snapshot.data!.docs.map((pathway) {
+            return Card(
+              child: ExpansionTile(
+                title: Text((pathway.data()['name'] ?? 'Pathway').toString()),
+                subtitle: Text((pathway.data()['description'] ?? '').toString()),
+                children: [
+                  StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                    stream: FirebaseFirestore.instance.collection('mcq_exam_sets')
+                      .where('pathwayId', isEqualTo: pathway.id)
+                      .where('trackType', isEqualTo: 'licensing')
+                      .where('isPublished', isEqualTo: true).snapshots(),
+                    builder: (context, setsSnapshot) {
+                      if (!setsSnapshot.hasData) return const Padding(padding: EdgeInsets.all(12), child: CircularProgressIndicator());
+                      final sets = setsSnapshot.data!.docs;
+                      if (sets.isEmpty) return const ListTile(title: Text('No published sets yet.'));
+                      return Column(children: sets.map((examSet) {
+                        return ListTile(
+                          title: Text((examSet.data()['name'] ?? 'Exam').toString()),
+                          trailing: const Icon(Icons.play_arrow),
+                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => StudentMcqPracticeScreen(examSetId: examSet.id))),
+                        );
+                      }).toList());
+                    },
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        );
+      },
+    ),
   );
 }
 
