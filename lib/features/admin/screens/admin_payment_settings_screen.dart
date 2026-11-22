@@ -82,10 +82,10 @@ class _AdminPaymentSettingsScreenState extends State<AdminPaymentSettingsScreen>
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFFF3F7FF),
+    backgroundColor: const Color(0xFFF2F7FF),
     appBar: AppBar(
       title: const Text('Payment & WhatsApp Settings'),
-      backgroundColor: const Color(0xFFF3F7FF),
+      backgroundColor: const Color(0xFFF2F7FF),
       foregroundColor: AtlasColors.navy,
       elevation: 0,
     ),
