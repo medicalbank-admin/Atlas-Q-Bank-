@@ -11,7 +11,7 @@ class AtlasPrimaryButton extends StatelessWidget {
     this.icon,
     this.isLoading = false,
     this.isFullWidth = true,
-    this.height = 56,
+    this.height = 54,
   });
 
   final String label;
@@ -33,13 +33,14 @@ class AtlasPrimaryButton extends StatelessWidget {
           foregroundColor: Colors.white,
           disabledBackgroundColor:
               AtlasColors.deepTeal.withValues(alpha: 0.5),
-          elevation: 0,
+          elevation: 1,
+          shadowColor: const Color(0x220E315A),
           padding: const EdgeInsets.symmetric(
             horizontal: 24,
           ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(
-              AtlasRadius.md,
+              22,
             ),
           ),
         ),
@@ -106,7 +107,7 @@ class AtlasOutlinedButton extends StatelessWidget {
           ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(
-              AtlasRadius.md,
+              22,
             ),
           ),
         ),
@@ -161,7 +162,7 @@ class AtlasGoldButton extends StatelessWidget {
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(
-              AtlasRadius.md,
+              22,
             ),
           ),
         ),
