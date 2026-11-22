@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/material.dart';
 
 /// Registers this installation for FCM delivery. A trusted server must send
 /// FCM HTTP v1 messages; client apps must never contain service-account keys.
@@ -19,12 +18,7 @@ class PushNotificationService {
       final token=await messaging.getToken();
       if(token!=null&&token.isNotEmpty)await _save(user.uid,token);
       _refresh??=messaging.onTokenRefresh.listen((value)=>_save(user.uid,value));
-      _foreground??=FirebaseMessaging.onMessage.listen((message){
-        final title=message.notification?.title??'The Atlas Academy';
-        final body=message.notification?.body??'You have a new notification.';
-        final context=appNavigatorKey.currentContext;
-        if(context!=null)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('$title: $body')));
-      });
+      _foreground??=FirebaseMessaging.onMessage.listen((message){});
     }catch(_){/* Push registration is optional when device permission/network is unavailable. */}
   }
   Future<void> _save(String uid,String token)async{
