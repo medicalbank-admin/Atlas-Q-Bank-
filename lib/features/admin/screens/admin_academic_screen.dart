@@ -39,7 +39,7 @@ class _AdminAcademicScreenState extends State<AdminAcademicScreen> {
   Widget build(BuildContext context) {
     if (_checking) {
       return const Scaffold(
-        backgroundColor: const Color(0xFFF3F7FF),
+        backgroundColor: const Color(0xFFF2F7FF),
         body: Center(
           child: CircularProgressIndicator(
             color: AtlasColors.royalBlue,
@@ -49,7 +49,7 @@ class _AdminAcademicScreenState extends State<AdminAcademicScreen> {
     }
     if (!_authorized) {
       return Scaffold(
-        backgroundColor: const Color(0xFFF3F7FF),
+        backgroundColor: const Color(0xFFF2F7FF),
         appBar: AppBar(title: const Text('Academic Management')),
         body: const Center(
           child: Text('Administrator access required.'),
@@ -57,19 +57,19 @@ class _AdminAcademicScreenState extends State<AdminAcademicScreen> {
       );
     }
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F7FF),
+      backgroundColor: const Color(0xFFF2F7FF),
       appBar: AppBar(
         title: const Text(
           'Academic Management',
           style: TextStyle(fontWeight: FontWeight.w900),
         ),
-        backgroundColor: AtlasColors.navy,
-        foregroundColor: Colors.white,
+        backgroundColor: const Color(0xFFF2F7FF),
+        foregroundColor: AtlasColors.navy,
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _showAddYearDialog,
-        backgroundColor: AtlasColors.navy,
-        foregroundColor: Colors.white,
+        backgroundColor: const Color(0xFFF2F7FF),
+        foregroundColor: AtlasColors.navy,
         icon: const Icon(Icons.add_rounded),
         label: const Text('Add Academic Year'),
       ),
