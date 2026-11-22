@@ -12,9 +12,10 @@ class StudentMcqHistoryScreen extends StatelessWidget {
       backgroundColor: AtlasColors.ivory,
       appBar: AppBar(
         title: const Text('Practice History'),
-        backgroundColor: AtlasColors.navy,
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.white,
+        foregroundColor: AtlasColors.navy,
         elevation: 0,
+        scrolledUnderElevation: 1,
       ),
       body: user == null
           ? const _HistoryMessage(
