@@ -18,18 +18,18 @@ class StudentPastPapersScreen extends StatelessWidget {
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [AtlasColors.navy, AtlasColors.royalBlue],
+                colors: [Color(0xFFE4F0FF), Color(0xFFD5E8FF)],
               ),
               borderRadius: BorderRadius.circular(19),
             ),
             child: const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.history_edu_rounded, color: AtlasColors.champagne, size: 32),
+                Icon(Icons.history_edu_rounded, color: AtlasColors.royalBlue, size: 32),
                 SizedBox(height: 10),
-                Text('Past Examination Papers', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900)),
+                Text('Past Examination Papers', style: TextStyle(color: AtlasColors.navy, fontSize: 20, fontWeight: FontWeight.w900)),
                 SizedBox(height: 6),
-                Text('Solve previous examination papers in a timed environment and review your performance.', style: TextStyle(color: Colors.white70, height: 1.5)),
+                Text('Solve previous examination papers in a timed environment and review your performance.', style: TextStyle(color: const Color(0xFF526B87), height: 1.5)),
               ],
             ),
           ),
