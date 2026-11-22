@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter/material.dart';
 
 /// Device registration is client-side; FCM message delivery is server-side.
 class PushNotificationService {
@@ -50,7 +51,7 @@ class PushNotificationService {
     return (decoded['sent'] as num?)?.toInt() ?? 0;
   }
 
-  Future<void> registerDevice() async {
+  Future<void> registerDevice(BuildContext context) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
     try {
@@ -66,7 +67,14 @@ class PushNotificationService {
       _refresh ??= messaging.onTokenRefresh.listen(
         (value) => _save(user.uid, value),
       );
-      _foreground ??= FirebaseMessaging.onMessage.listen((message) {});
+      _foreground ??= FirebaseMessaging.onMessage.listen((message) {
+        if (!context.mounted) return;
+        final title = message.notification?.title ?? 'The Atlas Academy';
+        final body = message.notification?.body ?? 'You have a new notification.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$title: $body')),
+        );
+      });
     } catch (_) {
       // Push registration is optional if permission or network is unavailable.
     }
