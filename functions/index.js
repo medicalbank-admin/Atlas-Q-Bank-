@@ -339,7 +339,7 @@ exports.startMcqPractice = onCall(
         throw new HttpsError("permission-denied", "An active subscription is required.");
       }
       const permissions = user.subscriptionAccessPermissions || {};
-      let requiredFeature = "mcqPractice";
+      let requiredFeatures = ["mcqPractice"];
       let durationMinutes = 60;
       let setData = null;
       if (examSetId) {
@@ -348,7 +348,7 @@ exports.startMcqPractice = onCall(
           throw new HttpsError("not-found", "This published exam set is unavailable.");
         }
         setData = setSnapshot.data();
-        const requiredFeatures = setData.trackType === "licensing"
+        requiredFeatures = setData.trackType === "licensing"
           ? ["examPathways"]
           : setData.trackType === "past_paper"
             ? ["pastPapers", "examinations"]
