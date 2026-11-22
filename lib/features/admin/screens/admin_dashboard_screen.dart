@@ -9,6 +9,7 @@ import '../../academic/screens/admin_learning_resources_screen.dart';
 import 'admin_mcq_bank_screen.dart';
 import 'admin_past_papers_screen.dart';
 import 'admin_mcq_curriculum_screen.dart';
+import 'admin_exam_management_screen.dart';
 import 'admin_students_screen.dart';
 import 'admin_subscription_plans_screen.dart';
 import 'admin_subscription_requests_screen.dart';
@@ -443,6 +444,13 @@ class AdminDashboardScreen extends StatelessWidget {
         subtitle: 'Live student, payment and content metrics',
         color: AtlasColors.gold,
         page: const AdminAnalyticsScreen(),
+      ),
+      _AdminItem(
+        icon: Icons.fact_check_rounded,
+        title: 'Examination Management',
+        subtitle: 'Manage subject exams, system exams and all mock categories',
+        color: AtlasColors.royalBlue,
+        page: const AdminExamManagementScreen(),
       ),
       _AdminItem(
         icon: Icons.account_tree_rounded,
