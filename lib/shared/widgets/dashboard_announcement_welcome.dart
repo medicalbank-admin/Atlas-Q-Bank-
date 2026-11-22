@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../app/atlas_academy_app.dart';
 
@@ -9,12 +10,26 @@ class DashboardAnnouncementWelcome extends StatefulWidget {
   @override State<DashboardAnnouncementWelcome> createState()=>_DashboardAnnouncementWelcomeState();
 }
 class _DashboardAnnouncementWelcomeState extends State<DashboardAnnouncementWelcome>{
+  // Process-memory session flag: it resets when the app process restarts.
+  // Firebase sign-out also resets it, including a later login by the same user.
+  static bool _popupShownThisSession=false;
+  static String? _sessionUid;
+  StreamSubscription<User?>? _authSubscription;
   Timer? _rotation;
   int _index=0;
   final Set<String> _popupSeenIds={};
   String _seenSignature='';
   List<QueryDocumentSnapshot<Map<String,dynamic>>> _active=[];
-  @override void dispose(){_rotation?.cancel();super.dispose();}
+  @override void initState(){
+    super.initState();
+    _handleAuthUser(FirebaseAuth.instance.currentUser);
+    _authSubscription=FirebaseAuth.instance.authStateChanges().listen(_handleAuthUser);
+  }
+  void _handleAuthUser(User? user){
+    if(user==null){_popupShownThisSession=false;_sessionUid=null;return;}
+    if(_sessionUid!=user.uid){_popupShownThisSession=false;_sessionUid=user.uid;}
+  }
+  @override void dispose(){_rotation?.cancel();_authSubscription?.cancel();super.dispose();}
   void _startRotation(){
     _rotation?.cancel();
     if(_active.length>1){
@@ -32,9 +47,10 @@ class _DashboardAnnouncementWelcomeState extends State<DashboardAnnouncementWelc
     _rotation?.cancel();
     if(mounted)setState((){});
     final unseen=_active.where((d)=>!_popupSeenIds.contains(d.id)).toList();
-    if(unseen.isNotEmpty){
+    if(unseen.isNotEmpty&&!_popupShownThisSession){
       final first=unseen.first;
       _popupSeenIds.add(first.id);
+      _popupShownThisSession=true;
       WidgetsBinding.instance.addPostFrameCallback((_)async{
         await _showInitialPopup(first.data());
         if(mounted)_startRotation();
