@@ -79,6 +79,34 @@
           "order": "ASCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "mcqs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "trackType",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "isPublished",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "mcqs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "examSetId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "isPublished",
+          "order": "ASCENDING"
+        }
+      ]
     }
   ],
   "fieldOverrides": []
