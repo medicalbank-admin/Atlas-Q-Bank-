@@ -41,6 +41,7 @@ class _AdminSubscriptionPlansScreenState
     'studyLibrary': 'Study Library & Learning Resources',
     'mcqPractice': 'MCQ Practice',
     'examinations': 'Examinations',
+    'pastPapers': 'Past Papers',
     'examPathways': 'Exam Pathways',
   };
 
