@@ -87,7 +87,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen>{
         const AtlasLogo(size: 58),
         const SizedBox(width: 9),
         const Expanded(child: Text(
-          'The Atlas\\nAcademy',
+          'The Atlas\nAcademy',
           style: TextStyle(
             color: Color(0xFF123B68), fontFamily: 'Georgia',
             fontSize: 21, height: 1.02, fontWeight: FontWeight.w700,
