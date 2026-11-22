@@ -13,6 +13,8 @@ import '../../academic/screens/student_study_library_screen.dart';
 import '../../academic/screens/student_exam_centre_screen.dart';
 import '../../academic/screens/student_past_papers_screen.dart';
 import '../../subscriptions/screens/subscription_plans_screen.dart';
+import '../../advanced_learning/screens/advanced_student_tools_screen.dart';
+import '../../advanced_learning/services/push_notification_service.dart';
 
 class StudentDashboardScreen extends StatefulWidget {
  const StudentDashboardScreen({super.key});
@@ -20,6 +22,7 @@ class StudentDashboardScreen extends StatefulWidget {
 }
 class _StudentDashboardScreenState extends State<StudentDashboardScreen>{
  int selected=0;
+ @override void initState(){super.initState();PushNotificationService().registerDevice();}
  Future<void> signOut()async{try{await StudentAuthService().signOut();if(mounted)Navigator.of(context).popUntil((r)=>r.isFirst);}catch(_){if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Unable to sign out.')));}}
  Future<void> openFeature(String key)async{
   final u=FirebaseAuth.instance.currentUser;if(u==null)return;
@@ -30,7 +33,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen>{
    final snap=await FirebaseFirestore.instance.collection('users').doc(u.uid).get();final d=snap.data()??{};
    final p=Map<String,dynamic>.from(d['subscriptionAccessPermissions']??const{});final e=d['subscriptionExpiryAt'];
    final valid=e is Timestamp&&e.toDate().isAfter(DateTime.now());
-   final allowed=key=='pastPapers'?(p['pastPapers']==true||p['examinations']==true):p[key]==true;
+   final permissionKey=key=='clinicalCases'?'clinicalCases':key;
+   final allowed=key=='pastPapers'?(p['pastPapers']==true||p['examinations']==true):p[permissionKey]==true;
    if(!mounted)return;
    if(d['subscriptionStatus']!='active'||d['accessEnabled']!=true||!valid||!allowed){await Navigator.push(context,MaterialPageRoute(builder:(_)=>const SubscriptionPlansScreen()));return;}
    Widget? page;
@@ -41,10 +45,10 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen>{
    if(page!=null)await Navigator.push(context,MaterialPageRoute(builder:(_)=>page!));
   }catch(_){if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Unable to check membership.')));}
  }
- Future<void> select(int i)async{setState(()=>selected=i);if(MediaQuery.sizeOf(context).width<850)Navigator.of(context).maybePop();if(i>0){const keys=['','studyLibrary','mcqPractice','pastPapers','examinations','examPathways','membership','account'];await openFeature(keys[i]);if(mounted)setState(()=>selected=0);}}
+ Future<void> select(int i)async{setState(()=>selected=i);if(MediaQuery.sizeOf(context).width<850)Navigator.of(context).maybePop();if(i>0){const keys=['','studyLibrary','mcqPractice','pastPapers','examinations','examPathways','clinicalCases','mistakesNotebook','mockPredictions','discussionForum','askTeacher','membership','account'];await openFeature(keys[i]);if(mounted)setState(()=>selected=0);}}
  @override Widget build(BuildContext context){
   final wide=MediaQuery.sizeOf(context).width>=850;final u=FirebaseAuth.instance.currentUser;final name=u?.displayName?.trim().isNotEmpty==true?u!.displayName!.trim():'Student';
-  final pages=<Widget>[_Home(name:name,onMembership:()=>openFeature('membership')),_FeaturePage('Study Library',Icons.menu_book_rounded,()=>openFeature('studyLibrary')),_FeaturePage('MCQ Practice',Icons.quiz_rounded,()=>openFeature('mcqPractice')),_FeaturePage('Past Papers',Icons.history_edu_rounded,()=>openFeature('pastPapers')),_FeaturePage('Examinations',Icons.assignment_rounded,()=>openFeature('examinations')),_FeaturePage('Exam Pathways',Icons.route_rounded,()=>openFeature('examPathways')),_FeaturePage('Membership',Icons.workspace_premium_rounded,()=>openFeature('membership')),_FeaturePage('Account Status',Icons.verified_user_rounded,()=>openFeature('account'))];
+  final pages=<Widget>[_Home(name:name,onMembership:()=>openFeature('membership')),_FeaturePage('Study Library',Icons.menu_book_rounded,()=>openFeature('studyLibrary')),_FeaturePage('MCQ Practice',Icons.quiz_rounded,()=>openFeature('mcqPractice')),_FeaturePage('Past Papers',Icons.history_edu_rounded,()=>openFeature('pastPapers')),_FeaturePage('Examinations',Icons.assignment_rounded,()=>openFeature('examinations')),_FeaturePage('Exam Pathways',Icons.route_rounded,()=>openFeature('examPathways')),_FeaturePage('Clinical Cases',Icons.medical_services_rounded,()=>openFeature('clinicalCases')),_FeaturePage('Mistakes Notebook',Icons.bookmark_added_rounded,()=>openFeature('mistakesNotebook')),_FeaturePage('Mock Exam Readiness',Icons.insights_rounded,()=>openFeature('mockPredictions')),_FeaturePage('Discussion Forum',Icons.forum_rounded,()=>openFeature('discussionForum')),_FeaturePage('Ask a Teacher',Icons.support_agent_rounded,()=>openFeature('askTeacher')),_FeaturePage('Membership',Icons.workspace_premium_rounded,()=>openFeature('membership')),_FeaturePage('Account Status',Icons.verified_user_rounded,()=>openFeature('account'))];
   return Scaffold(backgroundColor:AtlasColors.ivory,drawer:wide?null:Drawer(backgroundColor:AtlasColors.navy,child:_SideNav(selected:selected,onSelect:select,onSignOut:signOut,onProfile:()=>openFeature('profile'))),body:SafeArea(child:Row(children:[
    if(wide)SizedBox(width:265,child:_SideNav(selected:selected,onSelect:select,onSignOut:signOut,onProfile:()=>openFeature('profile'))),
    Expanded(child:Column(children:[
@@ -63,7 +67,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen>{
 class _SideNav extends StatelessWidget{
  final int selected;final ValueChanged<int> onSelect;final VoidCallback onSignOut,onProfile;
  const _SideNav({required this.selected,required this.onSelect,required this.onSignOut,required this.onProfile});
- static const items=[(Icons.home_rounded,'Home'),(Icons.menu_book_rounded,'Study Library'),(Icons.quiz_rounded,'MCQ Practice'),(Icons.history_edu_rounded,'Past Papers'),(Icons.assignment_rounded,'Examinations'),(Icons.route_rounded,'Exam Pathways'),(Icons.workspace_premium_rounded,'Membership'),(Icons.verified_user_rounded,'Account Status')];
+ static const items=[(Icons.home_rounded,'Home'),(Icons.menu_book_rounded,'Study Library'),(Icons.quiz_rounded,'MCQ Practice'),(Icons.history_edu_rounded,'Past Papers'),(Icons.assignment_rounded,'Examinations'),(Icons.route_rounded,'Exam Pathways'),(Icons.medical_services_rounded,'Clinical Cases'),(Icons.bookmark_added_rounded,'Mistakes Notebook'),(Icons.insights_rounded,'Mock Exam Readiness'),(Icons.forum_rounded,'Discussion Forum'),(Icons.support_agent_rounded,'Ask a Teacher'),(Icons.workspace_premium_rounded,'Membership'),(Icons.verified_user_rounded,'Account Status')];
  @override Widget build(BuildContext context)=>Container(color:AtlasColors.navy,child:Column(children:[
   Padding(padding:const EdgeInsets.fromLTRB(19,25,19,22),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[const AtlasLogo(size:58),const SizedBox(height:14),const Text('THE ATLAS ACADEMY',style:TextStyle(color:Colors.white,fontWeight:FontWeight.w900,fontSize:13,letterSpacing:1)),const SizedBox(height:5),Text('YOUR MEDICAL LEARNING SPACE',style:TextStyle(color:Colors.white.withValues(alpha:.55),fontSize:8,letterSpacing:1)),const SizedBox(height:18),Container(height:1,color:Colors.white.withValues(alpha:.13))])),
   Expanded(child:ListView(padding:const EdgeInsets.symmetric(horizontal:10),children:[for(var i=0;i<items.length;i++)Padding(padding:const EdgeInsets.only(bottom:5),child:Material(color:selected==i?Colors.white.withValues(alpha:.14):Colors.transparent,borderRadius:BorderRadius.circular(13),child:InkWell(onTap:()=>onSelect(i),borderRadius:BorderRadius.circular(13),child:Padding(padding:const EdgeInsets.symmetric(horizontal:13,vertical:13),child:Row(children:[Icon(items[i].$1,color:selected==i?AtlasColors.champagne:Colors.white70,size:20),const SizedBox(width:12),Expanded(child:Text(items[i].$2,style:TextStyle(color:selected==i?Colors.white:Colors.white70,fontSize:12,fontWeight:selected==i?FontWeight.w900:FontWeight.w600))),if(selected==i)const Icon(Icons.circle,size:6,color:AtlasColors.champagne)])))))])),
