@@ -261,7 +261,7 @@ class McqManagementService {
     if (question.trackType == 'licensing' && question.pathwayId.trim().isEmpty) {
       throw Exception('Licensing pathway is required.');
     }
-    if (question.trackType != 'mbbs' && question.trackType != 'licensing') {
+    if (!['mbbs', 'licensing', 'past_paper'].contains(question.trackType)) {
       throw Exception('Select a valid MCQ track.');
     }
     if (question.examSetId.trim().isEmpty) throw Exception('Exam set is required.');
