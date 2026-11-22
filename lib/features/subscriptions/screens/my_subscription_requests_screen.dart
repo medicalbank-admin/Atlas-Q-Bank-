@@ -25,9 +25,10 @@ class _MySubscriptionRequestsScreenState
       backgroundColor: AtlasColors.ivory,
       appBar: AppBar(
         title: const Text('My Requests'),
-        backgroundColor: AtlasColors.ivory,
-        foregroundColor: AtlasColors.deepTeal,
+        backgroundColor: Colors.white,
+        foregroundColor: AtlasColors.navy,
         elevation: 0,
+        scrolledUnderElevation: 1,
       ),
       body: StreamBuilder<List<SubscriptionRequestModel>>(
         stream: _service.watchMyRequests(),
@@ -35,7 +36,7 @@ class _MySubscriptionRequestsScreenState
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
               child: CircularProgressIndicator(
-                color: AtlasColors.oceanTeal,
+                color: AtlasColors.royalBlue,
               ),
             );
           }
@@ -51,7 +52,7 @@ class _MySubscriptionRequestsScreenState
           }
 
           return RefreshIndicator(
-            color: AtlasColors.oceanTeal,
+            color: AtlasColors.royalBlue,
             onRefresh: () async {
               await Future<void>.delayed(
                 const Duration(milliseconds: 500),
@@ -67,7 +68,7 @@ class _MySubscriptionRequestsScreenState
                   style: TextStyle(
                     fontSize: 19,
                     fontWeight: FontWeight.bold,
-                    color: AtlasColors.deepTeal,
+                    color: AtlasColors.navy,
                   ),
                 ),
                 const SizedBox(height: 14),
@@ -96,8 +97,8 @@ class _MySubscriptionRequestsScreenState
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [
-            AtlasColors.deepTeal,
-            AtlasColors.oceanTeal,
+            AtlasColors.navy,
+            AtlasColors.royalBlue,
           ],
         ),
         borderRadius: BorderRadius.circular(20),
@@ -162,9 +163,7 @@ class _MySubscriptionRequestsScreenState
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(19),
-        border: Border.all(
-          color: Colors.grey.shade200,
-        ),
+        border: Border.all(color: AtlasColors.border),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.035),
@@ -183,7 +182,7 @@ class _MySubscriptionRequestsScreenState
                 child: Text(
                   request.planName,
                   style: const TextStyle(
-                    color: AtlasColors.deepTeal,
+                    color: AtlasColors.navy,
                     fontSize: 17,
                     fontWeight: FontWeight.bold,
                   ),
@@ -196,7 +195,7 @@ class _MySubscriptionRequestsScreenState
           Text(
             '${request.currency} ${request.amount.toStringAsFixed(2)}',
             style: const TextStyle(
-              color: AtlasColors.oceanTeal,
+              color: AtlasColors.royalBlue,
               fontSize: 21,
               fontWeight: FontWeight.bold,
             ),
@@ -356,7 +355,7 @@ class _MySubscriptionRequestsScreenState
         Icon(
           icon,
           size: 17,
-          color: AtlasColors.oceanTeal,
+          color: AtlasColors.royalBlue,
         ),
         const SizedBox(width: 9),
         SizedBox(
@@ -440,14 +439,14 @@ class _MySubscriptionRequestsScreenState
               child: const Icon(
                 Icons.receipt_long_outlined,
                 size: 48,
-                color: AtlasColors.deepTeal,
+                color: AtlasColors.navy,
               ),
             ),
             const SizedBox(height: 22),
             const Text(
               'No Requests Yet',
               style: TextStyle(
-                color: AtlasColors.deepTeal,
+                color: AtlasColors.navy,
                 fontSize: 21,
                 fontWeight: FontWeight.bold,
               ),
@@ -484,7 +483,7 @@ class _MySubscriptionRequestsScreenState
             const Text(
               'Unable to Load Requests',
               style: TextStyle(
-                color: AtlasColors.deepTeal,
+                color: AtlasColors.navy,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
