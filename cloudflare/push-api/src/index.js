@@ -21,10 +21,37 @@ async function patchDoc(env,path,fields){const names=Object.keys(fields);const q
 async function listCollection(env,name,limit){const token=await access(env);const r=await fetch(DOCS+":runQuery",{method:"POST",headers:{Authorization:"Bearer "+token,"Content-Type":"application/json"},body:JSON.stringify({structuredQuery:{from:[{collectionId:name}],limit:limit||5000}})});const d=await r.json();if(!r.ok)throw Error(d.error&&d.error.message||"Unable to read "+name);return (Array.isArray(d)?d:[]).filter(x=>x.document).map(x=>({name:x.document.name,id:x.document.name.split("/").pop(),data:decode(x.document.fields||{})}));}
 async function getUser(env,uid){try{return decode((await firestore(env,"/users/"+encodeURIComponent(uid))).fields||{});}catch(_){return {};}}
 function matches(u,b){const a=b.audience||"all";if(a==="selected")return (b.userIds||[]).includes(u.uid);if(a==="plan"){const p=String(u.membershipPlan||u.planName||u.subscriptionPlanName||"");return p.toLowerCase()===String(b.membershipPlan||"").toLowerCase();}if(a==="pathway"){const p=String(u.medicalPathway||u.pathway||u.selectedPathway||"");return p.toLowerCase()===String(b.medicalPathway||"").toLowerCase();}if(a==="status"){const s=String(u.subscriptionStatus||u.membershipStatus||"inactive").toLowerCase();return s===String(b.subscriptionStatus||"").toLowerCase();}return true;}
+async function createInboxNotice(env,id,uid,b){
+const safeId=String(id||"push_notice").replace(/[^A-Za-z0-9_-]/g,"_").slice(0,90)+"_"+String(uid).slice(0,40);
+const token=await access(env);
+const fields={
+ userId:{stringValue:String(uid)},
+ audience:{stringValue:"selected"},
+ isActive:{booleanValue:true},
+ title:{stringValue:String(b.title||"The Atlas Academy")},
+ body:{stringValue:String(b.body||"You have a new academy notification.")},
+ destination:{stringValue:String(b.destination||"")},
+ createdAt:{timestampValue:new Date().toISOString()}
+};
+const r=await fetch(DOCS+"/notifications?documentId="+encodeURIComponent(safeId),{
+ method:"POST",
+ headers:{Authorization:"Bearer "+token,"Content-Type":"application/json"},
+ body:JSON.stringify({fields})
+});
+if(r.status===409)return false;
+if(!r.ok){const d=await r.json().catch(()=>({}));throw Error(d.error&&d.error.message||"Unable to save student inbox notification.");}
+return true;
+}
 async function sendCampaign(env,b){const all=await listCollection(env,"user_device_tokens",5000);const byUid=new Map();for(const row of all){const d=row.data;if(d.active!==true||!d.token||!d.userId)continue;if(!byUid.has(d.userId))byUid.set(d.userId,[]);byUid.get(d.userId).push(d.token);}
 const users=[];for(const [uid,tokens] of byUid){const u=await getUser(env,uid);u.uid=uid;if(matches(u,b))for(const token of tokens)users.push({uid:uid,token:token});}
 const results={sent:0,failed:0,devices:users.length};const bearer=await access(env);
 for(let i=0;i<users.length;i+=20){const group=users.slice(i,i+20);const replies=await Promise.all(group.map(x=>fetch(FCM,{method:"POST",headers:{Authorization:"Bearer "+bearer,"Content-Type":"application/json"},body:JSON.stringify({message:{token:x.token,notification:{title:b.title,body:b.body,image:b.imageUrl||undefined},data:{notificationId:b.notificationId||"",destination:b.destination||"",screen:"notifications"},android:{priority:"high",notification:{sound:"default",image:b.imageUrl||undefined}},apns:{payload:{aps:{sound:"default"}},fcm_options:b.imageUrl?{image:b.imageUrl}:undefined}}})})));for(let j=0;j<replies.length;j++){if(replies[j].ok)results.sent++;else{results.failed++;if(replies[j].status===404||replies[j].status===400){try{await patchDoc(env,"/user_device_tokens/"+encodeURIComponent(users[i+j].token),{active:false});}catch(_){}}}}}
+const inboxRecipients=[...new Set(users.map(x=>x.uid))];
+const inboxId=String(b.notificationId||("push_"+Date.now()));
+for(let i=0;i<inboxRecipients.length;i+=25){
+ const batch=inboxRecipients.slice(i,i+25);
+ await Promise.all(batch.map(uid=>createInboxNotice(env,inboxId,uid,b).catch(()=>false)));
+}
 return results;}
 async function createLog(env,id,fields){const token=await access(env);const body={fields:{}};for(const k in fields)body.fields[k]=enc(fields[k]);const r=await fetch(DOCS+"/push_notifications?documentId="+encodeURIComponent(id),{method:"POST",headers:{Authorization:"Bearer "+token,"Content-Type":"application/json"},body:JSON.stringify(body)});if(r.status===409)return false;if(!r.ok){const d=await r.json().catch(()=>({}));throw Error(d.error&&d.error.message||"Unable to save notification log.");}return true;}
 async function processExpiryReminders(env){const rows=await listCollection(env,"users",5000);const now=Date.now();for(const row of rows){const u=row.data;const uid=row.id;const expiry=u.subscriptionExpiryAt;if(!expiry||u.subscriptionStatus!=="active")continue;const date=Date.parse(expiry);if(!Number.isFinite(date))continue;const days=Math.ceil((date-now)/86400000);if(![7,3,1,0].includes(days))continue;const logId="membership_expiry_"+uid+"_"+days;let exists=true;try{await firestore(env,"/push_notifications/"+encodeURIComponent(logId));}catch(_){exists=false;}if(exists)continue;const body=days===0?"Your membership expires today. Renew now to avoid interruption.":"Your membership expires in "+days+" days. Renew early to keep your learning access active.";const payload={notificationId:logId,title:days===0?"Membership expires today":"Membership renewal reminder",body:body,destination:"membership",audience:"selected",userIds:[uid]};try{const result=await sendCampaign(env,payload);if(result.devices>0){await createLog(env,logId,{title:payload.title,body:body,audience:"selected",status:"sent",sentCount:result.sent,failedCount:result.failed,deviceCount:result.devices,createdAt:new Date().toISOString(),automaticType:"membership_expiry",studentUid:uid,daysRemaining:days});}}catch(_){} }}
