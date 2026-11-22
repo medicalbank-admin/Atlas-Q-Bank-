@@ -39,7 +39,7 @@ class _AdminAcademicScreenState extends State<AdminAcademicScreen> {
   Widget build(BuildContext context) {
     if (_checking) {
       return const Scaffold(
-        backgroundColor: AtlasColors.ivory,
+        backgroundColor: const Color(0xFFF3F7FF),
         body: Center(
           child: CircularProgressIndicator(
             color: AtlasColors.royalBlue,
@@ -49,7 +49,7 @@ class _AdminAcademicScreenState extends State<AdminAcademicScreen> {
     }
     if (!_authorized) {
       return Scaffold(
-        backgroundColor: AtlasColors.ivory,
+        backgroundColor: const Color(0xFFF3F7FF),
         appBar: AppBar(title: const Text('Academic Management')),
         body: const Center(
           child: Text('Administrator access required.'),
@@ -57,7 +57,7 @@ class _AdminAcademicScreenState extends State<AdminAcademicScreen> {
       );
     }
     return Scaffold(
-      backgroundColor: AtlasColors.ivory,
+      backgroundColor: const Color(0xFFF3F7FF),
       appBar: AppBar(
         title: const Text(
           'Academic Management',
@@ -179,14 +179,14 @@ class _AdminAcademicScreenState extends State<AdminAcademicScreen> {
             children: [
               Icon(
                 Icons.account_balance_rounded,
-                color: AtlasColors.champagne,
+                color: AtlasColors.royalBlue,
                 size: 29,
               ),
               SizedBox(width: 11),
               Text(
                 'ACADEMIC STRUCTURE',
                 style: TextStyle(
-                  color: AtlasColors.champagne,
+                  color: AtlasColors.royalBlue,
                   fontSize: 10,
                   letterSpacing: 1.4,
                   fontWeight: FontWeight.w900,
@@ -295,7 +295,7 @@ class _AdminAcademicScreenState extends State<AdminAcademicScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(19),
-        border: Border.all(color: AtlasColors.border),
+        border: Border.all(color: const Color(0xFFE0EAF5)),
         boxShadow: [
           BoxShadow(
             color: AtlasColors.navy.withValues(alpha: 0.035),
@@ -414,7 +414,7 @@ class _AdminAcademicScreenState extends State<AdminAcademicScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(21),
-        border: Border.all(color: AtlasColors.border),
+        border: Border.all(color: const Color(0xFFE0EAF5)),
       ),
       child: Column(
         children: [
