@@ -22,7 +22,7 @@ class _MySubscriptionRequestsScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AtlasColors.ivory,
+      backgroundColor: const Color(0xFFF3F7FF),
       appBar: AppBar(
         title: const Text('My Requests'),
         backgroundColor: Colors.white,
