@@ -84,7 +84,7 @@ title: const Text(
 'Student Management',
 style: TextStyle(fontWeight: FontWeight.w800),
 ),
-backgroundColor: Colors.white,
+backgroundColor: const Color(0xFFF2F7FF),
 foregroundColor: AtlasColors.navy,
 elevation: 0,
 ),
@@ -265,7 +265,7 @@ filled: true,
 fillColor: Colors.white,
 contentPadding: const EdgeInsets.symmetric(vertical: 16),
 border: OutlineInputBorder(
-borderRadius: BorderRadius.circular(17),
+borderRadius: BorderRadius.circular(21),
 borderSide: const BorderSide(color: AtlasColors.border),
 ),
 enabledBorder: OutlineInputBorder(
