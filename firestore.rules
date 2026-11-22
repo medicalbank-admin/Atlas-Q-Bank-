@@ -519,6 +519,14 @@ service cloud.firestore {
     }
 
     // ==================================================
+    // PUSH NOTIFICATION CAMPAIGNS
+    // Campaign drafts, scheduled jobs and send history are admin-managed.
+    // ==================================================
+    match /push_notifications/{notificationId} {
+      allow read, create, update, delete: if isAdmin();
+    }
+
+    // ==================================================
     // NOTIFICATIONS
     // ==================================================
 
