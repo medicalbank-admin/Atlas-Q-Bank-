@@ -21,7 +21,7 @@ class StudentExamCentreScreen extends StatelessWidget {
     final title = _titles[section] ?? 'Examinations';
     return Scaffold(
       backgroundColor: const Color(0xFFF2F7FF),
-      appBar: AppBar(title: Text(title), backgroundColor: Colors.white, foregroundColor: AtlasColors.navy, elevation: 0, scrolledUnderElevation: 0),
+      appBar: AppBar(title: Text(title), backgroundColor: const Color(0xFFF2F7FF), foregroundColor: AtlasColors.navy, elevation: 0, scrolledUnderElevation: 0),
       body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         // Restrict the stream to the new structured exam model.
         stream: FirebaseFirestore.instance
@@ -66,14 +66,14 @@ class StudentExamCentreScreen extends StatelessWidget {
               'grand_mock': 'Grand Mocks',
             };
             return ListView(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 22),
+              padding: const EdgeInsets.fromLTRB(18, 17, 18, 28),
               children: mockLabels.entries.map((entry) {
                 final group = docs.where((doc) =>
                     doc.data()['examCategory'] == entry.key).toList();
                 return Card(
                   color: Colors.white,
                   elevation: 0,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18), side: const BorderSide(color: AtlasColors.border)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22), side: const BorderSide(color: Color(0xFFE0EAF5))),
                   margin: const EdgeInsets.only(bottom: 12),
                   child: ExpansionTile(
                     initiallyExpanded: true,
@@ -130,12 +130,13 @@ class StudentExamCentreScreen extends StatelessWidget {
       List<QueryDocumentSnapshot<Map<String, dynamic>>> docs) {
     return docs.map((doc) {
       final data = doc.data();
-      return ListTile(
-        leading: const CircleAvatar(
-          backgroundColor: AtlasColors.paleBlue,
-          child: Icon(Icons.assignment_turned_in_rounded,
-              color: AtlasColors.royalBlue),
-        ),
+      return Container(
+        margin: const EdgeInsets.fromLTRB(12, 3, 12, 7),
+        decoration: BoxDecoration(color: const Color(0xFFFAFCFF), borderRadius: BorderRadius.circular(17)),
+        child: ListTile(
+        leading: Container(width: 46, height: 46, decoration: BoxDecoration(
+          color: const Color(0xFFE5F1FF), borderRadius: BorderRadius.circular(15)),
+          child: const Icon(Icons.assignment_turned_in_rounded, color: AtlasColors.royalBlue)),
         title: Text((data['name'] ?? 'Exam').toString(),
             style: const TextStyle(color: AtlasColors.navy,
                 fontWeight: FontWeight.w800)),
