@@ -75,10 +75,174 @@ class _MistakesNotebookScreenState extends State<MistakesNotebookScreen>{
  @override Widget build(BuildContext context)=>Scaffold(backgroundColor:AtlasColors.ivory,appBar:AppBar(title:const Text('Mistakes Notebook'),actions:[IconButton(tooltip:'Sync incorrect answers from attempts',onPressed:importMistakes,icon:const Icon(Icons.sync_rounded))]),floatingActionButton:FloatingActionButton.extended(onPressed:importMistakes,icon:const Icon(Icons.download_rounded),label:const Text('Sync mistakes')),body:uid==null?const SizedBox():StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(stream:FirebaseFirestore.instance.collection('mistake_notebook').where('userId',isEqualTo:uid).snapshots(),builder:(c,s){if(s.hasError)return Center(child:Text('Unable to load notebook: ${s.error}'));if(!s.hasData)return const Center(child:CircularProgressIndicator());final docs=s.data!.docs;if(docs.isEmpty)return const _EmptyState('Your incorrect and unanswered questions will appear here. Tap Sync mistakes to import your exam history.',Icons.menu_book_rounded);return ListView(padding:const EdgeInsets.all(15),children:[Text('${docs.length} saved revision items',style:const TextStyle(color:AtlasColors.secondaryText,fontWeight:FontWeight.w700)),const SizedBox(height:12),...docs.map((doc){final d=doc.data();return Card(margin:const EdgeInsets.only(bottom:10),child:Padding(padding:const EdgeInsets.all(15),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Row(children:[Expanded(child:Text((d['subject']??'General').toString()+' • '+(d['topic']??'').toString(),style:const TextStyle(color:AtlasColors.royalBlue,fontSize:10,fontWeight:FontWeight.w900))),Chip(label:Text(d['isReviewed']==true?'Reviewed':'To review'),backgroundColor:d['isReviewed']==true?const Color(0xFFE8F5EC):const Color(0xFFFFF3D9))]),Text((d['question']??'').toString(),style:const TextStyle(color:AtlasColors.navy,fontWeight:FontWeight.w800,height:1.5)),const SizedBox(height:8),Text('Your answer: ${d['selectedAnswer']??'Skipped'}   •   Correct: ${d['correctAnswer']??'—'}',style:const TextStyle(color:AtlasColors.charcoal,fontSize:12)),if((d['explanation']??'').toString().isNotEmpty)Padding(padding:const EdgeInsets.only(top:8),child:Text(d['explanation'].toString(),style:const TextStyle(color:AtlasColors.secondaryText,height:1.5))),if((d['personalNote']??'').toString().isNotEmpty)Padding(padding:const EdgeInsets.only(top:8),child:Text('My note: ${d['personalNote']}',style:const TextStyle(color:AtlasColors.charcoal,fontStyle:FontStyle.italic))),Align(alignment:Alignment.centerRight,child:TextButton.icon(onPressed:()=>updateNote(doc.id,d),icon:const Icon(Icons.edit_note_rounded),label:const Text('Add revision note')))])));})]);}));
 }
 
-class MockExamPredictionScreen extends StatelessWidget{const MockExamPredictionScreen({super.key});@override Widget build(BuildContext context){final uid=FirebaseAuth.instance.currentUser?.uid;return Scaffold(backgroundColor:AtlasColors.ivory,appBar:AppBar(title:const Text('Mock Exam Readiness')),body:uid==null?const SizedBox():StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(stream:FirebaseFirestore.instance.collection('mcq_attempts').where('userId',isEqualTo:uid).snapshots(),builder:(c,s){if(s.hasError)return Center(child:Text('Unable to analyse results: ${s.error}'));if(!s.hasData)return const Center(child:CircularProgressIndicator());final docs=[...s.data!.docs]..sort((a,b)=>(b.data()['completedAt'] as Timestamp? ?? Timestamp(0,0)).compareTo(a.data()['completedAt'] as Timestamp? ?? Timestamp(0,0)));final scores=docs.take(10).map((d)=>(d.data()['percentage'] as num?)?.toDouble()).whereType<double>().toList();if(scores.isEmpty)return const _EmptyState('Complete a few practice examinations to unlock your readiness analysis.',Icons.insights_rounded);final recent=scores.reversed.take(10).toList();final avg=recent.reduce((a,b)=>a+b)/recent.length;final confidence=(avg*(0.75+0.25*(recent.length/10))).clamp(0,100).toDouble();final label=confidence>=85?'Strong readiness':confidence>=70?'Promising progress':confidence>=50?'Developing readiness':'More preparation recommended';final subjects=<String,List<double>>{};for(final doc in docs){final answers=doc.data()['answers'];if(answers is! List)continue;for(final raw in answers){if(raw is! Map)continue;final a=Map<String,dynamic>.from(raw);final sub=(a['subject']??'General').toString();subjects.putIfAbsent(sub,()=>[]).add(a['isCorrect']==true?100:0);}}final weak=subjects.entries.map((e)=>MapEntry(e.key,e.value.reduce((a,b)=>a+b)/e.value.length)).toList()..sort((a,b)=>a.value.compareTo(b.value));return ListView(padding:const EdgeInsets.all(18),children:[Container(padding:const EdgeInsets.all(23),decoration:BoxDecoration(gradient:const LinearGradient(colors:[AtlasColors.navy,AtlasColors.royalBlue]),borderRadius:BorderRadius.circular(22)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[const Text('ESTIMATED EXAM READINESS',style:TextStyle(color:AtlasColors.champagne,fontWeight:FontWeight.w900,letterSpacing:1)),const SizedBox(height:12),Text('${confidence.toStringAsFixed(1)}%',style:const TextStyle(color:Colors.white,fontSize:42,fontWeight:FontWeight.w900)),Text(label,style:const TextStyle(color:AtlasColors.champagne,fontWeight:FontWeight.w800)),const SizedBox(height:14),LinearProgressIndicator(value:confidence/100,minHeight:9,backgroundColor:Colors.white24,color:AtlasColors.champagne),const SizedBox(height:12),Text('Based on ${recent.length} recent scored attempts (average ${avg.toStringAsFixed(1)}%).',style:const TextStyle(color:Colors.white70))]),),const SizedBox(height:17),const Text('Priority revision areas',style:TextStyle(color:AtlasColors.navy,fontSize:18,fontWeight:FontWeight.w900)),const SizedBox(height:9),if(weak.isEmpty)const Text('Subject-level detail will appear as more reviewed questions are recorded.') else ...weak.take(8).map((e)=>Card(child:ListTile(title:Text(e.key,style:const TextStyle(color:AtlasColors.navy,fontWeight:FontWeight.w800)),subtitle:LinearProgressIndicator(value:e.value/100,color:e.value<50?AtlasColors.error:AtlasColors.royalBlue),trailing:Text('${e.value.toStringAsFixed(0)}%'))),const SizedBox(height:14),const Text('This is an educational estimate, not a validated prediction or guarantee of examination performance. More attempts and representative full-length mocks improve reliability.',style:TextStyle(color:AtlasColors.secondaryText,fontSize:11,height:1.5))]);}));}}
+class MockExamPredictionScreen extends StatelessWidget {
+  const MockExamPredictionScreen({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    return Scaffold(
+      backgroundColor: AtlasColors.ivory,
+      appBar: AppBar(title: const Text('Mock Exam Readiness')),
+      body: uid == null ? const SizedBox() : StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+        stream: FirebaseFirestore.instance.collection('mcq_attempts').where('userId', isEqualTo: uid).snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) return Center(child: Text('Unable to analyse results: ${snapshot.error}'));
+          if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+          final docs = [...snapshot.data!.docs]..sort((a, b) {
+            final ad = a.data()['completedAt'];
+            final bd = b.data()['completedAt'];
+            final at = ad is Timestamp ? ad : Timestamp(0, 0);
+            final bt = bd is Timestamp ? bd : Timestamp(0, 0);
+            return bt.compareTo(at);
+          });
+          final recent = docs.take(10).map((d) => (d.data()['percentage'] as num?)?.toDouble()).whereType<double>().toList();
+          if (recent.isEmpty) return const _EmptyState('Complete a few practice examinations to unlock your readiness analysis.', Icons.insights_rounded);
+          final average = recent.reduce((a, b) => a + b) / recent.length;
+          final confidence = (average * (0.75 + 0.25 * (recent.length / 10))).clamp(0.0, 100.0);
+          final label = confidence >= 85 ? 'Strong readiness' : confidence >= 70 ? 'Promising progress' : confidence >= 50 ? 'Developing readiness' : 'More preparation recommended';
+          final subjects = <String, List<double>>{};
+          for (final doc in docs.take(10)) {
+            final answers = doc.data()['answers'];
+            if (answers is! List) continue;
+            for (final raw in answers) {
+              if (raw is! Map) continue;
+              final answer = Map<String, dynamic>.from(raw);
+              final subject = (answer['subject'] ?? 'General').toString();
+              subjects.putIfAbsent(subject, () => []).add(answer['isCorrect'] == true ? 100 : 0);
+            }
+          }
+          final weak = subjects.entries.map((e) => MapEntry(e.key, e.value.reduce((a, b) => a + b) / e.value.length)).toList()
+            ..sort((a, b) => a.value.compareTo(b.value));
+          return ListView(
+            padding: const EdgeInsets.all(18),
+            children: [
+              Container(
+                padding: const EdgeInsets.all(23),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(colors: [AtlasColors.navy, AtlasColors.royalBlue]),
+                  borderRadius: BorderRadius.circular(22),
+                ),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  const Text('ESTIMATED EXAM READINESS', style: TextStyle(color: AtlasColors.champagne, fontWeight: FontWeight.w900, letterSpacing: 1)),
+                  const SizedBox(height: 12),
+                  Text('${confidence.toStringAsFixed(1)}%', style: const TextStyle(color: Colors.white, fontSize: 42, fontWeight: FontWeight.w900)),
+                  Text(label, style: const TextStyle(color: AtlasColors.champagne, fontWeight: FontWeight.w800)),
+                  const SizedBox(height: 14),
+                  LinearProgressIndicator(value: confidence / 100, minHeight: 9, backgroundColor: Colors.white24, color: AtlasColors.champagne),
+                  const SizedBox(height: 12),
+                  Text('Based on ${recent.length} recent scored attempts (average ${average.toStringAsFixed(1)}%).', style: const TextStyle(color: Colors.white70)),
+                ]),
+              ),
+              const SizedBox(height: 17),
+              const Text('Priority revision areas', style: TextStyle(color: AtlasColors.navy, fontSize: 18, fontWeight: FontWeight.w900)),
+              const SizedBox(height: 9),
+              if (weak.isEmpty) const Text('Subject-level detail will appear as more reviewed questions are recorded.')
+              else ...weak.take(8).map((entry) => Card(
+                child: ListTile(
+                  title: Text(entry.key, style: const TextStyle(color: AtlasColors.navy, fontWeight: FontWeight.w800)),
+                  subtitle: LinearProgressIndicator(value: entry.value / 100, color: entry.value < 50 ? AtlasColors.error : AtlasColors.royalBlue),
+                  trailing: Text('${entry.value.toStringAsFixed(0)}%'),
+                ),
+              )),
+              const SizedBox(height: 14),
+              const Text('This is an educational estimate, not a validated prediction or guarantee of examination performance. More attempts and representative full-length mocks improve reliability.', style: TextStyle(color: AtlasColors.secondaryText, fontSize: 11, height: 1.5)),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
 
 class StudentDiscussionForumScreen extends StatefulWidget{const StudentDiscussionForumScreen({super.key});@override State<StudentDiscussionForumScreen> createState()=>_StudentDiscussionForumScreenState();}
-class _StudentDiscussionForumScreenState extends State<StudentDiscussionForumScreen>{final title=TextEditingController(),body=TextEditingController();bool busy=false;Future<void> post()async{final u=FirebaseAuth.instance.currentUser;if(u==null||title.text.trim().isEmpty||body.text.trim().isEmpty)return;setState(()=>busy=true);try{final p=await FirebaseFirestore.instance.collection('forum_posts').add({'userId':u.uid,'authorName':u.displayName??'Student','title':title.text.trim(),'body':body.text.trim(),'status':'published','createdAt':FieldValue.serverTimestamp(),'replyCount':0,'likeCount':0});title.clear();body.clear();if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Discussion posted.')));}catch(e){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('Could not post: $e')));}finally{if(mounted)setState(()=>busy=false);}}
+class StudentDiscussionForumScreen extends StatefulWidget {
+  const StudentDiscussionForumScreen({super.key});
+  @override
+  State<StudentDiscussionForumScreen> createState() => _StudentDiscussionForumScreenState();
+}
+class _StudentDiscussionForumScreenState extends State<StudentDiscussionForumScreen> {
+  final title = TextEditingController();
+  final body = TextEditingController();
+  bool busy = false;
+  Future<void> post() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null || title.text.trim().isEmpty || body.text.trim().isEmpty) return;
+    setState(() => busy = true);
+    try {
+      await FirebaseFirestore.instance.collection('forum_posts').add({
+        'userId': user.uid,
+        'authorName': user.displayName ?? 'Student',
+        'title': title.text.trim(),
+        'body': body.text.trim(),
+        'status': 'published',
+        'createdAt': FieldValue.serverTimestamp(),
+        'replyCount': 0,
+        'likeCount': 0,
+      });
+      title.clear();
+      body.clear();
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Discussion posted.')));
+    } catch (error) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not post: $error')));
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
+  }
+  @override
+  void dispose() {
+    title.dispose();
+    body.dispose();
+    super.dispose();
+  }
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AtlasColors.ivory,
+      appBar: AppBar(title: const Text('Student Discussion Forum')),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(15),
+              child: Column(children: [
+                TextField(controller: title, decoration: const InputDecoration(labelText: 'Discussion title')),
+                const SizedBox(height: 10),
+                TextField(controller: body, minLines: 3, maxLines: 5, decoration: const InputDecoration(labelText: 'Describe your question or discussion')),
+                const SizedBox(height: 10),
+                SizedBox(width: double.infinity, child: FilledButton(onPressed: busy ? null : post, child: Text(busy ? 'Posting…' : 'Publish discussion'))),
+              ]),
+            ),
+          ),
+          const SizedBox(height: 14),
+          StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+            stream: FirebaseFirestore.instance.collection('forum_posts').where('status', isEqualTo: 'published').snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.hasError) return Text('Unable to load discussions: ${snapshot.error}');
+              if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+              final docs = [...snapshot.data!.docs]..sort((a, b) {
+                final av = a.data()['createdAt'];
+                final bv = b.data()['createdAt'];
+                final at = av is Timestamp ? av : Timestamp(0, 0);
+                final bt = bv is Timestamp ? bv : Timestamp(0, 0);
+                return bt.compareTo(at);
+              });
+              return Column(children: docs.map((doc) => Card(
+                margin: const EdgeInsets.only(bottom: 10),
+                child: ListTile(
+                  title: Text((doc.data()['title'] ?? '').toString(), style: const TextStyle(color: AtlasColors.navy, fontWeight: FontWeight.w900)),
+                  subtitle: Text((doc.data()['body'] ?? '').toString(), maxLines: 3, overflow: TextOverflow.ellipsis),
+                  trailing: const Icon(Icons.forum_rounded, color: AtlasColors.royalBlue),
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ForumThreadScreen(postId: doc.id, data: doc.data()))),
+                ),
+              )).toList());
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
  @override void dispose(){title.dispose();body.dispose();super.dispose();}
  @override Widget build(BuildContext context)=>Scaffold(backgroundColor:AtlasColors.ivory,appBar:AppBar(title:const Text('Student Discussion Forum')),body:ListView(padding:const EdgeInsets.all(16),children:[Card(child:Padding(padding:const EdgeInsets.all(15),child:Column(children:[TextField(controller:title,decoration:const InputDecoration(labelText:'Discussion title')),const SizedBox(height:10),TextField(controller:body,minLines:3,maxLines:5,decoration:const InputDecoration(labelText:'Describe your question or discussion')),const SizedBox(height:10),SizedBox(width:double.infinity,child:FilledButton(onPressed:busy?null:post,child:Text(busy?'Posting…':'Publish discussion')))]))),const SizedBox(height:14),StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(stream:FirebaseFirestore.instance.collection('forum_posts').where('status',isEqualTo:'published').snapshots(),builder:(c,s){if(s.hasError)return Text('Unable to load discussions: ${s.error}');if(!s.hasData)return const Center(child:CircularProgressIndicator());final docs=[...s.data!.docs]..sort((a,b)=>(b.data()['createdAt'] as Timestamp? ?? Timestamp(0,0)).compareTo(a.data()['createdAt'] as Timestamp? ?? Timestamp(0,0)));return Column(children:docs.map((d)=>Card(margin:const EdgeInsets.only(bottom:10),child:ListTile(title:Text((d.data()['title']??'').toString(),style:const TextStyle(color:AtlasColors.navy,fontWeight:FontWeight.w900)),subtitle:Text((d.data()['body']??'').toString(),maxLines:3,overflow:TextOverflow.ellipsis),trailing:const Icon(Icons.forum_rounded,color:AtlasColors.royalBlue),onTap:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>ForumThreadScreen(postId:d.id,data:d.data()))))).toList());})]));
 }
