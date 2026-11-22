@@ -108,28 +108,28 @@ class AdminDashboardScreen extends StatelessWidget {
   Widget _buildDashboard(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
     return Scaffold(
-      backgroundColor: AtlasColors.ivory,
+      backgroundColor: const Color(0xFFF3F7FF),
       body: SafeArea(
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(19, 15, 19, 30),
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 28),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
                   _buildHeader(context),
-                  const SizedBox(height: 25),
+                  const SizedBox(height: 15),
                   _buildWelcomeBanner(user?.email ?? 'Administrator'),
-                  const SizedBox(height: 29),
+                  const SizedBox(height: 13),
+                  _buildAdminStats(),
+                  const SizedBox(height: 22),
                   _buildSectionHeading(
                     'Management Centre',
                     'Your academy operations, organised in one place.',
                   ),
                   const SizedBox(height: 17),
                   _buildManagementGrid(context),
-                  const SizedBox(height: 27),
-
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 22),
                   _buildFooter(),
                 ]),
               ),
@@ -142,7 +142,7 @@ class AdminDashboardScreen extends StatelessWidget {
   Widget _buildHeader(BuildContext context) {
     return Row(
       children: [
-        const AtlasLogo(size: 52),
+        const AtlasLogo(size: 58),
         /*
           decoration: BoxDecoration(
             gradient: const LinearGradient(
@@ -170,17 +170,18 @@ class AdminDashboardScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'THE ATLAS ACADEMY',
+                'The Atlas\\nAcademy',
                 style: TextStyle(
                   color: AtlasColors.navy,
-                  fontSize: 12,
-                  letterSpacing: 1.1,
+                  fontFamily: 'Georgia',
+                  fontSize: 19,
+                  height: 1.05,
                   fontWeight: FontWeight.w900,
                 ),
               ),
               SizedBox(height: 4),
               Text(
-                'ADMINISTRATOR PORTAL',
+                'ADMIN WORKSPACE',
                 style: TextStyle(
                   color: AtlasColors.secondaryText,
                   fontSize: 9,
@@ -229,25 +230,14 @@ class AdminDashboardScreen extends StatelessWidget {
   Widget _buildWelcomeBanner(String email) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(23, 25, 23, 24),
+      padding: const EdgeInsets.fromLTRB(20, 19, 18, 19),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [
-            AtlasColors.navy,
-            AtlasColors.royalBlue,
-            AtlasColors.brightBlue,
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+          colors: [Color(0xFFE4F0FF), Color(0xFFD5E8FF), Color(0xFFF1F7FF)],
+          begin: Alignment.topLeft, end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(27),
-        boxShadow: [
-          BoxShadow(
-            color: AtlasColors.navy.withValues(alpha: 0.19),
-            blurRadius: 23,
-            offset: const Offset(0, 10),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(21),
+        border: Border.all(color: const Color(0xFFDCE9F8)),
       ),
       child: Stack(
         children: [
@@ -257,7 +247,7 @@ class AdminDashboardScreen extends StatelessWidget {
             child: Icon(
               Icons.admin_panel_settings_rounded,
               size: 155,
-              color: Colors.white.withValues(alpha: 0.055),
+              color: AtlasColors.royalBlue.withValues(alpha: 0.07),
             ),
           ),
           Column(
@@ -269,10 +259,10 @@ class AdminDashboardScreen extends StatelessWidget {
                   vertical: 7,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.12),
+                  color: Colors.white.withValues(alpha: 0.75),
                   borderRadius: BorderRadius.circular(30),
                   border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.15),
+                    color: const Color(0xFFD7E7F8),
                   ),
                 ),
                 child: const Row(
@@ -280,14 +270,14 @@ class AdminDashboardScreen extends StatelessWidget {
                   children: [
                     Icon(
                       Icons.verified_user_rounded,
-                      color: AtlasColors.champagne,
+                      color: AtlasColors.royalBlue,
                       size: 14,
                     ),
                     SizedBox(width: 7),
                     Text(
                       'SECURE ADMIN WORKSPACE',
                       style: TextStyle(
-                        color: AtlasColors.champagne,
+                        color: AtlasColors.royalBlue,
                         fontSize: 9,
                         letterSpacing: 1.2,
                         fontWeight: FontWeight.w900,
@@ -300,8 +290,8 @@ class AdminDashboardScreen extends StatelessWidget {
               const Text(
                 'Welcome, Administrator',
                 style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
+                  color: AtlasColors.navy,
+                  fontSize: 23,
                   height: 1.2,
                   fontWeight: FontWeight.w900,
                 ),
@@ -311,7 +301,7 @@ class AdminDashboardScreen extends StatelessWidget {
                 'Manage students, subscriptions, academic content '
                 'and your medical question bank.',
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.83),
+                  color: const Color(0xFF355474),
                   fontSize: 12,
                   height: 1.6,
                 ),
@@ -323,7 +313,7 @@ class AdminDashboardScreen extends StatelessWidget {
                   vertical: 9,
                 ),
                 decoration: BoxDecoration(
-                  color: AtlasColors.champagne,
+                  color: const Color(0xFFD6E9FF),
                   borderRadius: BorderRadius.circular(11),
                 ),
                 child: const Row(
@@ -352,7 +342,7 @@ class AdminDashboardScreen extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.66),
+                  color: const Color(0xFF637B95),
                   fontSize: 10,
                 ),
               ),
@@ -360,6 +350,31 @@ class AdminDashboardScreen extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+  Widget _buildAdminStats() {
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance.collection('users')
+          .where('role', isEqualTo: 'student').snapshots(),
+      builder: (context, studentsSnapshot) {
+        return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+          stream: FirebaseFirestore.instance.collection('subscription_requests')
+              .where('status', isEqualTo: 'pending').snapshots(),
+          builder: (context, requestsSnapshot) {
+            final students = studentsSnapshot.data?.size ?? 0;
+            final pending = requestsSnapshot.data?.size ?? 0;
+            return Row(children: [
+              Expanded(child: _AdminStatTile(title: 'Registered Students',
+                value: '$students', icon: Icons.people_alt_rounded,
+                color: const Color(0xFF1768D1))),
+              const SizedBox(width: 10),
+              Expanded(child: _AdminStatTile(title: 'Pending Requests',
+                value: '$pending', icon: Icons.pending_actions_rounded,
+                color: const Color(0xFF1599A5))),
+            ]);
+          },
+        );
+      },
     );
   }
   Widget _buildSectionHeading(String title, String subtitle) {
@@ -578,6 +593,28 @@ class AdminDashboardScreen extends StatelessWidget {
     }
   }
 }
+class _AdminStatTile extends StatelessWidget {
+  final String title, value;
+  final IconData icon;
+  final Color color;
+  const _AdminStatTile({required this.title, required this.value, required this.icon, required this.color});
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(13),
+    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18),
+      border: Border.all(color: const Color(0xFFE0EAF5)),
+      boxShadow: [BoxShadow(color: AtlasColors.navy.withValues(alpha: .045), blurRadius: 12, offset: const Offset(0, 3))]),
+    child: Row(children: [
+      Container(width: 39, height: 39, decoration: BoxDecoration(color: color.withValues(alpha: .10), borderRadius: BorderRadius.circular(13)),
+        child: Icon(icon, color: color, size: 21)),
+      const SizedBox(width: 9),
+      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(value, style: const TextStyle(color: AtlasColors.navy, fontSize: 22, fontWeight: FontWeight.w900)),
+        Text(title, maxLines: 2, style: const TextStyle(color: AtlasColors.secondaryText, fontSize: 10, fontWeight: FontWeight.w700)),
+      ])),
+    ]),
+  );
+}
 class _AdminItem {
   final IconData icon;
   final String title;
@@ -602,16 +639,16 @@ class _AdminManagementCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(21),
+      color: const Color(0xFFF8FBFF),
+      borderRadius: BorderRadius.circular(20),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(21),
         child: Container(
           padding: const EdgeInsets.all(15),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(21),
-            border: Border.all(color: AtlasColors.border),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color(0xFFE1EBF5)),
             boxShadow: [
               BoxShadow(
                 color: AtlasColors.navy.withValues(alpha: 0.035),
@@ -625,8 +662,8 @@ class _AdminManagementCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                height: 43,
-                width: 43,
+                height: 47,
+                width: 47,
                 decoration: BoxDecoration(
                   color: item.color.withValues(alpha: 0.11),
                   borderRadius: BorderRadius.circular(14),
