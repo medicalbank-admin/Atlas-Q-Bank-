@@ -2,14 +2,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class McqDestination {
-  final String trackType, yearId, yearName, pathwayId, pathwayName;
+  final String trackType, yearId, yearName;
   final String subjectId, subjectName, examSetId, examSetName;
   const McqDestination({
     required this.trackType,
     this.yearId = '',
     this.yearName = '',
-    this.pathwayId = '',
-    this.pathwayName = '',
     required this.subjectId,
     required this.subjectName,
     required this.examSetId,
