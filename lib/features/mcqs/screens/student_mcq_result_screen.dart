@@ -44,7 +44,7 @@ class _StudentMcqResultScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AtlasColors.ivory,
+      backgroundColor: const Color(0xFFF3F7FF),
       appBar: AppBar(
         title: const Text('Practice Result'),
         backgroundColor: Colors.white,
@@ -650,7 +650,7 @@ class _NoReviewCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(17),
