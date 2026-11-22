@@ -134,7 +134,7 @@ class AtlasAcademyApp extends StatelessWidget {
       primaryTextTheme: _textTheme(AtlasColors.white),
       scaffoldBackgroundColor: AtlasColors.ivory,
       appBarTheme: const AppBarTheme(
-        backgroundColor: AtlasColors.ivory,
+        backgroundColor: AtlasColors.white,
         foregroundColor: AtlasColors.navy,
         elevation: 0,
         centerTitle: false,
