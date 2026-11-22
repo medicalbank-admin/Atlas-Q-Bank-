@@ -214,7 +214,7 @@ class _StudentMcqPracticeScreenState
   void _showQuestionNavigator() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFFF3F7FF),
+      backgroundColor: const Color(0xFFF2F7FF),
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
@@ -343,7 +343,7 @@ class _StudentMcqPracticeScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F7FF),
+      backgroundColor: const Color(0xFFF2F7FF),
       appBar: AppBar(
         backgroundColor: Colors.white,
         foregroundColor: AtlasColors.navy,
