@@ -44,7 +44,7 @@ class _AdminExamManagementScreenState extends State<AdminExamManagementScreen> {
     final ok = await showDialog<bool>(context: context, builder: (dialogContext) => StatefulBuilder(builder: (context, setDialogState) => AlertDialog(
       title: const Text('Create examination'),
       content: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
-        if (widget.sectionType == null)
+        if (widget.sectionType == null || widget.sectionType == 'mocks')
           DropdownButtonFormField<String>(value: type, decoration: const InputDecoration(labelText: 'Examination type'), items: types.entries.where((e) => widget.sectionType != 'mocks' || e.key.endsWith('_mock')).map((e) => DropdownMenuItem(value: e.key, child: Text(e.value))).toList(), onChanged: (v) { if (v != null) setDialogState(() { type = v; categoryId = ''; categoryName = ''; }); })
         else
           Padding(padding: const EdgeInsets.only(bottom: 12), child: Align(alignment: Alignment.centerLeft, child: Text(types[type] ?? 'Examination', style: const TextStyle(fontWeight: FontWeight.w800)))),
@@ -131,7 +131,7 @@ class _AdminExamManagementScreenState extends State<AdminExamManagementScreen> {
   @override
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: AtlasColors.ivory,
-    appBar: AppBar(title: const Text('Examination Management')),
+    appBar: AppBar(title: Text(widget.sectionType == null ? 'Examination Management' : widget.sectionType == 'mocks' ? 'Mock Exams Management' : (types[widget.sectionType] ?? 'Exam Management'))),
     floatingActionButton: FloatingActionButton.extended(onPressed: _createExam, icon: const Icon(Icons.add), label: const Text('Create exam')),
     body: ListView(padding: const EdgeInsets.all(16), children: [
       Container(padding: const EdgeInsets.all(19), decoration: BoxDecoration(gradient: const LinearGradient(colors: [AtlasColors.navy, AtlasColors.royalBlue]), borderRadius: BorderRadius.circular(20)), child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
