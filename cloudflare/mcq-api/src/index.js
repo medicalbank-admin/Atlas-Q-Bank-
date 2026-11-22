@@ -247,7 +247,7 @@ async function queryQuestions(env, examSetId) {
   if (examSetId) {
     filters.push({ fieldFilter: { field: { fieldPath: "examSetId" }, op: "EQUAL", value: { stringValue: examSetId } } });
   } else {
-    filters.push({ fieldFilter: { field: { fieldPath: "trackType" }, op: "EQUAL", value: { stringValue: "mbbs" } } });
+    filters.push({ fieldFilter: { field: { fieldPath: "trackType" }, op: "EQUAL", value: { stringValue: "structured" } } });
   }
   const result = await firestoreRequest(env, ":runQuery", {
     method: "POST",
@@ -283,20 +283,19 @@ async function requireEntitlement(env, uid, trackType, noSet = false) {
   const user = profile.data;
   if (!activeSubscription(user)) throw new Error("An active subscription is required.");
   const features = noSet ? ["mcqPractice"] :
-    trackType === "licensing" ? ["examPathways"] :
-    trackType === "past_paper" ? ["pastPapers", "examinations"] : ["examinations"];
+    trackType === "past_paper" ? ["pastPapers", "examinations"] : ["examinations", "mcqPractice"];
   if (!hasPermission(user, features)) throw new Error("Your subscription does not include this feature.");
   return user;
 }
 
 async function startSession(env, uid, body) {
   const examSetId = typeof body.examSetId === "string" ? body.examSetId.trim() : "";
-  let trackType = "mbbs";
+  let trackType = "structured";
   let durationMinutes = 60;
   if (examSetId) {
     const set = await getDocument(env, "mcq_exam_sets", examSetId);
     if (!set || set.data.isPublished !== true) throw new Error("This published exam set is unavailable.");
-    trackType = set.data.trackType || "mbbs";
+    trackType = set.data.trackType || "structured";
     await requireEntitlement(env, uid, trackType);
     const configured = Number(set.data.durationMinutes);
     if (Number.isInteger(configured) && configured > 0) durationMinutes = Math.min(configured, 240);
@@ -370,9 +369,9 @@ async function submitSession(env, uid, body) {
   if (examSetId) {
     const set = await getDocument(env, "mcq_exam_sets", examSetId);
     if (!set || set.data.isPublished !== true) throw new Error("This exam set is no longer published.");
-    user = await requireEntitlement(env, uid, set.data.trackType || "mbbs");
+    user = await requireEntitlement(env, uid, set.data.trackType || "structured");
   } else {
-    user = await requireEntitlement(env, uid, "mbbs", true);
+    user = await requireEntitlement(env, uid, "structured", true);
   }
 
   // Batch reads keep a 100-question submission well below Cloudflare's
