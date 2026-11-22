@@ -130,7 +130,7 @@ class _AdminExamManagementScreenState extends State<AdminExamManagementScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFFF3F7FF),
+    backgroundColor: const Color(0xFFF2F7FF),
     appBar: AppBar(title: Text(widget.sectionType == null ? 'Examination Management' : widget.sectionType == 'mocks' ? 'Mock Exams Management' : (types[widget.sectionType] ?? 'Exam Management'))),
     floatingActionButton: FloatingActionButton.extended(onPressed: _createExam, icon: const Icon(Icons.add), label: const Text('Create exam')),
     body: ListView(padding: const EdgeInsets.all(16), children: [
