@@ -79,7 +79,7 @@ class _Home extends StatelessWidget{
   if(uid!=null)StreamBuilder<DocumentSnapshot<Map<String,dynamic>>>(stream:FirebaseFirestore.instance.collection('users').doc(uid).snapshots(),builder:(c,s)=>s.hasData?_Membership(data:s.data!.data()??{},onTap:onMembership):const Center(child:CircularProgressIndicator())),
   const SizedBox(height:24),const Text('YOUR LEARNING ACTIVITY',style:TextStyle(color:AtlasColors.royalBlue,fontSize:10,letterSpacing:1.4,fontWeight:FontWeight.w900)),const SizedBox(height:11),if(uid!=null)_Stats(uid:uid),
   const SizedBox(height:25),const Center(child:Text('THE ATLAS ACADEMY  •  EXCELLENCE IN MEDICAL EDUCATION',textAlign:TextAlign.center,style:TextStyle(color:AtlasColors.secondaryText,fontSize:9,letterSpacing:.5,fontWeight:FontWeight.w700)))
- ])))));}
+ ]))));}
 }
 class _Membership extends StatelessWidget{
  final Map<String,dynamic> data;final VoidCallback onTap;const _Membership({required this.data,required this.onTap});
