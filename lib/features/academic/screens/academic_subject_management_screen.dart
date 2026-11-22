@@ -411,7 +411,7 @@ class AcademicSubjectManagementScreen extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: background,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(22),
       ),
       child: Text(
         label,
