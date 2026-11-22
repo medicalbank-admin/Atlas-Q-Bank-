@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 
 /// Device registration is client-side; FCM message delivery is server-side.
 class PushNotificationService {
-  static const String _apiUrl = String.fromEnvironment('PUSH_API_URL');
+  static const String _apiUrl = String.fromEnvironment('PUSH_API_URL', defaultValue: 'https://atlas-academy-push-api.medicalbankadmin.workers.dev');
   StreamSubscription<String>? _refresh;
   StreamSubscription<RemoteMessage>? _foreground;
 
