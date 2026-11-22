@@ -204,6 +204,29 @@ async function getDocument(env, collection, id) {
   }
 }
 
+async function getDocuments(env, collection, ids) {
+  if (!ids.length) return new Map();
+  const names = ids.map((id) =>
+    `projects/${PROJECT_ID}/databases/(default)/documents/${collection}/${id}`
+  );
+  const result = await firestoreRequest(env, ":batchGet", {
+    method: "POST",
+    body: JSON.stringify({ documents: names }),
+  });
+  const found = new Map();
+  for (const item of (Array.isArray(result) ? result : [])) {
+    if (item.found?.name) {
+      const id = item.found.name.split("/").pop();
+      found.set(id, {
+        data: decodeFields(item.found.fields),
+        updateTime: item.found.updateTime,
+        name: item.found.name,
+      });
+    }
+  }
+  return found;
+}
+
 async function queryQuestions(env, examSetId) {
   const filters = [
     { fieldFilter: { field: { fieldPath: "isPublished" }, op: "EQUAL", value: { booleanValue: true } } },
@@ -339,11 +362,15 @@ async function submitSession(env, uid, body) {
     user = await requireEntitlement(env, uid, "mbbs", true);
   }
 
-  const snapshots = await Promise.all(questionIds.map(async (id) => {
-    const [question, answerKey] = await Promise.all([
-      getDocument(env, "mcqs", id),
-      getDocument(env, "mcq_answer_keys", id),
-    ]);
+  // Batch reads keep a 100-question submission well below Cloudflare's
+  // per-request subrequest ceiling while answer keys remain server-only.
+  const [questionDocuments, answerDocuments] = await Promise.all([
+    getDocuments(env, "mcqs", questionIds),
+    getDocuments(env, "mcq_answer_keys", questionIds),
+  ]);
+  const snapshots = questionIds.map((id) => {
+    const question = questionDocuments.get(id);
+    const answerKey = answerDocuments.get(id);
     if (!question || !answerKey) throw new Error("A question or its private answer key is unavailable.");
     const q = question.data;
     if (q.isPublished !== true || (examSetId && q.examSetId !== examSetId)) {
@@ -361,7 +388,7 @@ async function submitSession(env, uid, body) {
     }
     return { id, question: q, options: q.options, correctAnswer, correctIndex,
       explanation: typeof answerKey.data.explanation === "string" ? answerKey.data.explanation : "" };
-  }));
+  });
 
   let correctAnswers = 0;
   let incorrectAnswers = 0;
