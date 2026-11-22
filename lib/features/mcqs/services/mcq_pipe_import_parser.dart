@@ -249,8 +249,6 @@ class McqPipeImportParser {
             explanation: explanation,
             yearId: cleanYearId,
             trackType: trackType,
-            pathwayId: pathwayId,
-            pathwayName: pathwayName,
             subjectId: subjectId,
             examSetId: examSetId,
             examSetName: examSetName,
