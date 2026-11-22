@@ -29,11 +29,13 @@ class ClinicalCaseLearningScreen extends StatelessWidget {
       },
     ),
   );
+}
 
 class ClinicalCaseDetailScreen extends StatefulWidget {
   final String caseId; final Map<String,dynamic> data;
   const ClinicalCaseDetailScreen({super.key,required this.caseId,required this.data});
   @override State<ClinicalCaseDetailScreen> createState()=>_ClinicalCaseDetailScreenState();
+}
 class _ClinicalCaseDetailScreenState extends State<ClinicalCaseDetailScreen>{
   final Map<int,String> selected={}; bool submitted=false;
   @override Widget build(BuildContext context){
@@ -54,6 +56,8 @@ class _ClinicalCaseDetailScreenState extends State<ClinicalCaseDetailScreen>{
       if((d['management']??'').toString().isNotEmpty)_CasePanel(title:'Management and debrief',icon:Icons.health_and_safety_rounded,body:d['management'].toString()),
       const SizedBox(height:24),
     ]));
+  }
+}
 class _CasePanel extends StatelessWidget{final String title,body;final IconData icon;const _CasePanel({required this.title,required this.body,required this.icon});@override Widget build(BuildContext context)=>Card(margin:const EdgeInsets.only(bottom:10),child:Padding(padding:const EdgeInsets.all(16),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Row(children:[Icon(icon,color:AtlasColors.royalBlue),const SizedBox(width:9),Text(title,style:const TextStyle(color:AtlasColors.navy,fontWeight:FontWeight.w900))]),const SizedBox(height:10),Text(body,style:const TextStyle(color:AtlasColors.charcoal,height:1.6))])));}
 
 class MistakesNotebookScreen extends StatefulWidget{const MistakesNotebookScreen({super.key});@override State<MistakesNotebookScreen> createState()=>_MistakesNotebookScreenState();}
@@ -64,9 +68,12 @@ class _MistakesNotebookScreenState extends State<MistakesNotebookScreen>{
   final attempts=await db.collection('mcq_attempts').where('userId',isEqualTo:uid).limit(100).get();int added=0,queued=0;
   var batch=db.batch();
   for(final doc in attempts.docs){final answers=doc.data()['answers'];if(answers is! List)continue;for(var i=0;i<answers.length;i++){final raw=answers[i];if(raw is! Map)continue;final a=Map<String,dynamic>.from(raw);if(a['isCorrect']==true||a['question']==null)continue;final id='${doc.id}_$i';final ref=db.collection('mistake_notebook').doc('${uid}_$id');if((await ref.get()).exists)continue;batch.set(ref,{'userId':uid,'attemptId':doc.id,'questionIndex':i,'question':a['question'],'options':a['options']??[],'selectedAnswer':a['selectedAnswer'],'correctAnswer':a['correctAnswer'],'explanation':a['explanation']??'','subject':a['subject']??'','topic':a['topic']??'','isReviewed':false,'createdAt':FieldValue.serverTimestamp()});added++;queued++;if(queued>=400){await batch.commit();batch=db.batch();queued=0;}}
+  }
   if(queued>0)await batch.commit();if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('$added incorrect or unanswered questions synced to your notebook.')));
+ }
  Future<void> updateNote(String id,Map<String,dynamic> data)async{final c=TextEditingController(text:(data['personalNote']??'').toString());final v=await showDialog<String>(context:context,builder:(ctx)=>AlertDialog(title:const Text('Your revision note'),content:TextField(controller:c,minLines:3,maxLines:6,decoration:const InputDecoration(hintText:'Why was this difficult? What will you remember?')),actions:[TextButton(onPressed:()=>Navigator.pop(ctx),child:const Text('Cancel')),FilledButton(onPressed:()=>Navigator.pop(ctx,c.text),child:const Text('Save'))]));if(v!=null){await FirebaseFirestore.instance.collection('mistake_notebook').doc(id).update({'personalNote':v,'isReviewed':true,'reviewedAt':FieldValue.serverTimestamp()});}}
  @override Widget build(BuildContext context)=>Scaffold(backgroundColor:AtlasColors.ivory,appBar:AppBar(title:const Text('Mistakes Notebook'),actions:[IconButton(tooltip:'Sync incorrect answers from attempts',onPressed:importMistakes,icon:const Icon(Icons.sync_rounded))]),floatingActionButton:FloatingActionButton.extended(onPressed:importMistakes,icon:const Icon(Icons.download_rounded),label:const Text('Sync mistakes')),body:uid==null?const SizedBox():StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(stream:FirebaseFirestore.instance.collection('mistake_notebook').where('userId',isEqualTo:uid).snapshots(),builder:(c,s){if(s.hasError)return Center(child:Text('Unable to load notebook: ${s.error}'));if(!s.hasData)return const Center(child:CircularProgressIndicator());final docs=s.data!.docs;if(docs.isEmpty)return const _EmptyState('Your incorrect and unanswered questions will appear here. Tap Sync mistakes to import your exam history.',Icons.menu_book_rounded);return ListView(padding:const EdgeInsets.all(15),children:[Text('${docs.length} saved revision items',style:const TextStyle(color:AtlasColors.secondaryText,fontWeight:FontWeight.w700)),const SizedBox(height:12),...docs.map((doc){final d=doc.data();return Card(margin:const EdgeInsets.only(bottom:10),child:Padding(padding:const EdgeInsets.all(15),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Row(children:[Expanded(child:Text((d['subject']??'General').toString()+' • '+(d['topic']??'').toString(),style:const TextStyle(color:AtlasColors.royalBlue,fontSize:10,fontWeight:FontWeight.w900))),Chip(label:Text(d['isReviewed']==true?'Reviewed':'To review'),backgroundColor:d['isReviewed']==true?const Color(0xFFE8F5EC):const Color(0xFFFFF3D9))]),Text((d['question']??'').toString(),style:const TextStyle(color:AtlasColors.navy,fontWeight:FontWeight.w800,height:1.5)),const SizedBox(height:8),Text('Your answer: ${d['selectedAnswer']??'Skipped'}   •   Correct: ${d['correctAnswer']??'—'}',style:const TextStyle(color:AtlasColors.charcoal,fontSize:12)),if((d['explanation']??'').toString().isNotEmpty)Padding(padding:const EdgeInsets.only(top:8),child:Text(d['explanation'].toString(),style:const TextStyle(color:AtlasColors.secondaryText,height:1.5))),if((d['personalNote']??'').toString().isNotEmpty)Padding(padding:const EdgeInsets.only(top:8),child:Text('My note: ${d['personalNote']}',style:const TextStyle(color:AtlasColors.charcoal,fontStyle:FontStyle.italic))),Align(alignment:Alignment.centerRight,child:TextButton.icon(onPressed:()=>updateNote(doc.id,d),icon:const Icon(Icons.edit_note_rounded),label:const Text('Add revision note')))])));})]);}));
+}
 
 class MockExamPredictionScreen extends StatelessWidget {
   const MockExamPredictionScreen({super.key});
@@ -102,6 +109,8 @@ class MockExamPredictionScreen extends StatelessWidget {
               final answer = Map<String, dynamic>.from(raw);
               final subject = (answer['subject'] ?? 'General').toString();
               subjects.putIfAbsent(subject, () => []).add(answer['isCorrect'] == true ? 100 : 0);
+            }
+          }
           final weak = subjects.entries.map((e) => MapEntry(e.key, e.value.reduce((a, b) => a + b) / e.value.length)).toList()
             ..sort((a, b) => a.value.compareTo(b.value));
           return ListView(
@@ -142,11 +151,14 @@ class MockExamPredictionScreen extends StatelessWidget {
         },
       ),
     );
+  }
+}
 
 class StudentDiscussionForumScreen extends StatefulWidget {
   const StudentDiscussionForumScreen({super.key});
   @override
   State<StudentDiscussionForumScreen> createState() => _StudentDiscussionForumScreenState();
+}
 class _StudentDiscussionForumScreenState extends State<StudentDiscussionForumScreen> {
   final title = TextEditingController();
   final body = TextEditingController();
@@ -173,11 +185,14 @@ class _StudentDiscussionForumScreenState extends State<StudentDiscussionForumScr
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not post: $error')));
     } finally {
       if (mounted) setState(() => busy = false);
+    }
+  }
   @override
   void dispose() {
     title.dispose();
     body.dispose();
     super.dispose();
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -225,6 +240,11 @@ class _StudentDiscussionForumScreenState extends State<StudentDiscussionForumScr
         ],
       ),
     );
+  }
+}
+ @override void dispose(){title.dispose();body.dispose();super.dispose();}
+ @override Widget build(BuildContext context)=>Scaffold(backgroundColor:AtlasColors.ivory,appBar:AppBar(title:const Text('Student Discussion Forum')),body:ListView(padding:const EdgeInsets.all(16),children:[Card(child:Padding(padding:const EdgeInsets.all(15),child:Column(children:[TextField(controller:title,decoration:const InputDecoration(labelText:'Discussion title')),const SizedBox(height:10),TextField(controller:body,minLines:3,maxLines:5,decoration:const InputDecoration(labelText:'Describe your question or discussion')),const SizedBox(height:10),SizedBox(width:double.infinity,child:FilledButton(onPressed:busy?null:post,child:Text(busy?'Posting…':'Publish discussion')))]))),const SizedBox(height:14),StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(stream:FirebaseFirestore.instance.collection('forum_posts').where('status',isEqualTo:'published').snapshots(),builder:(c,s){if(s.hasError)return Text('Unable to load discussions: ${s.error}');if(!s.hasData)return const Center(child:CircularProgressIndicator());final docs=[...s.data!.docs]..sort((a,b)=>(b.data()['createdAt'] as Timestamp? ?? Timestamp(0,0)).compareTo(a.data()['createdAt'] as Timestamp? ?? Timestamp(0,0)));return Column(children:docs.map((d)=>Card(margin:const EdgeInsets.only(bottom:10),child:ListTile(title:Text((d.data()['title']??'').toString(),style:const TextStyle(color:AtlasColors.navy,fontWeight:FontWeight.w900)),subtitle:Text((d.data()['body']??'').toString(),maxLines:3,overflow:TextOverflow.ellipsis),trailing:const Icon(Icons.forum_rounded,color:AtlasColors.royalBlue),onTap:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>ForumThreadScreen(postId:d.id,data:d.data()))))).toList());})]));
+}
 class ForumThreadScreen extends StatefulWidget{final String postId;final Map<String,dynamic> data;const ForumThreadScreen({super.key,required this.postId,required this.data});@override State<ForumThreadScreen> createState()=>_ForumThreadScreenState();}
 class _ForumThreadScreenState extends State<ForumThreadScreen>{final reply=TextEditingController();Future<void> send()async{final u=FirebaseAuth.instance.currentUser;if(u==null||reply.text.trim().isEmpty)return;await FirebaseFirestore.instance.collection('forum_posts').doc(widget.postId).collection('replies').add({'userId':u.uid,'authorName':u.displayName??'Student','body':reply.text.trim(),'createdAt':FieldValue.serverTimestamp()});reply.clear();}
  @override Widget build(BuildContext context)=>Scaffold(backgroundColor:AtlasColors.ivory,appBar:AppBar(title:const Text('Discussion')),body:Column(children:[Expanded(child:ListView(padding:const EdgeInsets.all(16),children:[Card(child:Padding(padding:const EdgeInsets.all(17),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text((widget.data['title']??'').toString(),style:const TextStyle(color:AtlasColors.navy,fontSize:18,fontWeight:FontWeight.w900)),const SizedBox(height:9),Text((widget.data['body']??'').toString(),style:const TextStyle(color:AtlasColors.charcoal,height:1.5))])),),const SizedBox(height:12),StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(stream:FirebaseFirestore.instance.collection('forum_posts').doc(widget.postId).collection('replies').orderBy('createdAt').snapshots(),builder:(c,s)=>Column(children:(s.data?.docs??[]).map((d)=>Card(child:ListTile(title:Text((d.data()['authorName']??'Student').toString()),subtitle:Text((d.data()['body']??'').toString())))).toList()))])),SafeArea(child:Padding(padding:const EdgeInsets.all(10),child:Row(children:[Expanded(child:TextField(controller:reply,decoration:const InputDecoration(hintText:'Write a reply…'))),IconButton(onPressed:send,icon:const Icon(Icons.send_rounded,color:AtlasColors.royalBlue))])))]));
@@ -234,4 +254,5 @@ class AskTeacherScreen extends StatefulWidget{const AskTeacherScreen({super.key}
 class _AskTeacherScreenState extends State<AskTeacherScreen>{final subject=TextEditingController(),question=TextEditingController();bool busy=false;Future<void> submit()async{final u=FirebaseAuth.instance.currentUser;if(u==null||subject.text.trim().isEmpty||question.text.trim().isEmpty)return;setState(()=>busy=true);try{await FirebaseFirestore.instance.collection('teacher_questions').add({'userId':u.uid,'studentName':u.displayName??'Student','subject':subject.text.trim(),'question':question.text.trim(),'status':'open','createdAt':FieldValue.serverTimestamp(),'reply':null});subject.clear();question.clear();if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Your question was sent to the teaching team.')));}catch(e){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('Unable to send question: $e')));}finally{if(mounted)setState(()=>busy=false);}}
  @override void dispose(){subject.dispose();question.dispose();super.dispose();}
  @override Widget build(BuildContext context){final uid=FirebaseAuth.instance.currentUser?.uid;return Scaffold(backgroundColor:AtlasColors.ivory,appBar:AppBar(title:const Text('Ask a Teacher')),body:ListView(padding:const EdgeInsets.all(16),children:[Card(child:Padding(padding:const EdgeInsets.all(16),child:Column(children:[TextField(controller:subject,decoration:const InputDecoration(labelText:'Subject / topic')),const SizedBox(height:10),TextField(controller:question,minLines:4,maxLines:7,decoration:const InputDecoration(labelText:'Describe your doubt or question')),const SizedBox(height:12),SizedBox(width:double.infinity,child:FilledButton(onPressed:busy?null:submit,child:Text(busy?'Sending…':'Submit to teacher')))]))),const SizedBox(height:17),const Text('My questions and teacher replies',style:TextStyle(color:AtlasColors.navy,fontWeight:FontWeight.w900,fontSize:16)),const SizedBox(height:9),if(uid!=null)StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(stream:FirebaseFirestore.instance.collection('teacher_questions').where('userId',isEqualTo:uid).snapshots(),builder:(c,s){if(!s.hasData)return const Center(child:CircularProgressIndicator());final docs=[...s.data!.docs]..sort((a,b)=>(b.data()['createdAt'] as Timestamp? ?? Timestamp(0,0)).compareTo(a.data()['createdAt'] as Timestamp? ?? Timestamp(0,0)));return Column(children:docs.map((d){final v=d.data();return Card(child:Padding(padding:const EdgeInsets.all(14),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text((v['subject']??'').toString(),style:const TextStyle(color:AtlasColors.royalBlue,fontWeight:FontWeight.w900)),const SizedBox(height:5),Text((v['question']??'').toString(),style:const TextStyle(color:AtlasColors.charcoal)),const Divider(),Text('Status: ${v['status']??'open'}',style:const TextStyle(color:AtlasColors.secondaryText,fontSize:11,fontWeight:FontWeight.w800)),if((v['reply']??'').toString().isNotEmpty)Text('Teacher reply: ${v['reply']}',style:const TextStyle(color:AtlasColors.success,height:1.5))])));}).toList());})]));}
+}
 class _EmptyState extends StatelessWidget{final String message;final IconData icon;const _EmptyState(this.message,this.icon);@override Widget build(BuildContext context)=>Center(child:Padding(padding:const EdgeInsets.all(30),child:Column(mainAxisSize:MainAxisSize.min,children:[Icon(icon,size:54,color:AtlasColors.royalBlue),const SizedBox(height:15),Text(message,textAlign:TextAlign.center,style:const TextStyle(color:AtlasColors.secondaryText,height:1.6))])));}
