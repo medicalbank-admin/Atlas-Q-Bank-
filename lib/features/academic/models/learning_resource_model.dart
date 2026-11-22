@@ -4,6 +4,7 @@ enum LearningResourceType {
   pdf,
   video,
   document,
+  text,
   presentation,
   externalLink,
 }
@@ -17,6 +18,7 @@ class LearningResourceModel {
   final String description;
   final LearningResourceType type;
   final String resourceUrl;
+  final String textContent;
   final String? thumbnailUrl;
   final int displayOrder;
   final bool isPublished;
@@ -34,6 +36,7 @@ class LearningResourceModel {
     this.description = '',
     required this.type,
     required this.resourceUrl,
+    this.textContent = '',
     this.thumbnailUrl,
     this.displayOrder = 0,
     this.isPublished = false,
@@ -60,6 +63,7 @@ class LearningResourceModel {
         orElse: () => LearningResourceType.document,
       ),
       resourceUrl: data['resourceUrl'] as String? ?? '',
+      textContent: data['textContent'] as String? ?? '',
       thumbnailUrl: data['thumbnailUrl'] as String?,
       displayOrder: (data['displayOrder'] as num?)?.toInt() ?? 0,
       isPublished: data['isPublished'] as bool? ?? false,
@@ -80,6 +84,7 @@ class LearningResourceModel {
       'description': description.trim(),
       'type': type.name,
       'resourceUrl': resourceUrl.trim(),
+      'textContent': textContent,
       'thumbnailUrl': thumbnailUrl,
       'displayOrder': displayOrder,
       'isPublished': isPublished,
@@ -95,6 +100,7 @@ class LearningResourceModel {
     String? description,
     LearningResourceType? type,
     String? resourceUrl,
+    String? textContent,
     String? thumbnailUrl,
     int? displayOrder,
     bool? isPublished,
@@ -111,6 +117,7 @@ class LearningResourceModel {
       description: description ?? this.description,
       type: type ?? this.type,
       resourceUrl: resourceUrl ?? this.resourceUrl,
+      textContent: textContent ?? this.textContent,
       thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
       displayOrder: displayOrder ?? this.displayOrder,
       isPublished: isPublished ?? this.isPublished,
