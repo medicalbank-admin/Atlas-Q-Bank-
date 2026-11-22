@@ -1,10 +1,8 @@
-import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../../app/atlas_academy_app.dart';
 import '../../../shared/widgets/atlas_logo.dart';
 import '../../profile/screens/profile_screen.dart';
@@ -69,7 +67,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen>{
  Future<void> select(int i)async{setState(()=>selected=i);if(MediaQuery.sizeOf(context).width<850)Navigator.of(context).maybePop();if(i>0){const keys=['','studyLibrary','mcqPractice','pastPapers','subjectExams','systemExams','mockExams','examsHistory','clinicalCases','mistakesNotebook','mockPredictions','discussionForum','askTeacher','membership','account'];await openFeature(keys[i]);if(mounted)setState(()=>selected=0);}}
  @override Widget build(BuildContext context){
   final wide=MediaQuery.sizeOf(context).width>=850;final u=FirebaseAuth.instance.currentUser;final name=u?.displayName?.trim().isNotEmpty==true?u!.displayName!.trim():'Student';
-  final pages=<Widget>[_Home(name:name,onMembership:()=>openFeature('membership'),onSubjectExams:()=>openFeature('subjectExams'),onSystemExams:()=>openFeature('systemExams'),onMockExams:()=>openFeature('mockExams'),onPastPapers:()=>openFeature('pastPapers')),_FeaturePage('Study Library',Icons.menu_book_rounded,()=>openFeature('studyLibrary')),_FeaturePage('MCQ Practice',Icons.quiz_rounded,()=>openFeature('mcqPractice')),_FeaturePage('Past Papers',Icons.history_edu_rounded,()=>openFeature('pastPapers')),_FeaturePage('Subject-Wise Exams',Icons.menu_book_rounded,()=>openFeature('subjectExams')),_FeaturePage('System-Wise Exams',Icons.account_tree_rounded,()=>openFeature('systemExams')),_FeaturePage('Mock Exams',Icons.fact_check_rounded,()=>openFeature('mockExams')),_FeaturePage('Exams History',Icons.history_rounded,()=>openFeature('examsHistory')),_FeaturePage('Clinical Cases',Icons.medical_services_rounded,()=>openFeature('clinicalCases')),_FeaturePage('Mistakes Notebook',Icons.bookmark_added_rounded,()=>openFeature('mistakesNotebook')),_FeaturePage('Mock Exam Readiness',Icons.insights_rounded,()=>openFeature('mockPredictions')),_FeaturePage('Discussion Forum',Icons.forum_rounded,()=>openFeature('discussionForum')),_FeaturePage('Ask a Teacher',Icons.support_agent_rounded,()=>openFeature('askTeacher')),_FeaturePage('Membership',Icons.workspace_premium_rounded,()=>openFeature('membership')),_FeaturePage('Account Status',Icons.verified_user_rounded,()=>openFeature('account'))];
+  final pages=<Widget>[_Home(name:name,onSubjectExams:()=>openFeature('subjectExams'),onSystemExams:()=>openFeature('systemExams'),onMockExams:()=>openFeature('mockExams'),onPastPapers:()=>openFeature('pastPapers')),_FeaturePage('Study Library',Icons.menu_book_rounded,()=>openFeature('studyLibrary')),_FeaturePage('MCQ Practice',Icons.quiz_rounded,()=>openFeature('mcqPractice')),_FeaturePage('Past Papers',Icons.history_edu_rounded,()=>openFeature('pastPapers')),_FeaturePage('Subject-Wise Exams',Icons.menu_book_rounded,()=>openFeature('subjectExams')),_FeaturePage('System-Wise Exams',Icons.account_tree_rounded,()=>openFeature('systemExams')),_FeaturePage('Mock Exams',Icons.fact_check_rounded,()=>openFeature('mockExams')),_FeaturePage('Exams History',Icons.history_rounded,()=>openFeature('examsHistory')),_FeaturePage('Clinical Cases',Icons.medical_services_rounded,()=>openFeature('clinicalCases')),_FeaturePage('Mistakes Notebook',Icons.bookmark_added_rounded,()=>openFeature('mistakesNotebook')),_FeaturePage('Mock Exam Readiness',Icons.insights_rounded,()=>openFeature('mockPredictions')),_FeaturePage('Discussion Forum',Icons.forum_rounded,()=>openFeature('discussionForum')),_FeaturePage('Ask a Teacher',Icons.support_agent_rounded,()=>openFeature('askTeacher')),_FeaturePage('Membership',Icons.workspace_premium_rounded,()=>openFeature('membership')),_FeaturePage('Account Status',Icons.verified_user_rounded,()=>openFeature('account'))];
   return Scaffold(backgroundColor:const Color(0xFFF3F7FF),drawer:wide?null:Drawer(backgroundColor:AtlasColors.navy,child:_SideNav(selected:selected,onSelect:select,onSignOut:signOut,onProfile:()=>openFeature('profile'))),body:SafeArea(child:Row(children:[
    if(wide)SizedBox(width:265,child:_SideNav(selected:selected,onSelect:select,onSignOut:signOut,onProfile:()=>openFeature('profile'))),
    Expanded(child:Column(children:[
@@ -332,10 +330,9 @@ class _SideNav extends StatelessWidget {
 }
 class _Home extends StatelessWidget {
   final String name;
-  final VoidCallback onMembership, onSubjectExams, onSystemExams, onMockExams, onPastPapers;
+  final VoidCallback onSubjectExams, onSystemExams, onMockExams, onPastPapers;
   const _Home({
     required this.name,
-    required this.onMembership,
     required this.onSubjectExams,
     required this.onSystemExams,
     required this.onMockExams,
@@ -560,225 +557,7 @@ class _ActivitySummary extends StatelessWidget {
     );
 }
 
-class _SectionHeading extends StatelessWidget {
-  final String title, subtitle;
-  final IconData icon;
-  const _SectionHeading({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) => Row(
-        children: [
-          Container(
-            width: 39,
-            height: 39,
-            decoration: BoxDecoration(
-              color: AtlasColors.paleBlue,
-              borderRadius: BorderRadius.circular(13),
-            ),
-            child: Icon(icon, color: AtlasColors.royalBlue, size: 20),
-          ),
-          const SizedBox(width: 11),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: AtlasColors.navy,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    color: AtlasColors.secondaryText,
-                    fontSize: 11,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      );
-}
-
-class _DashboardMessage extends StatelessWidget {
-  final IconData icon;
-  final String message;
-  const _DashboardMessage({required this.icon, required this.message});
-
-  @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.all(17),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AtlasColors.border),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: AtlasColors.secondaryText),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                message,
-                style: const TextStyle(
-                  color: AtlasColors.secondaryText,
-                  fontSize: 12,
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-}
-
-class _ExamSectionCard extends StatelessWidget {
-  final String title, subtitle, detail;
-  final IconData icon;
-  final VoidCallback onTap;
-
-  const _ExamSectionCard({
-    required this.title,
-    required this.subtitle,
-    required this.detail,
-    required this.icon,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) => Material(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(19),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(19),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(19),
-              border: Border.all(color: AtlasColors.border),
-              boxShadow: [
-                BoxShadow(
-                  color: AtlasColors.navy.withValues(alpha: .035),
-                  blurRadius: 14,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: AtlasColors.paleBlue,
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  child: Icon(icon, color: AtlasColors.royalBlue, size: 24),
-                ),
-                const SizedBox(width: 13),
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: const TextStyle(
-                          color: AtlasColors.navy,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        subtitle,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: AtlasColors.secondaryText,
-                          fontSize: 10,
-                          height: 1.35,
-                        ),
-                      ),
-                      const SizedBox(height: 7),
-                      Text(
-                        detail,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: AtlasColors.royalBlue,
-                          fontSize: 8,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: .45,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                const Icon(
-                  Icons.arrow_forward_rounded,
-                  color: AtlasColors.royalBlue,
-                  size: 19,
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-}
-class _Membership extends StatelessWidget{
- final Map<String,dynamic> data;final VoidCallback onTap;const _Membership({required this.data,required this.onTap});
- @override Widget build(BuildContext context){
-  DateTime? dt(dynamic v)=>v is Timestamp?v.toDate():null;
-  final start=dt(data['subscriptionStartedAt']);final expiry=dt(data['subscriptionExpiryAt']);final days=(data['subscriptionDurationDays'] as num?)?.toInt()??(start!=null&&expiry!=null?expiry.difference(start).inDays:0);
-  final left=expiry==null?0:expiry.difference(DateTime.now()).inDays.clamp(0,days>0?days:3650);final used=days>0?(days-left).clamp(0,days):0;final ratio=days>0?(used/days).clamp(0.0,1.0):0.0;
-  final active=data['subscriptionStatus']=='active'&&data['accessEnabled']==true&&expiry!=null&&expiry.isAfter(DateTime.now());
-  return Container(padding:const EdgeInsets.all(20),decoration:BoxDecoration(gradient:const LinearGradient(colors:[AtlasColors.navy,AtlasColors.royalBlue]),borderRadius:BorderRadius.circular(23),boxShadow:[BoxShadow(color:AtlasColors.navy.withValues(alpha:.13),blurRadius:18,offset:const Offset(0,7))]),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-   Row(children:[const Icon(Icons.workspace_premium,color:AtlasColors.champagne),const SizedBox(width:9),const Expanded(child:Text('Membership overview',style:TextStyle(color:Colors.white,fontSize:15,fontWeight:FontWeight.w900))),Text(active?'ACTIVE':(data['subscriptionStatus']=='active'?'EXPIRED':'INACTIVE'),style:const TextStyle(color:AtlasColors.champagne,fontSize:10,fontWeight:FontWeight.w900))]),
-   const SizedBox(height:14),Text((data['subscriptionPlanName']??'No active plan').toString(),style:const TextStyle(color:Colors.white,fontSize:19,fontWeight:FontWeight.w900)),const SizedBox(height:17),
-   Row(children:[
-    SizedBox(width:120,height:120,child:Stack(alignment:Alignment.center,children:[SizedBox.expand(child:CircularProgressIndicator(value:ratio,strokeWidth:9,backgroundColor:Colors.white24,valueColor:const AlwaysStoppedAnimation(AtlasColors.champagne),strokeCap:StrokeCap.round)),Column(mainAxisSize:MainAxisSize.min,children:[Text('$left',style:const TextStyle(color:Colors.white,fontSize:30,fontWeight:FontWeight.w900)),const Text('DAYS LEFT',style:TextStyle(color:Colors.white70,fontSize:9,letterSpacing:1))])])),
-    const SizedBox(width:20),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[_Metric('Days used',days>0?'$used':'—'),const SizedBox(height:12),_Metric('Membership duration',days>0?'$days days':'Not available'),const SizedBox(height:12),_Metric('Expiry date',expiry!=null?expiry.day.toString()+'/'+expiry.month.toString()+'/'+expiry.year.toString():'Not activated')]))
-   ]),
-   const SizedBox(height:16),ClipRRect(borderRadius:BorderRadius.circular(9),child:LinearProgressIndicator(value:ratio,minHeight:7,backgroundColor:Colors.white24,color:AtlasColors.champagne)),
-   const SizedBox(height:17),Row(children:[Expanded(child:OutlinedButton(onPressed:onTap,style:OutlinedButton.styleFrom(foregroundColor:Colors.white,side:const BorderSide(color:Colors.white54),shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(12))),child:Text(active?'Upgrade plan':'Choose a plan'))),const SizedBox(width:10),Expanded(child:FilledButton(onPressed:onTap,style:FilledButton.styleFrom(backgroundColor:AtlasColors.champagne,foregroundColor:AtlasColors.navy,shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(12))),child:Text(active?'Renew membership':'Activate membership')))])
-  ]));
- }
-}
-class _Metric extends StatelessWidget{final String label,value;const _Metric(this.label,this.value);@override Widget build(BuildContext context)=>Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(label,style:const TextStyle(color:Colors.white60,fontSize:10)),const SizedBox(height:3),Text(value,style:const TextStyle(color:Colors.white,fontSize:12,fontWeight:FontWeight.w800))]);}
-class _Stats extends StatelessWidget{
- final String uid;const _Stats({required this.uid});
- @override Widget build(BuildContext context)=>StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(stream:FirebaseFirestore.instance.collection('mcq_attempts').where('userId',isEqualTo:uid).snapshots(),builder:(c,s){if(s.hasError)return const Text('Statistics are temporarily unavailable.');final docs=s.data?.docs??[];final past=docs.where((d)=>d.data()['trackType']=='past_paper').length;final exams=docs.where((d)=>d.data()['trackType']!='past_paper'&&d.data()['examSetId']!=null).length;return Row(children:[Expanded(child:_Stat('Past papers attempted','$past',Icons.history_edu_rounded,AtlasColors.gold)),const SizedBox(width:12),Expanded(child:_Stat('Exams attempted','$exams',Icons.assignment_turned_in_rounded,AtlasColors.royalBlue))]);});
-}
-class _Stat extends StatelessWidget{final String title,value;final IconData icon;final Color color;const _Stat(this.title,this.value,this.icon,this.color);@override Widget build(BuildContext context)=>Container(padding:const EdgeInsets.all(16),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(18),border:Border.all(color:AtlasColors.border)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Icon(icon,color:color,size:24),const SizedBox(height:10),Text(value,style:const TextStyle(color:AtlasColors.navy,fontSize:25,fontWeight:FontWeight.w900)),Text(title,style:const TextStyle(color:AtlasColors.secondaryText,fontSize:10,fontWeight:FontWeight.w700))]));}
 class _FeaturePage extends StatelessWidget{final String title;final IconData icon;final VoidCallback onOpen;const _FeaturePage(this.title,this.icon,this.onOpen);@override Widget build(BuildContext context)=>Center(child:Container(constraints:const BoxConstraints(maxWidth:450),padding:const EdgeInsets.all(25),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(22),border:Border.all(color:AtlasColors.border)),child:Column(mainAxisSize:MainAxisSize.min,children:[Icon(icon,color:AtlasColors.royalBlue,size:48),const SizedBox(height:14),Text(title,style:const TextStyle(color:AtlasColors.navy,fontSize:22,fontWeight:FontWeight.w900)),const SizedBox(height:20),FilledButton.icon(onPressed:onOpen,icon:const Icon(Icons.arrow_forward),label:const Text('Open feature'))])));}
-class _QuoteCarousel extends StatefulWidget{const _QuoteCarousel();@override State<_QuoteCarousel> createState()=>_QuoteCarouselState();}
-class _QuoteCarouselState extends State<_QuoteCarousel>{
- final controller=PageController(viewportFraction:.92);Timer? timer;int index=0;
- static const cards=[
- ('QURAN','Indeed, with hardship comes ease.','Qur’an 94:6'),('QURAN','My Lord, increase me in knowledge.','Qur’an 20:114'),('QURAN','Allah does not burden a soul beyond what it can bear.','Qur’an 2:286'),('QURAN','Whoever relies upon Allah, He is sufficient for him.','Qur’an 65:3'),('QURAN','So remember Me; I will remember you.','Qur’an 2:152'),('QURAN','Whoever saves one life, it is as if he saved all mankind.','Qur’an 5:32'),('QURAN','And say: My Lord, increase me in knowledge.','Qur’an 20:114'),
- ('HADITH','Whoever follows a path seeking knowledge, Allah makes easy for him a path to Paradise.','Sahih Muslim 2699'),('HADITH','The best of you are those who learn the Qur’an and teach it.','Sahih al-Bukhari 5027'),('HADITH','Allah is gentle and loves gentleness in all matters.','Sahih al-Bukhari 6927'),('HADITH','Make things easy and do not make them difficult.','Sahih al-Bukhari 69'),('HADITH','The strong believer is better and more beloved to Allah.','Sahih Muslim 2664'),('HADITH','Whoever does not show mercy will not be shown mercy.','Sahih al-Bukhari 6013'),('HADITH','The most beloved deeds are those done regularly, even if small.','Sahih al-Bukhari 6464'),
- ('INSPIRATION','Small, consistent efforts become extraordinary achievements.','A reminder for your journey'),('INSPIRATION','Let curiosity guide you, discipline carry you, and compassion define you.','For future clinicians'),('INSPIRATION','Every concept mastered today is confidence for tomorrow.','A reminder for your journey'),('INSPIRATION','Progress is built one focused study session at a time.','A reminder for your journey'),('INSPIRATION','Your knowledge matters most when used to serve others.','For future clinicians'),('INSPIRATION','Be patient with the process. Excellence is a practice, not a moment.','A reminder for your journey'),('INSPIRATION','Study with purpose. Practice with honesty. Treat every patient with kindness.','The Atlas Academy')
- ];
- @override void initState(){super.initState();timer=Timer.periodic(const Duration(seconds:6),(_){if(!mounted)return;index=(index+1)%cards.length;controller.animateToPage(index,duration:const Duration(milliseconds:600),curve:Curves.easeInOut);});}
- @override void dispose(){timer?.cancel();controller.dispose();super.dispose();}
- @override Widget build(BuildContext context)=>Column(children:[SizedBox(height:204,child:PageView.builder(controller:controller,itemCount:cards.length,onPageChanged:(i)=>setState(()=>index=i),itemBuilder:(c,i){final v=cards[i];final colors=v.$1=='QURAN'?[const Color(0xFF0B3151),const Color(0xFF176B73)]:v.$1=='HADITH'?[AtlasColors.navy,AtlasColors.royalBlue]:[const Color(0xFF263D65),const Color(0xFF5476A8)];return Padding(padding:const EdgeInsets.only(right:9,bottom:4),child:Container(padding:const EdgeInsets.all(20),decoration:BoxDecoration(gradient:LinearGradient(colors:colors),borderRadius:BorderRadius.circular(22)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Row(children:[Icon(v.$1=='QURAN'?Icons.menu_book_rounded:v.$1=='HADITH'?Icons.auto_stories_rounded:Icons.lightbulb_outline,color:AtlasColors.champagne),const SizedBox(width:8),Expanded(child:Text(v.$1,style:const TextStyle(color:AtlasColors.champagne,fontSize:9,fontWeight:FontWeight.w900,letterSpacing:1.3))),Text((i+1).toString()+'/'+cards.length.toString(),style:const TextStyle(color:Colors.white60,fontSize:10))]),const Spacer(),Text(v.$2,style:const TextStyle(color:Colors.white,fontSize:16,height:1.5,fontWeight:FontWeight.w700),maxLines:4,overflow:TextOverflow.ellipsis),const SizedBox(height:10),Text(v.$3,style:const TextStyle(color:Colors.white70,fontSize:10,fontWeight:FontWeight.w700))]))); })),const SizedBox(height:4),Row(mainAxisAlignment:MainAxisAlignment.center,children:List.generate(cards.length,(i)=>AnimatedContainer(duration:const Duration(milliseconds:200),margin:const EdgeInsets.symmetric(horizontal:2),width:index==i?16:5,height:5,decoration:BoxDecoration(color:index==i?AtlasColors.royalBlue:AtlasColors.border,borderRadius:BorderRadius.circular(8)))))]);}
-class _NoticeLine extends StatelessWidget{
- const _NoticeLine();
- Future<void> open(BuildContext context,String value)async{final uri=Uri.tryParse(value);if(uri==null||!['https','http'].contains(uri.scheme)){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('This announcement link is invalid.')));return;}if(!await launchUrl(uri,mode:LaunchMode.externalApplication)&&context.mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Unable to open this link.')));}
- @override Widget build(BuildContext context)=>StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(stream:FirebaseFirestore.instance.collection('notifications').where('audience',isEqualTo:'all').where('isActive',isEqualTo:true).snapshots(),builder:(c,s){final docs=[...(s.data?.docs??[])]..sort((a,b){final x=a.data()['createdAt'];final y=b.data()['createdAt'];return (y is Timestamp?y.toDate():DateTime(1970)).compareTo(x is Timestamp?x.toDate():DateTime(1970));});if(docs.isEmpty)return const SizedBox.shrink();final d=docs.first.data();final link=(d['linkUrl']??d['url']??'').toString().trim();return Container(padding:const EdgeInsets.symmetric(horizontal:13,vertical:11),decoration:BoxDecoration(color:const Color(0xFFFFF5DF),borderRadius:BorderRadius.circular(14),border:Border.all(color:const Color(0xFFEAD6A7))),child:Row(children:[const Icon(Icons.campaign_rounded,color:AtlasColors.gold),const SizedBox(width:9),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text((d['title']??'Academy announcement').toString(),maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(color:AtlasColors.navy,fontSize:11,fontWeight:FontWeight.w900)),Text((d['body']??'').toString(),maxLines:2,overflow:TextOverflow.ellipsis,style:const TextStyle(color:AtlasColors.charcoal,fontSize:10,height:1.4))])),if(link.isNotEmpty)IconButton(tooltip:'Open link',onPressed:()=>open(context,link),style:IconButton.styleFrom(backgroundColor:AtlasColors.navy,foregroundColor:Colors.white),icon:const Icon(Icons.open_in_new_rounded,size:17))]));});
-}
-
 
 class StudentExamsHistoryScreen extends StatelessWidget {
  const StudentExamsHistoryScreen({super.key});
