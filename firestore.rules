@@ -200,7 +200,7 @@ service cloud.firestore {
         resource.data.isPublished == true &&
         (
           (resource.data.trackType == 'structured' &&
-            hasFeatureAccess('examinations')) ||
+            (hasFeatureAccess('examinations') || hasFeatureAccess('mcqPractice'))) ||
           (resource.data.trackType == 'past_paper' &&
             (hasFeatureAccess('pastPapers') ||
               hasFeatureAccess('examinations')))
