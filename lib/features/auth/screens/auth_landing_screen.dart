@@ -26,7 +26,7 @@ class AuthLandingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AtlasColors.ivory,
+      backgroundColor: const Color(0xFFF3F7FF),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -58,7 +58,7 @@ class AuthLandingScreen extends StatelessWidget {
                         color: Colors.white.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(30),
                         border: Border.all(
-                          color: AtlasColors.champagne.withValues(
+                          color: AtlasColors.royalBlue.withValues(
                             alpha: 0.65,
                           ),
                           width: 1.3,
@@ -73,7 +73,7 @@ class AuthLandingScreen extends StatelessWidget {
                       ),
                       child: const Icon(
                         Icons.school_rounded,
-                        color: AtlasColors.champagne,
+                        color: AtlasColors.royalBlue,
                         size: 58,
                       ),
                     ),
@@ -93,7 +93,7 @@ class AuthLandingScreen extends StatelessWidget {
                       height: 3,
                       width: 58,
                       decoration: BoxDecoration(
-                        color: AtlasColors.champagne,
+                        color: AtlasColors.royalBlue,
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
@@ -102,7 +102,7 @@ class AuthLandingScreen extends StatelessWidget {
                       'LEARN  •  PREPARE  •  EXCEL',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: AtlasColors.champagne,
+                        color: AtlasColors.royalBlue,
                         fontSize: 11,
                         letterSpacing: 2,
                         fontWeight: FontWeight.w800,
