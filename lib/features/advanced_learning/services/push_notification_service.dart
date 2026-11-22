@@ -51,6 +51,38 @@ class PushNotificationService {
     return (decoded['sent'] as num?)?.toInt() ?? 0;
   }
 
+  Future<Map<String, dynamic>> sendCampaign({
+    required String notificationId,
+    required String title,
+    required String body,
+    String imageUrl = '',
+    String destination = '',
+    String audience = 'all',
+    String membershipPlan = '',
+    String medicalPathway = '',
+    String subscriptionStatus = 'active',
+    List<String> userIds = const [],
+  }) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) throw Exception('Administrator sign-in is required.');
+    final token = await user.getIdToken();
+    if (token == null || token.isEmpty) throw Exception('Administrator session could not be verified.');
+    final endpoint = _apiUrl.endsWith('/') ? '${_apiUrl}send' : '$_apiUrl/send';
+    final response = await http.post(Uri.parse(endpoint),
+      headers: {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'notificationId': notificationId, 'title': title, 'body': body,
+        'imageUrl': imageUrl, 'destination': destination, 'audience': audience,
+        'membershipPlan': membershipPlan, 'medicalPathway': medicalPathway,
+        'subscriptionStatus': subscriptionStatus, 'userIds': userIds,
+      })).timeout(const Duration(seconds: 60));
+    final dynamic decoded = jsonDecode(response.body);
+    if (response.statusCode < 200 || response.statusCode >= 300 || decoded is! Map || decoded['success'] != true) {
+      throw Exception(decoded is Map ? (decoded['message'] ?? 'Push delivery failed.').toString() : 'Invalid push response.');
+    }
+    return Map<String, dynamic>.from(decoded);
+  }
+
   Future<void> registerDevice(BuildContext context) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
