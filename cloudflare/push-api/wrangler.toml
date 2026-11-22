@@ -5,3 +5,6 @@ workers_dev = true
 
 [vars]
 FIREBASE_PROJECT_ID = "the-atlas-academy-3fae0"
+
+[triggers]
+crons = ["* * * * *"]
