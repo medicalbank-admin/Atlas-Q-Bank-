@@ -106,7 +106,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen>{
     ),
     Expanded(child:IndexedStack(index:selected,children:pages)),
    ])),
-  ]))),
+  ])),
   bottomNavigationBar: wide ? null : _AtlasBottomNavigationBar(
     onHome: () { setState(() => selected = 0); },
     onExams: () => showModalBottomSheet(
@@ -127,6 +127,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen>{
     onResources: () => openFeature('studyLibrary'),
     onProfile: () => openFeature('profile'),
   ),
+ );
  }
 }
 class _AtlasBottomNavigationBar extends StatelessWidget {
