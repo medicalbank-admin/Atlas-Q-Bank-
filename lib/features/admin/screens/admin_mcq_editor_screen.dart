@@ -102,8 +102,6 @@ class _AdminMcqEditorScreenState
       explanation: _explanationController.text.trim(),
       yearId: _destination!.yearId,
       trackType: _destination!.trackType,
-      pathwayId: _destination!.pathwayId,
-      pathwayName: _destination!.pathwayName,
       subjectId: _destination!.subjectId,
       examSetId: _destination!.examSetId,
       examSetName: _destination!.examSetName,
