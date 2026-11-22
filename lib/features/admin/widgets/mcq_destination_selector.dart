@@ -109,7 +109,7 @@ class _McqDestinationSelectorState extends State<McqDestinationSelector> {
                 final data = doc.data();
                 if (data['isActive'] == false) return false;
                 if (_track == 'past_paper') return data['trackType'] == 'past_paper';
-                return data['trackType'] == 'structured' || data['yearId'] == 'exam_centre';
+                return data['trackType'] == 'structured';
               }).toList()
                 ..sort((a, b) => (a.data()['name'] ?? '')
                     .toString().compareTo((b.data()['name'] ?? '').toString()));
