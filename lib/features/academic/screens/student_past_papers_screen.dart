@@ -10,7 +10,7 @@ class StudentPastPapersScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AtlasColors.ivory,
-      appBar: AppBar(title: const Text('Past Papers')),
+      appBar: AppBar(title: const Text('Past Papers'), backgroundColor: Colors.white, foregroundColor: AtlasColors.navy, elevation: 0),
       body: ListView(
         padding: const EdgeInsets.all(18),
         children: [
@@ -62,6 +62,8 @@ class StudentPastPapersScreen extends StatelessWidget {
                   final duration = data['durationMinutes'] ?? 60;
                   return Card(
                     color: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(17), side: const BorderSide(color: AtlasColors.border)),
                     child: ListTile(
                       leading: const CircleAvatar(
                         backgroundColor: AtlasColors.paleBlue,
