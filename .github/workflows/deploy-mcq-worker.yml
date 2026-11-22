@@ -52,3 +52,8 @@ jobs:
             exit 1
           fi
           printf '%s' "$FIREBASE_SERVICE_ACCOUNT" | wrangler secret put FIREBASE_SERVICE_ACCOUNT --config cloudflare/mcq-api/wrangler.toml
+
+      - name: Verify Worker and Firestore connection
+        run: |
+          curl --retry 5 --retry-delay 2 --retry-connrefused --fail-with-body \
+            https://atlas-academy-mcq-api.medicalbankadmin.workers.dev/health
