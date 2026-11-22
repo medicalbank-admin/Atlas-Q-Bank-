@@ -26,7 +26,7 @@ class _AdminSubscriptionRequestsScreenState
       appBar: AppBar(
         title: const Text('Payment Management'),
         backgroundColor: AtlasColors.ivory,
-        foregroundColor: AtlasColors.deepTeal,
+        foregroundColor: AtlasColors.navy,
         elevation: 0,
       ),
       body: Column(
@@ -41,7 +41,7 @@ class _AdminSubscriptionRequestsScreenState
                     ConnectionState.waiting) {
                   return const Center(
                     child: CircularProgressIndicator(
-                      color: AtlasColors.oceanTeal,
+                      color: AtlasColors.royalBlue,
                     ),
                   );
                 }
@@ -84,8 +84,8 @@ class _AdminSubscriptionRequestsScreenState
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [
-            AtlasColors.deepTeal,
-            AtlasColors.oceanTeal,
+            AtlasColors.navy,
+            AtlasColors.royalBlue,
           ],
         ),
         borderRadius: BorderRadius.circular(20),
@@ -145,17 +145,17 @@ class _AdminSubscriptionRequestsScreenState
               onSelected: (_) {
                 setState(() => _selectedFilter = filter.$1);
               },
-              selectedColor: AtlasColors.deepTeal,
+              selectedColor: AtlasColors.navy,
               backgroundColor: Colors.white,
               labelStyle: TextStyle(
                 color: selected
                     ? Colors.white
-                    : AtlasColors.deepTeal,
+                    : AtlasColors.navy,
                 fontWeight: FontWeight.w600,
               ),
               side: BorderSide(
                 color: selected
-                    ? AtlasColors.deepTeal
+                    ? AtlasColors.navy
                     : Colors.grey.shade300,
               ),
             ),
@@ -194,7 +194,7 @@ class _AdminSubscriptionRequestsScreenState
                 backgroundColor: AtlasColors.softTeal,
                 child: Icon(
                   Icons.person_outline,
-                  color: AtlasColors.deepTeal,
+                  color: AtlasColors.navy,
                 ),
               ),
               const SizedBox(width: 11),
@@ -205,7 +205,7 @@ class _AdminSubscriptionRequestsScreenState
                     Text(
                       request.studentName,
                       style: const TextStyle(
-                        color: AtlasColors.deepTeal,
+                        color: AtlasColors.navy,
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                       ),
@@ -248,7 +248,7 @@ class _AdminSubscriptionRequestsScreenState
                   icon: const Icon(Icons.visibility_outlined),
                   label: const Text('Review'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AtlasColors.deepTeal,
+                    foregroundColor: AtlasColors.navy,
                   ),
                 ),
               ),
@@ -352,7 +352,7 @@ class _AdminSubscriptionRequestsScreenState
                   request.studentName,
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: AtlasColors.deepTeal,
+                    color: AtlasColors.navy,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -558,14 +558,14 @@ class _AdminSubscriptionRequestsScreenState
           children: [
             const Icon(
               Icons.inbox_outlined,
-              color: AtlasColors.oceanTeal,
+              color: AtlasColors.royalBlue,
               size: 55,
             ),
             const SizedBox(height: 15),
             const Text(
               'No Payment Requests',
               style: TextStyle(
-                color: AtlasColors.deepTeal,
+                color: AtlasColors.navy,
                 fontSize: 19,
                 fontWeight: FontWeight.bold,
               ),
@@ -601,7 +601,7 @@ class _AdminSubscriptionRequestsScreenState
             const Text(
               'Unable to Load Payment Requests',
               style: TextStyle(
-                color: AtlasColors.deepTeal,
+                color: AtlasColors.navy,
                 fontWeight: FontWeight.bold,
               ),
             ),
