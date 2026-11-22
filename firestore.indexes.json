@@ -67,34 +67,6 @@
       ]
     },
     {
-      "collectionGroup": "academic_subjects",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "yearId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "displayOrder",
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "mcq_attempts",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "userId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "completedAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
       "collectionGroup": "mcq_exam_sets",
       "queryScope": "COLLECTION",
       "fields": [
