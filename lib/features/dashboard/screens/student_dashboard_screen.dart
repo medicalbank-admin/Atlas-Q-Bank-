@@ -84,15 +84,173 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen>{
   ])));
  }
 }
-class _SideNav extends StatelessWidget{
- final int selected;final ValueChanged<int> onSelect;final VoidCallback onSignOut,onProfile;
- const _SideNav({required this.selected,required this.onSelect,required this.onSignOut,required this.onProfile});
- static const items=[(Icons.home_rounded,'Home'),(Icons.menu_book_rounded,'Study Library'),(Icons.quiz_rounded,'MCQ Practice'),(Icons.history_edu_rounded,'Past Papers'),(Icons.menu_book_rounded,'Subject-Wise Exams'),(Icons.account_tree_rounded,'System-Wise Exams'),(Icons.fact_check_rounded,'Mock Exams'),(Icons.history_rounded,'Exams History'),(Icons.medical_services_rounded,'Clinical Cases'),(Icons.bookmark_added_rounded,'Mistakes Notebook'),(Icons.insights_rounded,'Mock Exam Readiness'),(Icons.forum_rounded,'Discussion Forum'),(Icons.support_agent_rounded,'Ask a Teacher'),(Icons.workspace_premium_rounded,'Membership'),(Icons.verified_user_rounded,'Account Status')];
- @override Widget build(BuildContext context)=>Container(color:AtlasColors.navy,child:Column(children:[
-  Padding(padding:const EdgeInsets.fromLTRB(19,25,19,22),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[const AtlasLogo(size:58),const SizedBox(height:14),const Text('THE ATLAS ACADEMY',style:TextStyle(color:Colors.white,fontWeight:FontWeight.w900,fontSize:13,letterSpacing:1)),const SizedBox(height:5),Text('YOUR MEDICAL LEARNING SPACE',style:TextStyle(color:Colors.white.withValues(alpha:.55),fontSize:8,letterSpacing:1)),const SizedBox(height:18),Container(height:1,color:Colors.white.withValues(alpha:.13))])),
-  Expanded(child:ListView(padding:const EdgeInsets.symmetric(horizontal:10),children:[for(var i=0;i<items.length;i++)Padding(padding:const EdgeInsets.only(bottom:5),child:Material(color:selected==i?Colors.white.withValues(alpha:.14):Colors.transparent,borderRadius:BorderRadius.circular(13),child:InkWell(onTap:()=>onSelect(i),borderRadius:BorderRadius.circular(13),child:Padding(padding:const EdgeInsets.symmetric(horizontal:13,vertical:13),child:Row(children:[Icon(items[i].$1,color:selected==i?AtlasColors.champagne:Colors.white70,size:20),const SizedBox(width:12),Expanded(child:Text(items[i].$2,style:TextStyle(color:selected==i?Colors.white:Colors.white70,fontSize:12,fontWeight:selected==i?FontWeight.w900:FontWeight.w600))),if(selected==i)const Icon(Icons.circle,size:6,color:AtlasColors.champagne)])))))])),
-  Padding(padding:const EdgeInsets.fromLTRB(10,8,10,15),child:Column(children:[ListTile(dense:true,leading:const Icon(Icons.person_outline,color:AtlasColors.champagne),title:const Text('My Profile',style:TextStyle(color:Colors.white,fontSize:12)),onTap:onProfile),ListTile(dense:true,leading:const Icon(Icons.logout,color:Colors.white70),title:const Text('Sign Out',style:TextStyle(color:Colors.white70,fontSize:12)),onTap:onSignOut)]))
- ]));
+class _SideNav extends StatelessWidget {
+  final int selected;
+  final ValueChanged<int> onSelect;
+  final VoidCallback onSignOut, onProfile;
+
+  const _SideNav({
+    required this.selected,
+    required this.onSelect,
+    required this.onSignOut,
+    required this.onProfile,
+  });
+
+  static const items = [
+    (Icons.home_rounded, 'Home'),
+    (Icons.menu_book_rounded, 'Study Library'),
+    (Icons.quiz_rounded, 'MCQ Practice'),
+    (Icons.history_edu_rounded, 'Past Papers'),
+    (Icons.menu_book_rounded, 'Subject-Wise Exams'),
+    (Icons.account_tree_rounded, 'System-Wise Exams'),
+    (Icons.fact_check_rounded, 'Mock Exams'),
+    (Icons.history_rounded, 'Exams History'),
+    (Icons.medical_services_rounded, 'Clinical Cases'),
+    (Icons.bookmark_added_rounded, 'Mistakes Notebook'),
+    (Icons.insights_rounded, 'Mock Exam Readiness'),
+    (Icons.forum_rounded, 'Discussion Forum'),
+    (Icons.support_agent_rounded, 'Ask a Teacher'),
+    (Icons.workspace_premium_rounded, 'Membership'),
+    (Icons.verified_user_rounded, 'Account Status'),
+  ];
+
+  @override
+  Widget build(BuildContext context) => Container(
+        color: Colors.white,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(19, 25, 19, 22),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const AtlasLogo(size: 58),
+                  const SizedBox(height: 14),
+                  const Text(
+                    'THE ATLAS ACADEMY',
+                    style: TextStyle(
+                      color: AtlasColors.navy,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 13,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  const Text(
+                    'YOUR MEDICAL LEARNING SPACE',
+                    style: TextStyle(
+                      color: AtlasColors.secondaryText,
+                      fontSize: 8,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Container(height: 1, color: AtlasColors.border),
+                ],
+              ),
+            ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                children: [
+                  for (var i = 0; i < items.length; i++)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 5),
+                      child: Material(
+                        color: selected == i
+                            ? AtlasColors.paleBlue
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(13),
+                        child: InkWell(
+                          onTap: () => onSelect(i),
+                          borderRadius: BorderRadius.circular(13),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 13,
+                              vertical: 13,
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  items[i].$1,
+                                  color: selected == i
+                                      ? AtlasColors.royalBlue
+                                      : AtlasColors.secondaryText,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    items[i].$2,
+                                    style: TextStyle(
+                                      color: selected == i
+                                          ? AtlasColors.navy
+                                          : AtlasColors.charcoal,
+                                      fontSize: 12,
+                                      fontWeight: selected == i
+                                          ? FontWeight.w900
+                                          : FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                                if (selected == i)
+                                  Container(
+                                    width: 6,
+                                    height: 6,
+                                    decoration: const BoxDecoration(
+                                      color: AtlasColors.royalBlue,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 8, 10, 15),
+              child: Column(
+                children: [
+                  ListTile(
+                    dense: true,
+                    leading: const Icon(
+                      Icons.person_outline,
+                      color: AtlasColors.royalBlue,
+                    ),
+                    title: const Text(
+                      'My Profile',
+                      style: TextStyle(
+                        color: AtlasColors.charcoal,
+                        fontSize: 12,
+                      ),
+                    ),
+                    onTap: onProfile,
+                  ),
+                  ListTile(
+                    dense: true,
+                    leading: const Icon(
+                      Icons.logout,
+                      color: AtlasColors.secondaryText,
+                    ),
+                    title: const Text(
+                      'Sign Out',
+                      style: TextStyle(
+                        color: AtlasColors.secondaryText,
+                        fontSize: 12,
+                      ),
+                    ),
+                    onTap: onSignOut,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
 }
 class _Home extends StatelessWidget {
   final String name;
