@@ -20,8 +20,8 @@ class StudentExamCentreScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final title = _titles[section] ?? 'Examinations';
     return Scaffold(
-      backgroundColor: AtlasColors.ivory,
-      appBar: AppBar(title: Text(title), backgroundColor: Colors.white, foregroundColor: AtlasColors.navy, elevation: 0),
+      backgroundColor: const Color(0xFFF3F7FF),
+      appBar: AppBar(title: Text(title), backgroundColor: Colors.white, foregroundColor: AtlasColors.navy, elevation: 0, scrolledUnderElevation: 0),
       body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         // Restrict the stream to the new structured exam model.
         stream: FirebaseFirestore.instance
@@ -66,7 +66,7 @@ class StudentExamCentreScreen extends StatelessWidget {
               'grand_mock': 'Grand Mocks',
             };
             return ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 22),
               children: mockLabels.entries.map((entry) {
                 final group = docs.where((doc) =>
                     doc.data()['examCategory'] == entry.key).toList();
@@ -98,7 +98,7 @@ class StudentExamCentreScreen extends StatelessWidget {
             groups.putIfAbsent(categoryName, () => []).add(doc);
           }
           return ListView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 22),
             children: groups.entries.map((entry) => Card(
               color: Colors.white,
               elevation: 0,
@@ -123,7 +123,7 @@ class StudentExamCentreScreen extends StatelessWidget {
 
   Widget _examList(BuildContext context,
       List<QueryDocumentSnapshot<Map<String, dynamic>>> docs) {
-    return ListView(padding: const EdgeInsets.all(16), children: _tiles(context, docs));
+    return ListView(padding: const EdgeInsets.fromLTRB(16, 16, 16, 22), children: _tiles(context, docs));
   }
 
   List<Widget> _tiles(BuildContext context,
