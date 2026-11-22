@@ -365,7 +365,7 @@ class _Home extends StatelessWidget {
           clipBehavior: Clip.none,
           children: [
             Container(
-              height: 205,
+              height: 180,
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(22, 18, 8, 78),
               decoration: const BoxDecoration(
@@ -428,7 +428,7 @@ class _Home extends StatelessWidget {
         const SizedBox(height: 91),
         GridView.count(
           crossAxisCount: 2, crossAxisSpacing: 12, mainAxisSpacing: 12,
-          childAspectRatio: 1.43, shrinkWrap: true,
+          childAspectRatio: 1.50, shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           children: [
             _ClinicalExamTile(title: 'Subject-Wise\nExams', icon: Icons.menu_book_rounded,
