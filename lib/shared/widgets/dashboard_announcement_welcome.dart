@@ -86,7 +86,14 @@ class _DashboardAnnouncementWelcomeState
             child: SizedBox(
               width: 139,
               child: ColorFiltered(
-                colorFilter: const ColorFilter.mode(Colors.white, BlendMode.multiply),
+                // The supplied JPG has a black canvas. Convert that canvas to
+                // transparency while preserving the blue and silver instrument.
+                colorFilter: const ColorFilter.matrix(<double>[
+                  1, 0, 0, 0, 0,
+                  0, 1, 0, 0, 0,
+                  0, 0, 1, 0, 0,
+                  1.2, 1.2, 1.2, 0, -0.10,
+                ]),
                 child: Image.asset(
                   'assets/images/IMG_20261123_044554.jpg',
                   fit: BoxFit.contain,
