@@ -82,7 +82,7 @@ class _StructuredExamList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(
-    stream: FirebaseFirestore.instance.collection('mcq_exam_sets').where('isPublished', isEqualTo: true).snapshots(),
+    stream: FirebaseFirestore.instance.collection('mcq_exam_sets').where('trackType', isEqualTo: 'mbbs').where('isPublished', isEqualTo: true).snapshots(),
     builder: (context, snapshot) {
       if (snapshot.hasError) return Center(child: Padding(padding: const EdgeInsets.all(20), child: Text('Unable to load $heading. Please try again.')));
       if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
