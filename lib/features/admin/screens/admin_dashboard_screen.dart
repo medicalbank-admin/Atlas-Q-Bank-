@@ -170,7 +170,7 @@ class AdminDashboardScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'The Atlas\\nAcademy',
+                'The Atlas\nAcademy',
                 style: TextStyle(
                   color: AtlasColors.navy,
                   fontFamily: 'Georgia',
