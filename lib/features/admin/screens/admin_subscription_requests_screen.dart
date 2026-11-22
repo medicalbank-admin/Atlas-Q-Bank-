@@ -22,10 +22,10 @@ class _AdminSubscriptionRequestsScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AtlasColors.ivory,
+      backgroundColor: const Color(0xFFF3F7FF),
       appBar: AppBar(
         title: const Text('Payment Management'),
-        backgroundColor: AtlasColors.ivory,
+        backgroundColor: const Color(0xFFF3F7FF),
         foregroundColor: AtlasColors.navy,
         elevation: 0,
       ),
@@ -95,7 +95,7 @@ class _AdminSubscriptionRequestsScreenState
         children: [
           Icon(
             Icons.admin_panel_settings_rounded,
-            color: AtlasColors.champagne,
+            color: AtlasColors.royalBlue,
             size: 32,
           ),
           SizedBox(height: 12),
