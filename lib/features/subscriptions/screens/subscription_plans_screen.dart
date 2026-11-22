@@ -14,7 +14,7 @@ class SubscriptionPlansScreen extends StatelessWidget {
     final service = SubscriptionPlanService();
 
     return Scaffold(
-      backgroundColor: AtlasColors.ivory,
+      backgroundColor: const Color(0xFFF3F7FF),
       appBar: AppBar(
         title: const Text('Membership Plans'),
         backgroundColor: Colors.white,
@@ -127,7 +127,7 @@ class SubscriptionPlansScreen extends StatelessWidget {
             AtlasColors.royalBlue,
           ],
         ),
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(20),
       ),
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -208,7 +208,7 @@ class SubscriptionPlansScreen extends StatelessWidget {
           .map((entry) => permissionLabels[entry.key] ?? entry.key),
     }.toList();
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
