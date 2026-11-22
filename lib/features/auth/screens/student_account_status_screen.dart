@@ -75,7 +75,7 @@ class _StudentAccountStatusScreenState
   Widget build(BuildContext context) {
     if (_loading) {
       return const Scaffold(
-        backgroundColor: AtlasColors.ivory,
+        backgroundColor: const Color(0xFFF3F7FF),
         body: Center(
           child: CircularProgressIndicator(
             color: AtlasColors.royalBlue,
@@ -85,7 +85,7 @@ class _StudentAccountStatusScreenState
     }
     if (_error != null || _profile == null) {
       return Scaffold(
-        backgroundColor: AtlasColors.ivory,
+        backgroundColor: const Color(0xFFF3F7FF),
         appBar: AppBar(title: const Text('Account Status')),
         body: Center(
           child: Padding(
@@ -145,7 +145,7 @@ class _StudentAccountStatusScreenState
                 ? 'Your membership is being activated. Learning content will become available as soon as activation is complete.'
                 : 'Your membership is active and your learning access is enabled.';
     return Scaffold(
-      backgroundColor: AtlasColors.ivory,
+      backgroundColor: const Color(0xFFF3F7FF),
       appBar: AppBar(
         title: const Text('Account Status'),
         actions: [
@@ -195,14 +195,14 @@ class _StudentAccountStatusScreenState
                     children: [
                       Icon(
                         Icons.school_rounded,
-                        color: AtlasColors.champagne,
+                        color: AtlasColors.royalBlue,
                         size: 25,
                       ),
                       SizedBox(width: 10),
                       Text(
                         'THE ATLAS ACADEMY',
                         style: TextStyle(
-                          color: AtlasColors.champagne,
+                          color: AtlasColors.royalBlue,
                           fontSize: 11,
                           letterSpacing: 1.5,
                           fontWeight: FontWeight.w900,
@@ -250,7 +250,7 @@ class _StudentAccountStatusScreenState
                           canAccess
                               ? Icons.verified_rounded
                               : Icons.hourglass_top_rounded,
-                          color: AtlasColors.champagne,
+                          color: AtlasColors.royalBlue,
                           size: 17,
                         ),
                         const SizedBox(width: 9),
@@ -430,7 +430,7 @@ class _Panel extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(21),
-        border: Border.all(color: AtlasColors.border),
+        border: Border.all(color: const Color(0xFFE0EAF5)),
         boxShadow: [
           BoxShadow(
             color: AtlasColors.navy.withValues(alpha: 0.035),
@@ -492,7 +492,7 @@ class _DetailTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AtlasColors.border),
+        border: Border.all(color: const Color(0xFFE0EAF5)),
       ),
       child: Row(
         children: [
