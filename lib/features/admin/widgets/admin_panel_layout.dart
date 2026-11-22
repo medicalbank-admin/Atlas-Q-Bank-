@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../app/atlas_academy_app.dart';
 import 'admin_navigation_drawer.dart';
 
 class AdminPanelLayout extends StatelessWidget {
@@ -17,73 +18,37 @@ class AdminPanelLayout extends StatelessWidget {
     this.actions = const [],
   });
 
-  static const Color deepTeal = Color(0xFF071B3D);
-  static const Color ivory = Color(0xFFF5F7FC);
-  static const Color champagne = Color(0xFFE4BE68);
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: ivory,
+      backgroundColor: AtlasColors.ivory,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        foregroundColor: deepTeal,
+        foregroundColor: AtlasColors.navy,
         elevation: 0,
         scrolledUnderElevation: 1,
+        shadowColor: AtlasColors.navy.withValues(alpha: .08),
         titleSpacing: 8,
-        title: Text(
-          title,
-          style: const TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.w800,
-            color: deepTeal,
-          ),
-        ),
-        actions: [
-          ...actions,
-          const SizedBox(width: 8),
-        ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(3),
-          child: Container(
-            height: 3,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  deepTeal,
-                  Color(0xFF174A91),
-                  champagne,
-                ],
-              ),
-            ),
-          ),
+        title: Text(title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AtlasColors.navy)),
+        actions: [...actions, const SizedBox(width: 8)],
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(height: 1, thickness: 1, color: AtlasColors.border),
         ),
       ),
       drawer: SizedBox(
         width: 300,
-        child: AdminNavigationDrawer(
-          selectedRoute: selectedRoute,
-          onDestinationSelected: onDestinationSelected,
-        ),
+        child: AdminNavigationDrawer(selectedRoute: selectedRoute, onDestinationSelected: onDestinationSelected),
       ),
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final horizontalPadding =
-                constraints.maxWidth >= 1000 ? 32.0 : 16.0;
-
+            final horizontalPadding = constraints.maxWidth >= 1000 ? 32.0 : 16.0;
             return SingleChildScrollView(
-              padding: EdgeInsets.symmetric(
-                horizontal: horizontalPadding,
-                vertical: 22,
-              ),
+              physics: const BouncingScrollPhysics(),
+              padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 22),
               child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(
-                    maxWidth: 1500,
-                  ),
-                  child: child,
-                ),
+                child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 1500), child: child),
               ),
             );
           },
