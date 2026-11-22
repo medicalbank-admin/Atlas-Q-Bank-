@@ -17,9 +17,10 @@ class SubscriptionPlansScreen extends StatelessWidget {
       backgroundColor: AtlasColors.ivory,
       appBar: AppBar(
         title: const Text('Membership Plans'),
-        backgroundColor: AtlasColors.ivory,
-        foregroundColor: AtlasColors.deepTeal,
+        backgroundColor: Colors.white,
+        foregroundColor: AtlasColors.navy,
         elevation: 0,
+        scrolledUnderElevation: 1,
         actions: [
           IconButton(
             tooltip: 'My subscription requests',
@@ -42,7 +43,7 @@ class SubscriptionPlansScreen extends StatelessWidget {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
               child: CircularProgressIndicator(
-                color: AtlasColors.oceanTeal,
+                color: AtlasColors.royalBlue,
               ),
             );
           }
@@ -70,7 +71,7 @@ class SubscriptionPlansScreen extends StatelessWidget {
           }
 
           return RefreshIndicator(
-            color: AtlasColors.oceanTeal,
+            color: AtlasColors.royalBlue,
             onRefresh: () async {
               await service.watchActivePlans().first;
             },
@@ -84,7 +85,7 @@ class SubscriptionPlansScreen extends StatelessWidget {
                 const Text(
                   'Choose Your Membership',
                   style: TextStyle(
-                    color: AtlasColors.deepTeal,
+                    color: AtlasColors.navy,
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                   ),
@@ -122,8 +123,8 @@ class SubscriptionPlansScreen extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AtlasColors.deepTeal,
-            AtlasColors.oceanTeal,
+            AtlasColors.navy,
+            AtlasColors.royalBlue,
           ],
         ),
         borderRadius: BorderRadius.circular(22),
@@ -173,9 +174,9 @@ class SubscriptionPlansScreen extends StatelessWidget {
       icon: const Icon(Icons.history_rounded),
       label: const Text('View My Payment Requests'),
       style: OutlinedButton.styleFrom(
-        foregroundColor: AtlasColors.deepTeal,
+        foregroundColor: AtlasColors.navy,
         side: const BorderSide(
-          color: AtlasColors.oceanTeal,
+          color: AtlasColors.royalBlue,
         ),
         minimumSize: const Size(double.infinity, 48),
         shape: RoundedRectangleBorder(
@@ -212,7 +213,7 @@ class SubscriptionPlansScreen extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: AtlasColors.oceanTeal.withValues(alpha: 0.18),
+          color: AtlasColors.royalBlue.withValues(alpha: 0.18),
         ),
         boxShadow: [
           BoxShadow(
@@ -237,7 +238,7 @@ class SubscriptionPlansScreen extends StatelessWidget {
                 child: Text(
                   plan.name,
                   style: const TextStyle(
-                    color: AtlasColors.deepTeal,
+                    color: AtlasColors.navy,
                     fontSize: 19,
                     fontWeight: FontWeight.bold,
                   ),
@@ -260,7 +261,7 @@ class SubscriptionPlansScreen extends StatelessWidget {
           Text(
             '${plan.currency} ${plan.price.toStringAsFixed(2)}',
             style: const TextStyle(
-              color: AtlasColors.oceanTeal,
+              color: AtlasColors.royalBlue,
               fontSize: 25,
               fontWeight: FontWeight.bold,
             ),
@@ -280,7 +281,7 @@ class SubscriptionPlansScreen extends StatelessWidget {
             const Text(
               'Plan Benefits',
               style: TextStyle(
-                color: AtlasColors.deepTeal,
+                color: AtlasColors.navy,
                 fontWeight: FontWeight.bold,
                 fontSize: 13,
               ),
@@ -327,7 +328,7 @@ class SubscriptionPlansScreen extends StatelessWidget {
                 );
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: AtlasColors.deepTeal,
+                backgroundColor: AtlasColors.navy,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
@@ -358,14 +359,14 @@ class SubscriptionPlansScreen extends StatelessWidget {
         children: [
           Icon(
             Icons.verified_user_outlined,
-            color: AtlasColors.deepTeal,
+            color: AtlasColors.navy,
           ),
           SizedBox(width: 10),
           Expanded(
             child: Text(
               'After transferring the fee, send your payment confirmation through WhatsApp. An administrator will verify your payment and activate the plan.',
               style: TextStyle(
-                color: AtlasColors.deepTeal,
+                color: AtlasColors.navy,
                 fontSize: 12,
                 height: 1.5,
               ),
@@ -392,13 +393,13 @@ class SubscriptionPlansScreen extends StatelessWidget {
             Icon(
               icon,
               size: 48,
-              color: AtlasColors.oceanTeal,
+              color: AtlasColors.royalBlue,
             ),
             const SizedBox(height: 16),
             Text(
               title,
               style: const TextStyle(
-                color: AtlasColors.deepTeal,
+                color: AtlasColors.navy,
                 fontSize: 19,
                 fontWeight: FontWeight.bold,
               ),
