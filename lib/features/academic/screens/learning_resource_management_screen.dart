@@ -622,7 +622,7 @@ class LearningResourceManagementScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: ivory,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: ivory,
         foregroundColor: deepTeal,
         title: Text(
           topicTitle,
@@ -660,7 +660,7 @@ class LearningResourceManagementScreen extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _addResource(context),
-        backgroundColor: deepTeal,
+        backgroundColor: oceanTeal,
         foregroundColor: champagne,
         icon: const Icon(Icons.add_rounded),
         label: const Text('Add Resource'),
@@ -731,7 +731,7 @@ class LearningResourceManagementScreen extends StatelessWidget {
                       icon: const Icon(Icons.add),
                       label: const Text('Add First Resource'),
                       style: FilledButton.styleFrom(
-                        backgroundColor: deepTeal,
+                        backgroundColor: oceanTeal,
                       ),
                     ),
                   ],
