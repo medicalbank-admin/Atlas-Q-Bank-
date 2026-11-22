@@ -200,7 +200,6 @@ class SubscriptionPlansScreen extends StatelessWidget {
       'mockPredictions': 'Mock Exam Readiness & Predictions',
       'discussionForum': 'Student Discussion Forum',
       'askTeacher': 'Ask a Teacher',
-      'pushNotifications': 'Push Notifications',
     };
     final benefits = <String>{
       ...plan.features,
