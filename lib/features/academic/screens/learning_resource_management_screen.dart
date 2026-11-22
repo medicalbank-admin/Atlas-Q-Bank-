@@ -515,10 +515,11 @@ class LearningResourceManagementScreen extends StatelessWidget {
                   }
                 },
                 itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: 'edit',
-                    child: Text('Edit'),
-                  ),
+                  if (resource.type != LearningResourceType.text)
+                    const PopupMenuItem(
+                      value: 'edit',
+                      child: Text('Edit'),
+                    ),
                   PopupMenuItem(
                     value: 'publish',
                     child: Text(
