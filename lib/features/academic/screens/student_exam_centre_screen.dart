@@ -21,7 +21,7 @@ class StudentExamCentreScreen extends StatelessWidget {
     final title = _titles[section] ?? 'Examinations';
     return Scaffold(
       backgroundColor: AtlasColors.ivory,
-      appBar: AppBar(title: Text(title)),
+      appBar: AppBar(title: Text(title), backgroundColor: Colors.white, foregroundColor: AtlasColors.navy, elevation: 0),
       body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         // Restrict the stream to the new structured exam model.
         stream: FirebaseFirestore.instance
@@ -72,6 +72,8 @@ class StudentExamCentreScreen extends StatelessWidget {
                     doc.data()['examCategory'] == entry.key).toList();
                 return Card(
                   color: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18), side: const BorderSide(color: AtlasColors.border)),
                   margin: const EdgeInsets.only(bottom: 12),
                   child: ExpansionTile(
                     initiallyExpanded: true,
@@ -99,6 +101,8 @@ class StudentExamCentreScreen extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             children: groups.entries.map((entry) => Card(
               color: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18), side: const BorderSide(color: AtlasColors.border)),
               margin: const EdgeInsets.only(bottom: 12),
               child: ExpansionTile(
                 initiallyExpanded: true,
