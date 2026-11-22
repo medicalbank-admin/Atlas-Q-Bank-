@@ -1,6 +1,4 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../subscriptions/models/subscription_request_model.dart';
@@ -8,15 +6,12 @@ import '../../subscriptions/models/subscription_request_model.dart';
 class AdminSubscriptionRequestService {
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
-  final FirebaseFunctions _functions;
 
   AdminSubscriptionRequestService({
     FirebaseFirestore? firestore,
     FirebaseAuth? auth,
-    FirebaseFunctions? functions,
   })  : _firestore = firestore ?? FirebaseFirestore.instance,
-        _auth = auth ?? FirebaseAuth.instance,
-        _functions = functions ?? FirebaseFunctions.instance;
+        _auth = auth ?? FirebaseAuth.instance;
 
   CollectionReference<Map<String, dynamic>> get _requests =>
       _firestore.collection('subscription_requests');
@@ -27,52 +22,51 @@ class AdminSubscriptionRequestService {
     }
   }
 
+  Future<void> _requireAdmin() async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw Exception('Please sign in to continue.');
+    }
+    final token = await user.getIdTokenResult(true);
+    if (token.claims?['admin'] != true) {
+      throw Exception(
+        'Administrator permission is required. Please sign in again '
+        'with an authorized administrator account.',
+      );
+    }
+  }
+
   Stream<List<SubscriptionRequestModel>> watchAllRequests() {
     _requireSignedIn();
-
     return _requests
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map(
-                (doc) => SubscriptionRequestModel.fromFirestore(
+        .map((snapshot) => snapshot.docs
+            .map((doc) => SubscriptionRequestModel.fromFirestore(
                   doc.id,
                   doc.data(),
-                ),
-              )
-              .toList(),
-        );
+                ))
+            .toList());
   }
 
   Stream<List<SubscriptionRequestModel>> watchPendingRequests() {
     _requireSignedIn();
-
     return _requests
         .where('status', isEqualTo: 'pending')
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map(
-                (doc) => SubscriptionRequestModel.fromFirestore(
+        .map((snapshot) => snapshot.docs
+            .map((doc) => SubscriptionRequestModel.fromFirestore(
                   doc.id,
                   doc.data(),
-                ),
-              )
-              .toList(),
-        );
+                ))
+            .toList());
   }
 
-  Future<SubscriptionRequestModel?> getRequest(
-    String requestId,
-  ) async {
+  Future<SubscriptionRequestModel?> getRequest(String requestId) async {
     _requireSignedIn();
-
     final snapshot = await _requests.doc(requestId).get();
-
     if (!snapshot.exists) return null;
-
     return SubscriptionRequestModel.fromFirestore(
       snapshot.id,
       snapshot.data()!,
@@ -83,65 +77,140 @@ class AdminSubscriptionRequestService {
     required String requestId,
     String adminNote = '',
   }) async {
-    _requireSignedIn();
+    await _requireAdmin();
+    final id = requestId.trim();
+    if (id.isEmpty) throw Exception('Invalid subscription request.');
 
-    if (requestId.trim().isEmpty) {
-      throw Exception('Invalid subscription request.');
-    }
+    final adminUid = _auth.currentUser!.uid;
+    final requestRef = _requests.doc(id);
 
-    // Confirm the request is present in the same Firestore project used by
-    // the admin app before invoking the trusted approval function.
-    final requestSnapshot = await _requests.doc(requestId.trim()).get();
-    if (!requestSnapshot.exists) {
-      throw Exception(
-        'This payment request is no longer present in the app database. '
-        'Refresh the request list and try again.',
-      );
-    }
+    await _firestore.runTransaction((transaction) async {
+      final requestSnapshot = await transaction.get(requestRef);
+      if (!requestSnapshot.exists) {
+        throw Exception(
+          'Payment request not found. Refresh the requests list and try again.',
+        );
+      }
 
-    try {
-      final callable =
-          _functions.httpsCallable('approveSubscriptionRequest');
+      final request = requestSnapshot.data()!;
+      if (request['status'] != 'pending') {
+        throw Exception('This request has already been reviewed.');
+      }
 
-      await callable.call({
-        'requestId': requestId,
+      final studentUid = request['studentUid'] as String?;
+      final planId = request['planId'] as String?;
+      if (studentUid == null || studentUid.isEmpty ||
+          planId == null || planId.isEmpty) {
+        throw Exception('The request is missing student or plan information.');
+      }
+
+      final studentRef = _firestore.collection('users').doc(studentUid);
+      final planRef = _firestore.collection('subscription_plans').doc(planId);
+      final studentSnapshot = await transaction.get(studentRef);
+      final planSnapshot = await transaction.get(planRef);
+
+      if (!studentSnapshot.exists) {
+        throw Exception('The student account could not be found.');
+      }
+      if (!planSnapshot.exists) {
+        throw Exception('The selected membership plan could not be found.');
+      }
+
+      final plan = planSnapshot.data()!;
+      final student = studentSnapshot.data()!;
+      if (plan['isActive'] != true) {
+        throw Exception('This membership plan is no longer active.');
+      }
+
+      final durationDays = (plan['durationDays'] as num?)?.toInt() ?? 0;
+      final amount = (plan['price'] as num?)?.toDouble();
+      final currency = plan['currency'] as String?;
+      if (durationDays < 1 || durationDays > 3650 ||
+          amount == null || currency == null ||
+          request['durationDays'] != durationDays ||
+          (request['amount'] as num?)?.toDouble() != amount ||
+          request['currency'] != currency) {
+        throw Exception(
+          'The payment request no longer matches the selected plan. '
+          'Please review it before approval.',
+        );
+      }
+
+      final configured = plan['accessPermissions'];
+      if (configured is! Map) {
+        throw Exception('The membership plan has invalid access permissions.');
+      }
+      final permissions = Map<String, dynamic>.from(configured);
+      if (permissions['pastPapers'] == true) {
+        permissions['examinations'] = true;
+      }
+
+      final now = DateTime.now();
+      var startDate = now;
+      var expiryBase = now;
+      final currentExpiry = student['subscriptionExpiryAt'];
+      if (student['subscriptionStatus'] == 'active' &&
+          currentExpiry is Timestamp &&
+          currentExpiry.toDate().isAfter(now)) {
+        expiryBase = currentExpiry.toDate();
+        final currentStart = student['subscriptionStartedAt'];
+        if (currentStart is Timestamp) {
+          startDate = currentStart.toDate();
+        }
+      }
+      final expiryDate = expiryBase.add(Duration(days: durationDays));
+      final serverNow = FieldValue.serverTimestamp();
+
+      transaction.update(requestRef, {
+        'status': 'approved',
         'adminNote': adminNote.trim(),
+        'reviewedBy': adminUid,
+        'reviewedAt': serverNow,
+        'updatedAt': serverNow,
       });
-    } on FirebaseFunctionsException catch (e) {
-      throw Exception(
-        e.message ?? 'Unable to approve this payment request.',
-      );
-    }
+      transaction.update(studentRef, {
+        'accountStatus': 'approved',
+        'subscriptionStatus': 'active',
+        'accessEnabled': true,
+        'subscriptionPlanId': planId,
+        'subscriptionPlanName': plan['name'] ?? 'Subscription',
+        'subscriptionDurationDays': durationDays,
+        'subscriptionAccessPermissions': permissions,
+        'subscriptionStartedAt': Timestamp.fromDate(startDate),
+        'subscriptionExpiryAt': Timestamp.fromDate(expiryDate),
+        'updatedAt': serverNow,
+      });
+    });
   }
 
   Future<void> rejectRequest({
     required String requestId,
     required String adminNote,
   }) async {
-    _requireSignedIn();
-
-    if (requestId.trim().isEmpty) {
-      throw Exception('Invalid subscription request.');
+    await _requireAdmin();
+    final id = requestId.trim();
+    final note = adminNote.trim();
+    if (id.isEmpty) throw Exception('Invalid subscription request.');
+    if (note.isEmpty) {
+      throw Exception('Please provide a reason for rejecting this request.');
     }
 
-    if (adminNote.trim().isEmpty) {
-      throw Exception(
-        'Please provide a reason for rejecting this request.',
-      );
-    }
-
-    try {
-      final callable =
-          _functions.httpsCallable('rejectSubscriptionRequest');
-
-      await callable.call({
-        'requestId': requestId,
-        'adminNote': adminNote.trim(),
+    final ref = _requests.doc(id);
+    await _firestore.runTransaction((transaction) async {
+      final snapshot = await transaction.get(ref);
+      if (!snapshot.exists) {
+        throw Exception('Payment request not found. Refresh and try again.');
+      }
+      if (snapshot.data()?['status'] != 'pending') {
+        throw Exception('This request has already been reviewed.');
+      }
+      transaction.update(ref, {
+        'status': 'rejected',
+        'adminNote': note,
+        'reviewedBy': _auth.currentUser!.uid,
+        'reviewedAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
       });
-    } on FirebaseFunctionsException catch (e) {
-      throw Exception(
-        e.message ?? 'Unable to reject this payment request.',
-      );
-    }
+    });
   }
 }
