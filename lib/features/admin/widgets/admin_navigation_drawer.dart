@@ -31,7 +31,7 @@ class AdminNavigationDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     final selectedIndex = items.indexWhere((item) => item.route == selectedRoute);
     return NavigationDrawer(
-      backgroundColor: const Color(0xFFF8FBFF),
+      backgroundColor: const Color(0xFFF2F7FF),
       indicatorColor: const Color(0xFFDCEBFC),
       selectedIndex: selectedIndex < 0 ? 0 : selectedIndex,
       onDestinationSelected: (index) {
@@ -41,10 +41,10 @@ class AdminNavigationDrawer extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(19, 23, 17, 19),
           child: Row(children: [
-            const AtlasLogo(size: 55),
+            const AtlasLogo(size: 66),
             const SizedBox(width: 13),
             const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('THE ATLAS ACADEMY', style: TextStyle(color: AtlasColors.navy, fontFamily: 'Georgia', fontSize: 16, fontWeight: FontWeight.w700, letterSpacing: -.2)),
+              Text('THE ATLAS ACADEMY', style: TextStyle(color: AtlasColors.navy, fontFamily: 'Georgia', fontSize: 17, fontWeight: FontWeight.w700, letterSpacing: -.2)),
               SizedBox(height: 5),
               Text('Administrator workspace', style: TextStyle(color: AtlasColors.secondaryText, fontSize: 11)),
             ])),
