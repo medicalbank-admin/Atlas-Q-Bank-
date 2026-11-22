@@ -154,7 +154,6 @@ class MockExamPredictionScreen extends StatelessWidget {
   }
 }
 
-class StudentDiscussionForumScreen extends StatefulWidget{const StudentDiscussionForumScreen({super.key});@override State<StudentDiscussionForumScreen> createState()=>_StudentDiscussionForumScreenState();}
 class StudentDiscussionForumScreen extends StatefulWidget {
   const StudentDiscussionForumScreen({super.key});
   @override
