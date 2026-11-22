@@ -443,6 +443,93 @@ class _Home extends StatelessWidget {
   }
 }
 
+class _MembershipDetails extends StatelessWidget {
+  final String uid;
+  final VoidCallback onManage;
+  const _MembershipDetails({required this.uid, required this.onManage});
+
+  String _expiryLabel(dynamic value) {
+    DateTime? date;
+    if (value is Timestamp) date = value.toDate();
+    if (value is DateTime) date = value;
+    if (value is String) date = DateTime.tryParse(value);
+    if (date == null) return 'Not specified';
+    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+        stream: FirebaseFirestore.instance.collection('users').doc(uid).snapshots(),
+        builder: (context, snapshot) {
+          final data = snapshot.data?.data() ?? const <String, dynamic>{};
+          final status = (data['subscriptionStatus'] ?? 'Not active').toString();
+          final plan = (data['subscriptionPlanName'] ?? 'No membership selected').toString();
+          final enabled = data['accessEnabled'] == true;
+          final active = status.toLowerCase() == 'active' && enabled;
+          return Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(17, 16, 15, 15),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(21),
+              border: Border.all(color: const Color(0xFFDCE8F5)),
+              boxShadow: [BoxShadow(
+                color: AtlasColors.navy.withValues(alpha: .055),
+                blurRadius: 15, offset: const Offset(0, 5),
+              )],
+            ),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(children: [
+                const Icon(Icons.workspace_premium_rounded,
+                    color: Color(0xFF2563A6), size: 22),
+                const SizedBox(width: 9),
+                const Expanded(child: Text('Membership Details',
+                    style: TextStyle(color: AtlasColors.navy,
+                        fontSize: 16, fontWeight: FontWeight.w900))),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: active ? const Color(0xFFE5F7EF) : const Color(0xFFFFF2E2),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(active ? 'ACTIVE' : status.toUpperCase(),
+                    style: TextStyle(
+                      color: active ? const Color(0xFF16845D) : const Color(0xFF9A681D),
+                      fontSize: 9, fontWeight: FontWeight.w900,
+                    )),
+                ),
+              ]),
+              const SizedBox(height: 13),
+              _membershipLine('Current Plan', plan),
+              _membershipLine('Valid Until', _expiryLabel(data['subscriptionExpiryAt'])),
+              _membershipLine('Account Access', enabled ? 'Enabled' : 'Awaiting activation'),
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  onPressed: onManage,
+                  icon: const Icon(Icons.arrow_forward_rounded, size: 16),
+                  label: const Text('Manage Membership'),
+                ),
+              ),
+            ]),
+          );
+        },
+      );
+
+  Widget _membershipLine(String label, String value) => Padding(
+    padding: const EdgeInsets.only(bottom: 8),
+    child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      SizedBox(width: 112, child: Text(label,
+        style: const TextStyle(color: AtlasColors.secondaryText, fontSize: 11))),
+      Expanded(child: Text(value,
+        style: const TextStyle(color: AtlasColors.charcoal,
+          fontSize: 12, fontWeight: FontWeight.w700))),
+    ]),
+  );
+}
+
 class _ProgressOverview extends StatelessWidget {
   final String uid;
   const _ProgressOverview({required this.uid});
