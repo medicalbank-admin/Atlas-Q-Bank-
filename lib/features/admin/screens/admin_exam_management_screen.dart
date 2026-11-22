@@ -77,6 +77,25 @@ class _AdminExamManagementScreenState extends State<AdminExamManagementScreen> {
     if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Exam created. Import its MCQs, then publish it.')));
   }
 
+  Future<void> _editExam(String id, Map<String, dynamic> data) async {
+    final title = TextEditingController(text: (data['name'] ?? '').toString());
+    final duration = TextEditingController(text: (data['durationMinutes'] ?? 60).toString());
+    final description = TextEditingController(text: (data['description'] ?? '').toString());
+    final ok = await showDialog<bool>(context: context, builder: (c) => AlertDialog(
+      title: const Text('Edit examination'),
+      content: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
+        TextField(controller: title, decoration: const InputDecoration(labelText: 'Exam name')),
+        TextField(controller: duration, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Duration in minutes')),
+        TextField(controller: description, maxLines: 2, decoration: const InputDecoration(labelText: 'Instructions')),
+      ])),
+      actions: [TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')), FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Save'))],
+    ));
+    if (ok == true && title.text.trim().isNotEmpty) {
+      await db.collection('mcq_exam_sets').doc(id).update({'name': title.text.trim(), 'examSetName': title.text.trim(), 'durationMinutes': (int.tryParse(duration.text.trim()) ?? 60).clamp(1, 300), 'description': description.text.trim(), 'updatedAt': FieldValue.serverTimestamp()});
+    }
+    title.dispose(); duration.dispose(); description.dispose();
+  }
+
   Future<void> _togglePublished(String id, bool published) async {
     final questions = await db.collection('mcqs').where('examSetId', isEqualTo: id).get();
     if (!published && questions.docs.isEmpty) throw Exception('Import questions into this exam before publishing it.');
@@ -133,12 +152,14 @@ class _AdminExamManagementScreenState extends State<AdminExamManagementScreen> {
             isThreeLine: true,
             trailing: PopupMenuButton<String>(onSelected: (v) async {
               try {
+                if (v == 'edit') await _editExam(d.id, x);
                 if (v == 'import') await Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminMcqImportScreen()));
                 if (v == 'publish') await _togglePublished(d.id, published);
                 if (v == 'preview') await Navigator.push(context, MaterialPageRoute(builder: (_) => StudentMcqPracticeScreen(examSetId: d.id)));
                 if (v == 'delete') { await d.reference.update({'isActive': false, 'isPublished': false, 'archivedAt': FieldValue.serverTimestamp()}); }
               } catch (e) { if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString()))); }
             }, itemBuilder: (_) => [
+              const PopupMenuItem(value: 'edit', child: Text('Edit exam')),
               const PopupMenuItem(value: 'import', child: Text('Import MCQs')),
               PopupMenuItem(value: 'publish', child: Text(published ? 'Unpublish' : 'Publish')),
               const PopupMenuItem(value: 'preview', child: Text('Preview exam')),
