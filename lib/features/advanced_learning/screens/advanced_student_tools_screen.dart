@@ -8,7 +8,7 @@ class ClinicalCaseLearningScreen extends StatelessWidget {
   const ClinicalCaseLearningScreen({super.key});
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: AtlasColors.ivory,
+    backgroundColor: const Color(0xFFF3F7FF),
     appBar: AppBar(title: const Text('Clinical Case-Based Learning')),
     body: StreamBuilder<QuerySnapshot<Map<String,dynamic>>>(
       stream: FirebaseFirestore.instance.collection('clinical_cases').where('isPublished',isEqualTo:true).snapshots(),
@@ -136,7 +136,7 @@ class MockExamPredictionScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     return Scaffold(
-      backgroundColor: AtlasColors.ivory,
+      backgroundColor: const Color(0xFFF3F7FF),
       appBar: AppBar(title: const Text('Mock Exam Readiness')),
       body: uid == null ? const SizedBox() : StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: FirebaseFirestore.instance.collection('mcq_attempts').where('userId', isEqualTo: uid).snapshots(),
@@ -175,15 +175,15 @@ class MockExamPredictionScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(23),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(colors: [AtlasColors.navy, AtlasColors.royalBlue]),
-                  borderRadius: BorderRadius.circular(22),
+                  borderRadius: BorderRadius.circular(20),
                 ),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  const Text('ESTIMATED EXAM READINESS', style: TextStyle(color: AtlasColors.champagne, fontWeight: FontWeight.w900, letterSpacing: 1)),
+                  const Text('ESTIMATED EXAM READINESS', style: TextStyle(color: AtlasColors.royalBlue, fontWeight: FontWeight.w900, letterSpacing: 1)),
                   const SizedBox(height: 12),
                   Text('${confidence.toStringAsFixed(1)}%', style: const TextStyle(color: Colors.white, fontSize: 42, fontWeight: FontWeight.w900)),
-                  Text(label, style: const TextStyle(color: AtlasColors.champagne, fontWeight: FontWeight.w800)),
+                  Text(label, style: const TextStyle(color: AtlasColors.royalBlue, fontWeight: FontWeight.w800)),
                   const SizedBox(height: 14),
-                  LinearProgressIndicator(value: confidence / 100, minHeight: 9, backgroundColor: Colors.white24, color: AtlasColors.champagne),
+                  LinearProgressIndicator(value: confidence / 100, minHeight: 9, backgroundColor: Colors.white24, color: AtlasColors.royalBlue),
                   const SizedBox(height: 12),
                   Text('Based on ${recent.length} recent scored attempts (average ${average.toStringAsFixed(1)}%).', style: const TextStyle(color: Colors.white70)),
                 ]),
@@ -251,7 +251,7 @@ class _StudentDiscussionForumScreenState extends State<StudentDiscussionForumScr
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AtlasColors.ivory,
+      backgroundColor: const Color(0xFFF3F7FF),
       appBar: AppBar(title: const Text('Student Discussion Forum')),
       body: ListView(
         padding: const EdgeInsets.all(16),
