@@ -348,15 +348,17 @@ exports.startMcqPractice = onCall(
           throw new HttpsError("not-found", "This published exam set is unavailable.");
         }
         setData = setSnapshot.data();
-        requiredFeature = setData.trackType === "licensing"
-          ? "examPathways"
-          : "examinations";
+        const requiredFeatures = setData.trackType === "licensing"
+          ? ["examPathways"]
+          : setData.trackType === "past_paper"
+            ? ["pastPapers", "examinations"]
+            : ["examinations"];
         const configuredDuration = Number(setData.durationMinutes);
         if (Number.isInteger(configuredDuration) && configuredDuration > 0) {
           durationMinutes = Math.min(configuredDuration, 240);
         }
       }
-      if (permissions[requiredFeature] !== true) {
+      if (!requiredFeatures.some((feature) => permissions[feature] === true)) {
         throw new HttpsError("permission-denied", "Your subscription does not include this feature.");
       }
       let query = db.collection("mcqs").where("isPublished", "==", true);
