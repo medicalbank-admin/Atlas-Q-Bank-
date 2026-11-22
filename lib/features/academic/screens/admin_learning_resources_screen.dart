@@ -51,7 +51,7 @@ class _AdminLearningResourcesScreenState
               gradient: const LinearGradient(
                 colors: [AtlasColors.navy, AtlasColors.royalBlue],
               ),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(22),
             ),
             child: const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
