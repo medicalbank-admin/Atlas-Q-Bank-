@@ -211,8 +211,8 @@ class AdminDashboardScreen extends StatelessWidget {
         ),
         const SizedBox(width: 8),
         IconButton(
-          tooltip: 'Sign out',
-          onPressed: () => _confirmSignOut(context),
+          tooltip: 'Notifications',
+          onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminNotificationsScreen())),
           style: IconButton.styleFrom(
             backgroundColor: Colors.white,
             foregroundColor: AtlasColors.navy,
@@ -222,7 +222,7 @@ class AdminDashboardScreen extends StatelessWidget {
               side: const BorderSide(color: AtlasColors.border),
             ),
           ),
-          icon: const Icon(Icons.logout_rounded, size: 20),
+          icon: const Icon(Icons.notifications_none_rounded, size: 23),
         ),
       ],
     );
