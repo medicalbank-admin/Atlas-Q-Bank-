@@ -75,7 +75,7 @@ class _StudentAccountStatusScreenState
   Widget build(BuildContext context) {
     if (_loading) {
       return const Scaffold(
-        backgroundColor: const Color(0xFFF3F7FF),
+        backgroundColor: const Color(0xFFF2F7FF),
         body: Center(
           child: CircularProgressIndicator(
             color: AtlasColors.royalBlue,
@@ -85,7 +85,7 @@ class _StudentAccountStatusScreenState
     }
     if (_error != null || _profile == null) {
       return Scaffold(
-        backgroundColor: const Color(0xFFF3F7FF),
+        backgroundColor: const Color(0xFFF2F7FF),
         appBar: AppBar(title: const Text('Account Status')),
         body: Center(
           child: Padding(
@@ -145,7 +145,7 @@ class _StudentAccountStatusScreenState
                 ? 'Your membership is being activated. Learning content will become available as soon as activation is complete.'
                 : 'Your membership is active and your learning access is enabled.';
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F7FF),
+      backgroundColor: const Color(0xFFF2F7FF),
       appBar: AppBar(
         title: const Text('Account Status'),
         actions: [
