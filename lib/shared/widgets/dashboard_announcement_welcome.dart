@@ -85,7 +85,9 @@ class _DashboardAnnouncementWelcomeState
             bottom: 2,
             child: SizedBox(
               width: 139,
-              child: ColorFiltered(
+              child: Transform.flip(
+                flipX: true,
+                child: ColorFiltered(
                 // The supplied JPG has a black canvas. Convert that canvas to
                 // transparency while preserving the blue and silver instrument.
                 colorFilter: const ColorFilter.matrix(<double>[
@@ -104,6 +106,7 @@ class _DashboardAnnouncementWelcomeState
                       Color(0xFF78A9D8), BlendMode.srcIn,
                     ),
                   ),
+                ),
                 ),
               ),
             ),
