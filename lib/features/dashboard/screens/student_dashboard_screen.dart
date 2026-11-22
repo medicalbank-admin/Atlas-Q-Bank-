@@ -17,6 +17,7 @@ import '../../subscriptions/screens/subscription_plans_screen.dart';
 import '../../advanced_learning/screens/advanced_student_tools_screen.dart';
 import '../../advanced_learning/services/push_notification_service.dart';
 import 'student_notifications_screen.dart';
+import '../../../shared/widgets/dashboard_announcement_welcome.dart';
 
 class StudentDashboardScreen extends StatefulWidget {
  const StudentDashboardScreen({super.key});
@@ -24,6 +25,7 @@ class StudentDashboardScreen extends StatefulWidget {
 }
 class _StudentDashboardScreenState extends State<StudentDashboardScreen>{
  int selected=0;
+ bool _notificationsOpened=false;
  final PushNotificationService pushService=PushNotificationService();
  @override void initState(){super.initState();pushService.registerDevice(context,onNotificationTap:_handleNotificationTap);}
  Future<void> _handleNotificationTap(RemoteMessage message) async {
@@ -37,13 +39,16 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen>{
   return Stack(clipBehavior: Clip.none, children: [
     IconButton(
       tooltip: 'Notifications',
-      onPressed: () => Navigator.of(context).push(MaterialPageRoute(
-        builder: (_) => const StudentNotificationsScreen(),
-      )),
+      onPressed: () async {
+        if (mounted) setState(() => _notificationsOpened = true);
+        await Navigator.of(context).push(MaterialPageRoute(
+          builder: (_) => const StudentNotificationsScreen(),
+        ));
+      },
       icon: const Icon(Icons.notifications_none_rounded,
           size: 32, color: Color(0xFF123B68)),
     ),
-    if (count > 0)
+    if (count > 0 && !_notificationsOpened)
       Positioned(right: 1, top: 0, child: Container(
         constraints: const BoxConstraints(minWidth: 19, minHeight: 19),
         padding: const EdgeInsets.symmetric(horizontal: 5),
@@ -92,23 +97,23 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen>{
  Future<void> select(int i)async{setState(()=>selected=i);if(MediaQuery.sizeOf(context).width<850)Navigator.of(context).maybePop();if(i>0){const keys=['','studyLibrary','mcqPractice','pastPapers','subjectExams','systemExams','mockExams','examsHistory','clinicalCases','mistakesNotebook','mockPredictions','discussionForum','askTeacher','membership','account'];await openFeature(keys[i]);if(mounted)setState(()=>selected=0);}}
  @override Widget build(BuildContext context){
   final wide=MediaQuery.sizeOf(context).width>=850;final u=FirebaseAuth.instance.currentUser;final name=u?.displayName?.trim().isNotEmpty==true?u!.displayName!.trim():'Student';
-  final pages=<Widget>[_Home(name:name,onSubjectExams:()=>openFeature('subjectExams'),onSystemExams:()=>openFeature('systemExams'),onMockExams:()=>openFeature('mockExams'),onPastPapers:()=>openFeature('pastPapers')),_FeaturePage('Study Library',Icons.menu_book_rounded,()=>openFeature('studyLibrary')),_FeaturePage('MCQ Practice',Icons.quiz_rounded,()=>openFeature('mcqPractice')),_FeaturePage('Past Papers',Icons.history_edu_rounded,()=>openFeature('pastPapers')),_FeaturePage('Subject-Wise Exams',Icons.menu_book_rounded,()=>openFeature('subjectExams')),_FeaturePage('System-Wise Exams',Icons.account_tree_rounded,()=>openFeature('systemExams')),_FeaturePage('Mock Exams',Icons.fact_check_rounded,()=>openFeature('mockExams')),_FeaturePage('Exams History',Icons.history_rounded,()=>openFeature('examsHistory')),_FeaturePage('Clinical Cases',Icons.medical_services_rounded,()=>openFeature('clinicalCases')),_FeaturePage('Mistakes Notebook',Icons.bookmark_added_rounded,()=>openFeature('mistakesNotebook')),_FeaturePage('Mock Exam Readiness',Icons.insights_rounded,()=>openFeature('mockPredictions')),_FeaturePage('Discussion Forum',Icons.forum_rounded,()=>openFeature('discussionForum')),_FeaturePage('Ask a Teacher',Icons.support_agent_rounded,()=>openFeature('askTeacher')),_FeaturePage('Membership',Icons.workspace_premium_rounded,()=>openFeature('membership')),_FeaturePage('Account Status',Icons.verified_user_rounded,()=>openFeature('account'))];
+  final pages=<Widget>[_Home(name:name,onSubjectExams:()=>openFeature('subjectExams'),onSystemExams:()=>openFeature('systemExams'),onMockExams:()=>openFeature('mockExams'),onPastPapers:()=>openFeature('pastPapers'),onMembership:()=>openFeature('membership')),_FeaturePage('Study Library',Icons.menu_book_rounded,()=>openFeature('studyLibrary')),_FeaturePage('MCQ Practice',Icons.quiz_rounded,()=>openFeature('mcqPractice')),_FeaturePage('Past Papers',Icons.history_edu_rounded,()=>openFeature('pastPapers')),_FeaturePage('Subject-Wise Exams',Icons.menu_book_rounded,()=>openFeature('subjectExams')),_FeaturePage('System-Wise Exams',Icons.account_tree_rounded,()=>openFeature('systemExams')),_FeaturePage('Mock Exams',Icons.fact_check_rounded,()=>openFeature('mockExams')),_FeaturePage('Exams History',Icons.history_rounded,()=>openFeature('examsHistory')),_FeaturePage('Clinical Cases',Icons.medical_services_rounded,()=>openFeature('clinicalCases')),_FeaturePage('Mistakes Notebook',Icons.bookmark_added_rounded,()=>openFeature('mistakesNotebook')),_FeaturePage('Mock Exam Readiness',Icons.insights_rounded,()=>openFeature('mockPredictions')),_FeaturePage('Discussion Forum',Icons.forum_rounded,()=>openFeature('discussionForum')),_FeaturePage('Ask a Teacher',Icons.support_agent_rounded,()=>openFeature('askTeacher')),_FeaturePage('Membership',Icons.workspace_premium_rounded,()=>openFeature('membership')),_FeaturePage('Account Status',Icons.verified_user_rounded,()=>openFeature('account'))];
   return Scaffold(backgroundColor:const Color(0xFFF3F7FF),drawer:wide?null:Drawer(backgroundColor:AtlasColors.navy,child:_SideNav(selected:selected,onSelect:select,onSignOut:signOut,onProfile:()=>openFeature('profile'))),body:SafeArea(child:Row(children:[
    if(wide)SizedBox(width:265,child:_SideNav(selected:selected,onSelect:select,onSignOut:signOut,onProfile:()=>openFeature('profile'))),
    Expanded(child:Column(children:[
     Container(
       color: const Color(0xFFF2F8FF),
-      padding: const EdgeInsets.fromLTRB(18, 7, 17, 8),
+      padding: const EdgeInsets.fromLTRB(8, 5, 12, 5),
       child: Row(children: [
-        const AtlasLogo(size: 86),
-        const SizedBox(width: 5),
-        const Expanded(child: Text(
-          'The Atlas\\nAcademy',
-          style: TextStyle(
-            color: Color(0xFF123B68), fontFamily: 'Georgia',
-            fontSize: 25, height: .98, fontWeight: FontWeight.w700,
-            letterSpacing: -.55,
-          ),
+        Builder(builder: (headerContext) => IconButton(
+          tooltip: 'Open navigation menu',
+          onPressed: () => Scaffold.of(headerContext).openDrawer(),
+          icon: const Icon(Icons.menu_rounded, size: 29, color: Color(0xFF123B68)),
+        )),
+        const SizedBox(width: 3),
+        const Expanded(child: Align(
+          alignment: Alignment.centerLeft,
+          child: AtlasLogo(size: 70),
         )),
         StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
           stream: FirebaseFirestore.instance.collection('notifications')
@@ -357,13 +362,14 @@ class _SideNav extends StatelessWidget {
 }
 class _Home extends StatelessWidget {
   final String name;
-  final VoidCallback onSubjectExams, onSystemExams, onMockExams, onPastPapers;
+  final VoidCallback onSubjectExams, onSystemExams, onMockExams, onPastPapers, onMembership;
   const _Home({
     required this.name,
     required this.onSubjectExams,
     required this.onSystemExams,
     required this.onMockExams,
     required this.onPastPapers,
+    required this.onMembership,
   });
 
   @override
@@ -373,71 +379,10 @@ class _Home extends StatelessWidget {
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 22),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Container(
-              height: 180,
-              width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(22, 18, 8, 78),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFFE5F1FF), Color(0xFFD4E8FF), Color(0xFFF1F7FF)],
-                ),
-              ),
-              child: Stack(children: [
-                Positioned(
-                  right: -2, top: -5, bottom: 0,
-                  child: SizedBox(
-                    width: 165,
-                    child: SvgPicture.asset(
-                      'assets/images/clinical_stethoscope.svg',
-                      fit: BoxFit.contain,
-                      colorFilter: const ColorFilter.mode(
-                        Color(0x6682B5E8), BlendMode.srcIn,
-                      ),
-                    ),
-                  ),
-                ),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: SizedBox(
-                    width: MediaQuery.sizeOf(context).width * .68,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Hello, $firstName!',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Color(0xFF123B68), fontSize: 27,
-                            fontWeight: FontWeight.w900, letterSpacing: -.7,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Your journey to excellence continues',
-                          style: TextStyle(
-                            color: Color(0xFF173B65), fontSize: 13, height: 1.4,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ]),
-            ),
-            Positioned(
-              left: 0, right: 0, bottom: -73,
-              child: uid != null ? _ProgressOverview(uid: uid) : const SizedBox.shrink(),
-            ),
-          ],
-        ),
-        const SizedBox(height: 91),
+        DashboardAnnouncementWelcome(displayName: firstName),
+        const SizedBox(height: 16),
+        if (uid != null) _ProgressOverview(uid: uid),
+        const SizedBox(height: 17),
         GridView.count(
           crossAxisCount: 2, crossAxisSpacing: 12, mainAxisSpacing: 12,
           childAspectRatio: 1.50, shrinkWrap: true,
@@ -490,6 +435,8 @@ class _Home extends StatelessWidget {
             ),
           ]),
         ),
+        const SizedBox(height: 15),
+        if (uid != null) _MembershipDetails(uid: uid, onManage: onMembership),
         const SizedBox(height: 16),
       ]),
     );
