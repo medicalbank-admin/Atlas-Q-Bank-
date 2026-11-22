@@ -96,7 +96,7 @@ class _MistakesNotebookScreenState extends State<MistakesNotebookScreen>{
  final uid=FirebaseAuth.instance.currentUser?.uid;
  Future<void> importMistakes()async{
   if(uid==null)return;final db=FirebaseFirestore.instance;
-  final attempts=await db.collection('mcq_attempts').where('userId',isEqualTo:uid).limit(100).get();int added=0,queued=0;
+  final attempts=await db.collection('mcq_attempts').where('userId',isEqualTo:uid).orderBy('completedAt',descending:true).limit(100).get();int added=0,queued=0;
   var batch=db.batch();
   for(final doc in attempts.docs){final answers=doc.data()['answers'];if(answers is! List)continue;for(var i=0;i<answers.length;i++){final raw=answers[i];if(raw is! Map)continue;final a=Map<String,dynamic>.from(raw);if(a['isCorrect']==true||a['question']==null)continue;final id='${doc.id}_$i';final ref=db.collection('mistake_notebook').doc('${uid}_$id');if((await ref.get()).exists)continue;batch.set(ref,{'userId':uid,'attemptId':doc.id,'questionIndex':i,'question':a['question'],'options':a['options']??[],'selectedAnswer':a['selectedAnswer'],'correctAnswer':a['correctAnswer'],'explanation':a['explanation']??'','subject':a['subject']??'','topic':a['topic']??'','isReviewed':false,'createdAt':FieldValue.serverTimestamp()});added++;queued++;if(queued>=400){await batch.commit();batch=db.batch();queued=0;}}
   }
