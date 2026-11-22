@@ -9,10 +9,10 @@ class StudentPastPapersScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AtlasColors.ivory,
-      appBar: AppBar(title: const Text('Past Papers'), backgroundColor: Colors.white, foregroundColor: AtlasColors.navy, elevation: 0),
+      backgroundColor: const Color(0xFFF3F7FF),
+      appBar: AppBar(title: const Text('Past Papers'), backgroundColor: Colors.white, foregroundColor: AtlasColors.navy, elevation: 0, scrolledUnderElevation: 0),
       body: ListView(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 22),
         children: [
           Container(
             padding: const EdgeInsets.all(20),
@@ -20,7 +20,7 @@ class StudentPastPapersScreen extends StatelessWidget {
               gradient: const LinearGradient(
                 colors: [AtlasColors.navy, AtlasColors.royalBlue],
               ),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(19),
             ),
             child: const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -42,7 +42,7 @@ class StudentPastPapersScreen extends StatelessWidget {
                 .snapshots(),
             builder: (context, snapshot) {
               if (snapshot.hasError) {
-                return Padding(padding: const EdgeInsets.all(18), child: Text('Past papers could not be loaded: ${snapshot.error}', style: const TextStyle(color: AtlasColors.error)));
+                return Padding(padding: const EdgeInsets.fromLTRB(16, 16, 16, 22), child: Text('Past papers could not be loaded: ${snapshot.error}', style: const TextStyle(color: AtlasColors.error)));
               }
               if (!snapshot.hasData) {
                 return const Center(child: CircularProgressIndicator());
