@@ -197,7 +197,7 @@ class _AdminClinicalCasesScreenState extends State<AdminClinicalCasesScreen> {
     if (checking) return const Scaffold(body: Center(child: CircularProgressIndicator()));
     if (!authorized) return const Scaffold(body: Center(child: Text('Administrator access required.')));
     return Scaffold(
-      backgroundColor: AtlasColors.ivory,
+      backgroundColor: const Color(0xFFF3F7FF),
       appBar: AppBar(title: const Text('Clinical Case Management')),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _form(),
@@ -338,7 +338,7 @@ class _AdminStudentSupportScreenState extends State<AdminStudentSupportScreen> {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        backgroundColor: AtlasColors.ivory,
+        backgroundColor: const Color(0xFFF3F7FF),
         appBar: AppBar(
           title: const Text('Student Community & Support'),
           bottom: const TabBar(tabs: [
