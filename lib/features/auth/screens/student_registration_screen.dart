@@ -528,10 +528,10 @@ class _StudentRegistrationScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F7FF),
+      backgroundColor: const Color(0xFFF2F7FF),
       appBar: AppBar(
         title: const Text('Student Registration'),
-        backgroundColor: const Color(0xFFF3F7FF),
+        backgroundColor: const Color(0xFFF2F7FF),
         foregroundColor: AtlasColors.navy,
         elevation: 0,
       ),
