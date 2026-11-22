@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/learning_resource_model.dart';
 import '../services/learning_resource_service.dart';
+import 'learning_resource_upload_dialog.dart';
 
 class LearningResourceManagementScreen extends StatelessWidget {
   final String yearId;
@@ -413,6 +414,8 @@ class LearningResourceManagementScreen extends StatelessWidget {
         return 'Video';
       case LearningResourceType.document:
         return 'Document';
+      case LearningResourceType.text:
+        return 'Text Note';
       case LearningResourceType.presentation:
         return 'Presentation';
       case LearningResourceType.externalLink:
@@ -428,6 +431,8 @@ class LearningResourceManagementScreen extends StatelessWidget {
         return Icons.play_circle_rounded;
       case LearningResourceType.document:
         return Icons.description_rounded;
+      case LearningResourceType.text:
+        return Icons.notes_rounded;
       case LearningResourceType.presentation:
         return Icons.slideshow_rounded;
       case LearningResourceType.externalLink:
@@ -613,6 +618,25 @@ class LearningResourceManagementScreen extends StatelessWidget {
           ),
         ),
         actions: [
+          IconButton(
+            tooltip: 'Upload PDF, text note or video',
+            onPressed: () async {
+              final saved = await showDialog<bool>(
+                context: context,
+                builder: (_) => LearningResourceUploadDialog(
+                  yearId: yearId,
+                  subjectId: subjectId,
+                  topicId: topicId,
+                ),
+              );
+              if (saved == true && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Resource saved as a draft. Publish it to make it visible to students.')),
+                );
+              }
+            },
+            icon: const Icon(Icons.cloud_upload_rounded),
+          ),
           IconButton(
             tooltip: 'Add resource',
             onPressed: () => _addResource(context),
