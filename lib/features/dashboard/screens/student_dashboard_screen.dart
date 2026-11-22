@@ -94,27 +94,378 @@ class _SideNav extends StatelessWidget{
   Padding(padding:const EdgeInsets.fromLTRB(10,8,10,15),child:Column(children:[ListTile(dense:true,leading:const Icon(Icons.person_outline,color:AtlasColors.champagne),title:const Text('My Profile',style:TextStyle(color:Colors.white,fontSize:12)),onTap:onProfile),ListTile(dense:true,leading:const Icon(Icons.logout,color:Colors.white70),title:const Text('Sign Out',style:TextStyle(color:Colors.white70,fontSize:12)),onTap:onSignOut)]))
  ]));
 }
-class _Home extends StatelessWidget{
- final String name;final VoidCallback onMembership,onSubjectExams,onSystemExams,onMockExams;const _Home({required this.name,required this.onMembership,required this.onSubjectExams,required this.onSystemExams,required this.onMockExams});
- @override Widget build(BuildContext context){final uid=FirebaseAuth.instance.currentUser?.uid;return SingleChildScrollView(padding:const EdgeInsets.fromLTRB(20,22,20,32),child:Center(child:ConstrainedBox(constraints:const BoxConstraints(maxWidth:1050),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-  Text('Welcome back, '+name,style:const TextStyle(color:AtlasColors.navy,fontSize:24,fontWeight:FontWeight.w900)),const SizedBox(height:5),const Text('Here is your learning and membership overview.',style:TextStyle(color:AtlasColors.secondaryText,fontSize:12)),
-  const SizedBox(height:19),const _QuoteCarousel(),const SizedBox(height:12),const _NoticeLine(),
-  const SizedBox(height:24),const Text('YOUR MEMBERSHIP',style:TextStyle(color:AtlasColors.royalBlue,fontSize:10,letterSpacing:1.4,fontWeight:FontWeight.w900)),const SizedBox(height:11),
-  if(uid!=null)StreamBuilder<DocumentSnapshot<Map<String,dynamic>>>(stream:FirebaseFirestore.instance.collection('users').doc(uid).snapshots(),builder:(c,s)=>s.hasData?_Membership(data:s.data!.data()??{},onTap:onMembership):const Center(child:CircularProgressIndicator())),
-  const SizedBox(height:24),const Text('EXAMINATION CENTRE',style:TextStyle(color:AtlasColors.royalBlue,fontSize:10,letterSpacing:1.4,fontWeight:FontWeight.w900)),const SizedBox(height:11),
-   Wrap(spacing:10,runSpacing:10,children:[
-    _ExamSectionCard(title:'Subject-Wise Exams',subtitle:'Practice by subject',icon:Icons.menu_book_rounded,onTap:onSubjectExams),
-    _ExamSectionCard(title:'System-Wise Exams',subtitle:'Practice by system',icon:Icons.account_tree_rounded,onTap:onSystemExams),
-    _ExamSectionCard(title:'Mock Exams',subtitle:'Subject, system & grand mocks',icon:Icons.fact_check_rounded,onTap:onMockExams),
-   ]),
-   const SizedBox(height:24),const Text('YOUR LEARNING ACTIVITY',style:TextStyle(color:AtlasColors.royalBlue,fontSize:10,letterSpacing:1.4,fontWeight:FontWeight.w900)),const SizedBox(height:11),if(uid!=null)_Stats(uid:uid),
-  const SizedBox(height:25),const Center(child:Text('THE ATLAS ACADEMY  •  EXCELLENCE IN MEDICAL EDUCATION',textAlign:TextAlign.center,style:TextStyle(color:AtlasColors.secondaryText,fontSize:9,letterSpacing:.5,fontWeight:FontWeight.w700)))
- ]))));}
+class _Home extends StatelessWidget {
+  final String name;
+  final VoidCallback onMembership, onSubjectExams, onSystemExams, onMockExams;
+
+  const _Home({
+    required this.name,
+    required this.onMembership,
+    required this.onSubjectExams,
+    required this.onSystemExams,
+    required this.onMockExams,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final firstName = name.trim().split(' ').first;
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(18, 20, 18, 32),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1080),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(21),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(22),
+                  border: Border.all(color: AtlasColors.border),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: AtlasColors.paleBlue,
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            child: const Text(
+                              'YOUR MEDICAL LEARNING SPACE',
+                              style: TextStyle(
+                                color: AtlasColors.royalBlue,
+                                fontSize: 9,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 1,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 13),
+                          Text(
+                            'Welcome back, $firstName',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: AtlasColors.navy,
+                              fontSize: 25,
+                              height: 1.15,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: -0.6,
+                            ),
+                          ),
+                          const SizedBox(height: 7),
+                          const Text(
+                            'Build your knowledge. Track your progress. Become confident.',
+                            style: TextStyle(
+                              color: AtlasColors.secondaryText,
+                              fontSize: 12,
+                              height: 1.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Container(
+                      width: 58,
+                      height: 58,
+                      decoration: BoxDecoration(
+                        color: AtlasColors.paleBlue,
+                        borderRadius: BorderRadius.circular(19),
+                      ),
+                      child: const Icon(
+                        Icons.school_rounded,
+                        color: AtlasColors.royalBlue,
+                        size: 31,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              const _QuoteCarousel(),
+              const SizedBox(height: 12),
+              const _NoticeLine(),
+              const SizedBox(height: 25),
+              _SectionHeading(
+                title: 'Membership overview',
+                subtitle: 'Your plan and access at a glance',
+                icon: Icons.workspace_premium_rounded,
+              ),
+              const SizedBox(height: 12),
+              if (uid != null)
+                StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                  stream: FirebaseFirestore.instance.collection('users').doc(uid).snapshots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasError) {
+                      return const _DashboardMessage(
+                        icon: Icons.info_outline_rounded,
+                        message: 'Membership details are temporarily unavailable.',
+                      );
+                    }
+                    if (!snapshot.hasData) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    return _Membership(
+                      data: snapshot.data!.data() ?? {},
+                      onTap: onMembership,
+                    );
+                  },
+                ),
+              const SizedBox(height: 27),
+              _SectionHeading(
+                title: 'Examination centre',
+                subtitle: 'Choose how you want to practise today',
+                icon: Icons.assignment_rounded,
+              ),
+              const SizedBox(height: 12),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final columns = constraints.maxWidth >= 760 ? 3 : 1;
+                  return GridView.count(
+                    crossAxisCount: columns,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: columns == 1 ? 3.15 : 1.55,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    children: [
+                      _ExamSectionCard(
+                        title: 'Subject-Wise Exams',
+                        subtitle: 'Strengthen your knowledge subject by subject',
+                        detail: 'PHYSIOLOGY  ·  ANATOMY  ·  BIOCHEMISTRY',
+                        icon: Icons.menu_book_rounded,
+                        onTap: onSubjectExams,
+                      ),
+                      _ExamSectionCard(
+                        title: 'System-Wise Exams',
+                        subtitle: 'Study connected concepts by body system',
+                        detail: 'CARDIOVASCULAR  ·  RESPIRATORY  ·  MORE',
+                        icon: Icons.account_tree_rounded,
+                        onTap: onSystemExams,
+                      ),
+                      _ExamSectionCard(
+                        title: 'Mock Exams',
+                        subtitle: 'Test your preparation with timed assessments',
+                        detail: 'SUBJECT  ·  SYSTEM  ·  GRAND MOCKS',
+                        icon: Icons.fact_check_rounded,
+                        onTap: onMockExams,
+                      ),
+                    ],
+                  );
+                },
+              ),
+              const SizedBox(height: 27),
+              _SectionHeading(
+                title: 'Your learning activity',
+                subtitle: 'A snapshot of your exam practice',
+                icon: Icons.insights_rounded,
+              ),
+              const SizedBox(height: 12),
+              if (uid != null) _Stats(uid: uid),
+              const SizedBox(height: 28),
+              const Center(
+                child: Text(
+                  'THE ATLAS ACADEMY  •  EXCELLENCE IN MEDICAL EDUCATION',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: AtlasColors.secondaryText,
+                    fontSize: 9,
+                    letterSpacing: .5,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
-class _ExamSectionCard extends StatelessWidget{
- final String title,subtitle;final IconData icon;final VoidCallback onTap;
- const _ExamSectionCard({required this.title,required this.subtitle,required this.icon,required this.onTap});
- @override Widget build(BuildContext context)=>SizedBox(width:MediaQuery.sizeOf(context).width<520?(MediaQuery.sizeOf(context).width-60).clamp(220.0,420.0).toDouble():250,child:Material(color:Colors.white,borderRadius:BorderRadius.circular(17),child:InkWell(onTap:onTap,borderRadius:BorderRadius.circular(17),child:Container(padding:const EdgeInsets.all(16),decoration:BoxDecoration(borderRadius:BorderRadius.circular(17),border:Border.all(color:AtlasColors.border)),child:Row(children:[Container(width:44,height:44,decoration:BoxDecoration(color:AtlasColors.paleBlue,borderRadius:BorderRadius.circular(13)),child:Icon(icon,color:AtlasColors.royalBlue)),const SizedBox(width:12),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(title,style:const TextStyle(color:AtlasColors.navy,fontWeight:FontWeight.w900,fontSize:12)),const SizedBox(height:4),Text(subtitle,style:const TextStyle(color:AtlasColors.secondaryText,fontSize:10))])),const Icon(Icons.arrow_forward_ios_rounded,size:14,color:AtlasColors.royalBlue)])))));
+
+class _SectionHeading extends StatelessWidget {
+  final String title, subtitle;
+  final IconData icon;
+  const _SectionHeading({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) => Row(
+        children: [
+          Container(
+            width: 39,
+            height: 39,
+            decoration: BoxDecoration(
+              color: AtlasColors.paleBlue,
+              borderRadius: BorderRadius.circular(13),
+            ),
+            child: Icon(icon, color: AtlasColors.royalBlue, size: 20),
+          ),
+          const SizedBox(width: 11),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: AtlasColors.navy,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    color: AtlasColors.secondaryText,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+}
+
+class _DashboardMessage extends StatelessWidget {
+  final IconData icon;
+  final String message;
+  const _DashboardMessage({required this.icon, required this.message});
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.all(17),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AtlasColors.border),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: AtlasColors.secondaryText),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                message,
+                style: const TextStyle(
+                  color: AtlasColors.secondaryText,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+}
+
+class _ExamSectionCard extends StatelessWidget {
+  final String title, subtitle, detail;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _ExamSectionCard({
+    required this.title,
+    required this.subtitle,
+    required this.detail,
+    required this.icon,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) => Material(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(19),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(19),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(19),
+              border: Border.all(color: AtlasColors.border),
+              boxShadow: [
+                BoxShadow(
+                  color: AtlasColors.navy.withValues(alpha: .035),
+                  blurRadius: 14,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: AtlasColors.paleBlue,
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Icon(icon, color: AtlasColors.royalBlue, size: 24),
+                ),
+                const SizedBox(width: 13),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          color: AtlasColors.navy,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: AtlasColors.secondaryText,
+                          fontSize: 10,
+                          height: 1.35,
+                        ),
+                      ),
+                      const SizedBox(height: 7),
+                      Text(
+                        detail,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: AtlasColors.royalBlue,
+                          fontSize: 8,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: .45,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Icon(
+                  Icons.arrow_forward_rounded,
+                  color: AtlasColors.royalBlue,
+                  size: 19,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
 }
 class _Membership extends StatelessWidget{
  final Map<String,dynamic> data;final VoidCallback onTap;const _Membership({required this.data,required this.onTap});
