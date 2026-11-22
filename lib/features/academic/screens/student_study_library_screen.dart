@@ -17,9 +17,9 @@ class _StudentStudyLibraryScreenState extends State<StudentStudyLibraryScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: AtlasColors.ivory,
-    appBar: AppBar(title: const Text('Study Library'), backgroundColor: Colors.white, foregroundColor: AtlasColors.navy, elevation: 0),
-    body: ListView(padding: const EdgeInsets.all(18), children: [
+    backgroundColor: const Color(0xFFF3F7FF),
+    appBar: AppBar(title: const Text('Study Library'), backgroundColor: Colors.white, foregroundColor: AtlasColors.navy, elevation: 0, scrolledUnderElevation: 0),
+    body: ListView(padding: const EdgeInsets.fromLTRB(16, 16, 16, 22), children: [
       _banner(),
       const SizedBox(height: 18),
       if (yearId == null) _years()
@@ -33,7 +33,7 @@ class _StudentStudyLibraryScreenState extends State<StudentStudyLibraryScreen> {
     padding: const EdgeInsets.all(20),
     decoration: BoxDecoration(
       gradient: const LinearGradient(colors: [AtlasColors.navy, AtlasColors.royalBlue]),
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(19),
     ),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       const Icon(Icons.local_library_rounded, color: AtlasColors.champagne, size: 30),
