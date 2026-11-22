@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 150">
+<defs>
+ <linearGradient id="book" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#FFFFFF"/><stop offset="1" stop-color="#B9D4F2"/></linearGradient>
+ <linearGradient id="cap" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#1C75D0"/><stop offset="1" stop-color="#06366F"/></linearGradient>
+ <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FFE58A"/><stop offset="1" stop-color="#D99A16"/></linearGradient>
+</defs>
+<path d="M40 103 Q130 82 222 103 L214 126 Q130 111 47 129Z" fill="#8DB5E2" opacity=".35"/>
+<path d="M43 91 Q130 75 220 93 L216 116 Q130 99 47 118Z" fill="url(#book)" stroke="#5D8FC4" stroke-width="3"/>
+<path d="M43 91 Q130 75 220 93 L216 105 Q130 91 47 106Z" fill="#F9FCFF"/>
+<path d="M53 83 Q130 66 211 83 L220 94 Q132 80 43 99Z" fill="#D8E9FA" stroke="#5D8FC4" stroke-width="3"/>
+<path d="M64 76 Q130 62 202 77 L212 87 Q130 72 54 91Z" fill="url(#book)" stroke="#6D9BC9" stroke-width="3"/>
+<path d="M52 78 L51 88 M61 77 L60 89 M204 77 L207 88" stroke="#8EB3D8" stroke-width="2"/>
+<path d="M32 47 L130 14 L230 48 L130 83Z" fill="url(#cap)" stroke="#06366F" stroke-width="3" stroke-linejoin="round"/>
+<path d="M69 58 L69 83 Q130 111 192 83 L192 58 L130 79Z" fill="#0B4D96"/>
+<path d="M130 14 L230 48 L130 83 L32 47Z" fill="url(#cap)" stroke="#06366F" stroke-width="3" stroke-linejoin="round"/>
+<path d="M225 48 L225 86" stroke="url(#gold)" stroke-width="4" stroke-linecap="round"/>
+<circle cx="225" cy="48" r="5" fill="#FFE58A"/>
+<path d="M225 86 Q221 96 226 105 Q231 96 225 86Z" fill="url(#gold)"/>
+<path d="M105 38 L130 46 L154 38" fill="none" stroke="#6CB0F0" stroke-width="3" opacity=".8"/>
+</svg>
