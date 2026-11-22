@@ -526,6 +526,15 @@ service cloud.firestore {
       allow read, create, update, delete: if isAdmin();
     }
 
+    match /push_notification_events/{eventId} {
+      allow create: if signedIn() &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.notificationId is string &&
+        request.resource.data.event == 'opened';
+      allow read: if isAdmin();
+      allow update, delete: if false;
+    }
+
     // ==================================================
     // NOTIFICATIONS
     // ==================================================
