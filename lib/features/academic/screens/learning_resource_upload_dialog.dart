@@ -63,6 +63,10 @@ class _LearningResourceUploadDialogState extends State<LearningResourceUploadDia
       _message('Choose a file before saving.');
       return;
     }
+    if (_type == LearningResourceType.text && _text.text.trim().length > 700000) {
+      _message('Text notes must be shorter than 700,000 characters.');
+      return;
+    }
     if (_type == LearningResourceType.text && _text.text.trim().isEmpty) {
       _message('Write the note content first.');
       return;
@@ -77,8 +81,10 @@ class _LearningResourceUploadDialogState extends State<LearningResourceUploadDia
         final storageRef = FirebaseStorage.instance.ref().child(
           'learning_resources/${widget.yearId}/${widget.subjectId}/${widget.topicId}/${DateTime.now().millisecondsSinceEpoch}_$safeName',
         );
+        final extension = file.extension?.toLowerCase();
         final contentType = _type == LearningResourceType.pdf ? 'application/pdf'
-          : file.extension?.toLowerCase() == 'mov' ? 'video/quicktime' : 'video/mp4';
+          : extension == 'mov' ? 'video/quicktime'
+          : extension == 'webm' ? 'video/webm' : 'video/mp4';
         final task = storageRef.putData(
           file.bytes!,
           SettableMetadata(contentType: contentType, customMetadata: {'originalName': file.name}),
