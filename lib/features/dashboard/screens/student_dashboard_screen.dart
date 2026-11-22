@@ -346,42 +346,75 @@ class _Home extends StatelessWidget {
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 22),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Container(
-          height: 178,
-          padding: const EdgeInsets.fromLTRB(18, 17, 8, 14),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft, end: Alignment.bottomRight,
-              colors: [Color(0xFFE5F1FF), Color(0xFFD4E8FF), Color(0xFFF1F7FF)],
-            ),
-          ),
-          child: Stack(children: [
-            Positioned(right: -4, top: -4, bottom: -8, child: SizedBox(
-              width: 150,
-              child: SvgPicture.asset('assets/images/clinical_stethoscope.svg',
-                fit: BoxFit.contain, colorFilter: const ColorFilter.mode(
-                  Color(0x6682B5E8), BlendMode.srcIn)),
-            )),
-            Align(alignment: Alignment.centerLeft, child: SizedBox(
-              width: MediaQuery.sizeOf(context).width * .68,
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center, children: [
-                Text('Hello, $firstName!', maxLines: 1, overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: Color(0xFF123B68), fontSize: 26,
-                    fontWeight: FontWeight.w900, letterSpacing: -.7)),
-                const SizedBox(height: 7),
-                const Text('Your journey to excellence continues',
-                  style: TextStyle(color: Color(0xFF173B65), fontSize: 13, height: 1.4)),
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Container(
+              height: 205,
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(22, 18, 8, 78),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFFE5F1FF), Color(0xFFD4E8FF), Color(0xFFF1F7FF)],
+                ),
+              ),
+              child: Stack(children: [
+                Positioned(
+                  right: -2, top: -5, bottom: 0,
+                  child: SizedBox(
+                    width: 165,
+                    child: SvgPicture.asset(
+                      'assets/images/clinical_stethoscope.svg',
+                      fit: BoxFit.contain,
+                      colorFilter: const ColorFilter.mode(
+                        Color(0x6682B5E8), BlendMode.srcIn,
+                      ),
+                    ),
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: SizedBox(
+                    width: MediaQuery.sizeOf(context).width * .68,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Hello, $firstName!',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Color(0xFF123B68), fontSize: 27,
+                            fontWeight: FontWeight.w900, letterSpacing: -.7,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Your journey to excellence continues',
+                          style: TextStyle(
+                            color: Color(0xFF173B65), fontSize: 13, height: 1.4,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ]),
-            )),
-          ]),
+            ),
+            Positioned(
+              left: 0, right: 0, bottom: -73,
+              child: uid != null ? _ProgressOverview(uid: uid) : const SizedBox.shrink(),
+            ),
+          ],
         ),
-        const SizedBox(height: 13),
-        if (uid != null) _ProgressOverview(uid: uid),
+        const SizedBox(height: 91),
         const SizedBox(height: 17),
         GridView.count(
-          crossAxisCount: 2, crossAxisSpacing: 11, mainAxisSpacing: 11,
-          childAspectRatio: 1.12, shrinkWrap: true,
+          crossAxisCount: 2, crossAxisSpacing: 12, mainAxisSpacing: 12,
+          childAspectRatio: 1.24, shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           children: [
             _ClinicalExamTile(title: 'Subject-Wise\nExams', icon: Icons.menu_book_rounded,
@@ -398,7 +431,7 @@ class _Home extends StatelessWidget {
               action: 'Explore', onTap: onPastPapers),
           ],
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 19),
         Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
           const Text('Your Activity', style: TextStyle(
             color: AtlasColors.navy, fontSize: 18, fontWeight: FontWeight.w900)),
@@ -409,7 +442,7 @@ class _Home extends StatelessWidget {
         if (uid != null) _ActivitySummary(uid: uid),
         const SizedBox(height: 13),
         Container(
-          height: 105, width: double.infinity,
+          height: 112, width: double.infinity,
           padding: const EdgeInsets.fromLTRB(20, 15, 10, 12),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
@@ -422,8 +455,12 @@ class _Home extends StatelessWidget {
             const Expanded(child: Text('Study Smart.\nScore High.',
               style: TextStyle(color: Color(0xFF123B68), fontSize: 21,
                 height: 1.15, fontWeight: FontWeight.w900))),
-            Icon(Icons.school_rounded, size: 78,
-              color: AtlasColors.royalBlue.withValues(alpha: .8)),
+            Column(mainAxisAlignment: MainAxisAlignment.end, children: [
+              Icon(Icons.auto_stories_rounded, size: 48,
+                color: AtlasColors.royalBlue.withValues(alpha: .8)),
+              Icon(Icons.school_rounded, size: 43,
+                color: AtlasColors.navy.withValues(alpha: .85)),
+            ]),
           ]),
         ),
         const SizedBox(height: 16),
@@ -450,12 +487,12 @@ class _ProgressOverview extends StatelessWidget {
         }
         final percent = total > 0 ? (correct * 100 / total).round().clamp(0, 100) : 0;
         return Container(
-          padding: const EdgeInsets.fromLTRB(18, 15, 18, 14),
+          padding: const EdgeInsets.fromLTRB(20, 17, 20, 16),
           decoration: BoxDecoration(
-            color: Colors.white, borderRadius: BorderRadius.circular(20),
+            color: Colors.white, borderRadius: BorderRadius.circular(22),
             border: Border.all(color: const Color(0xFFE2EBF7)),
             boxShadow: [BoxShadow(color: AtlasColors.navy.withValues(alpha: .07),
-              blurRadius: 16, offset: const Offset(0, 5))],
+              blurRadius: 19, offset: const Offset(0, 6))],
           ),
           child: Column(children: [
             Row(children: [
