@@ -44,10 +44,10 @@ class _AdminExamManagementScreenState extends State<AdminExamManagementScreen> {
       title: const Text('Create examination'),
       content: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
         DropdownButtonFormField<String>(value: type, decoration: const InputDecoration(labelText: 'Examination type'), items: types.entries.map((e) => DropdownMenuItem(value: e.key, child: Text(e.value))).toList(), onChanged: (v) { if (v != null) setDialogState(() { type = v; categoryId = ''; categoryName = ''; }); }),
-        if (type != 'grand_mock') StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(stream: db.collection('exam_categories').where('categoryType', isEqualTo: type.startsWith('subject') ? 'subject' : 'system').where('isActive', isEqualTo: true).snapshots(), builder: (c, s) {
+        if (type != 'grand_mock') StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(stream: db.collection('exam_categories').where('categoryType', isEqualTo: type.startsWith('subject') ? 'subject' : 'system').snapshots(), builder: (c, s) {
           if (!s.hasData) return const Padding(padding: EdgeInsets.all(12), child: LinearProgressIndicator());
-          final docs = s.data!.docs;
-          return DropdownButtonFormField<String>(value: docs.any((d) => d.id == categoryId) ? categoryId : null, decoration: const InputDecoration(labelText: 'Subject / system'), items: docs.map((d) => DropdownMenuItem(value: d.id, child: Text((d.data()['name'] ?? '').toString()))).toList(), onChanged: (v) { final d = docs.where((x) => x.id == v).firstOrNull; setDialogState(() { categoryId = v ?? ''; categoryName = (d?.data()['name'] ?? '').toString(); }); });
+          final docs = s.data!.docs.where((d) => d.data()['isActive'] != false).toList();
+          return DropdownButtonFormField<String>(value: docs.any((d) => d.id == categoryId) ? categoryId : null, decoration: const InputDecoration(labelText: 'Subject / system'), items: docs.map((d) => DropdownMenuItem(value: d.id, child: Text((d.data()['name'] ?? '').toString()))).toList(), onChanged: (v) { final matches = docs.where((x) => x.id == v); final d = matches.isEmpty ? null : matches.first; setDialogState(() { categoryId = v ?? ''; categoryName = (d?.data()['name'] ?? '').toString(); }); });
         }),
         TextField(controller: title, decoration: const InputDecoration(labelText: 'Exam name (e.g. Exam 1)')),
         TextField(controller: duration, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Duration in minutes')),
