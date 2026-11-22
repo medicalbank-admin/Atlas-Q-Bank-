@@ -14,7 +14,7 @@ class SubscriptionPlansScreen extends StatelessWidget {
     final service = SubscriptionPlanService();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F7FF),
+      backgroundColor: const Color(0xFFF2F7FF),
       appBar: AppBar(
         title: const Text('Membership Plans'),
         backgroundColor: Colors.white,
