@@ -40,15 +40,17 @@ class AdminNavigationDrawer extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(19, 23, 17, 19),
-          child: Row(children: [
-            const AtlasLogo(size: 66),
-            const SizedBox(width: 13),
-            const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('THE ATLAS ACADEMY', style: TextStyle(color: AtlasColors.navy, fontFamily: 'Georgia', fontSize: 17, fontWeight: FontWeight.w700, letterSpacing: -.2)),
-              SizedBox(height: 5),
-              Text('Administrator workspace', style: TextStyle(color: AtlasColors.secondaryText, fontSize: 11)),
-            ])),
-          ]),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const AtlasLogo(size: 57),
+              const SizedBox(height: 8),
+              const Text(
+                'Administrator workspace',
+                style: TextStyle(color: AtlasColors.secondaryText, fontSize: 11),
+              ),
+            ],
+          ),
         ),
         const Divider(height: 1, indent: 20, endIndent: 20, color: AtlasColors.border),
         const Padding(
