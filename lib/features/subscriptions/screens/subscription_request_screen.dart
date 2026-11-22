@@ -98,8 +98,8 @@ class _SubscriptionRequestScreenState extends State<SubscriptionRequestScreen> {
   Widget build(BuildContext context) {
     final plan = widget.plan;
     return Scaffold(
-      backgroundColor: AtlasColors.ivory,
-      appBar: AppBar(title: const Text('Complete Subscription Payment'), backgroundColor: AtlasColors.ivory, foregroundColor: AtlasColors.navy, elevation: 0),
+      backgroundColor: const Color(0xFFF3F7FF),
+      appBar: AppBar(title: const Text('Complete Subscription Payment'), backgroundColor: const Color(0xFFF3F7FF), foregroundColor: AtlasColors.navy, elevation: 0),
       body: SafeArea(
         child: StreamBuilder<Map<String, dynamic>>(
           stream: _settingsService.watchSettings(),
@@ -117,13 +117,13 @@ class _SubscriptionRequestScreenState extends State<SubscriptionRequestScreen> {
                       borderRadius: BorderRadius.circular(23),
                     ),
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      const Icon(Icons.workspace_premium_rounded, color: AtlasColors.champagne, size: 30),
+                      const Icon(Icons.workspace_premium_rounded, color: AtlasColors.royalBlue, size: 30),
                       const SizedBox(height: 12),
-                      const Text('YOUR SELECTED PLAN', style: TextStyle(color: AtlasColors.champagne, fontSize: 10, letterSpacing: 1.4, fontWeight: FontWeight.w900)),
+                      const Text('YOUR SELECTED PLAN', style: TextStyle(color: AtlasColors.royalBlue, fontSize: 10, letterSpacing: 1.4, fontWeight: FontWeight.w900)),
                       const SizedBox(height: 7),
                       Text(plan.name, style: const TextStyle(color: Colors.white, fontSize: 23, fontWeight: FontWeight.w900)),
                       const SizedBox(height: 8),
-                      Text('${plan.currency} ${plan.price.toStringAsFixed(2)}', style: const TextStyle(color: AtlasColors.champagne, fontSize: 25, fontWeight: FontWeight.w900)),
+                      Text('${plan.currency} ${plan.price.toStringAsFixed(2)}', style: const TextStyle(color: AtlasColors.royalBlue, fontSize: 25, fontWeight: FontWeight.w900)),
                       Text('${plan.durationDays} days • ${plan.features.length} listed benefits', style: const TextStyle(color: Colors.white70)),
                     ]),
                   ),
@@ -182,7 +182,7 @@ class _SubscriptionRequestScreenState extends State<SubscriptionRequestScreen> {
     final configured = holder.isNotEmpty || provider.isNotEmpty || account.isNotEmpty;
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18), border: Border.all(color: AtlasColors.border)),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18), border: Border.all(color: const Color(0xFFE0EAF5))),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         if (!configured) const Text('Payment account details have not been configured yet. Please contact the academy.', style: TextStyle(color: AtlasColors.error)),
         if (provider.isNotEmpty) _paymentLine('Bank / Provider', provider),
