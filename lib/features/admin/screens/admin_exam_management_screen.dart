@@ -5,7 +5,8 @@ import '../../mcqs/screens/student_mcq_practice_screen.dart';
 import 'admin_mcq_import_screen.dart';
 
 class AdminExamManagementScreen extends StatefulWidget {
-  const AdminExamManagementScreen({super.key});
+  final String? sectionType;
+  const AdminExamManagementScreen({super.key, this.sectionType});
   @override
   State<AdminExamManagementScreen> createState() => _AdminExamManagementScreenState();
 }
@@ -34,7 +35,7 @@ class _AdminExamManagementScreenState extends State<AdminExamManagementScreen> {
   }
 
   Future<void> _createExam() async {
-    String type = 'subject_exam';
+    String type = widget.sectionType ?? 'subject_exam';
     String categoryId = '';
     String categoryName = '';
     final title = TextEditingController();
@@ -43,7 +44,10 @@ class _AdminExamManagementScreenState extends State<AdminExamManagementScreen> {
     final ok = await showDialog<bool>(context: context, builder: (dialogContext) => StatefulBuilder(builder: (context, setDialogState) => AlertDialog(
       title: const Text('Create examination'),
       content: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
-        DropdownButtonFormField<String>(value: type, decoration: const InputDecoration(labelText: 'Examination type'), items: types.entries.map((e) => DropdownMenuItem(value: e.key, child: Text(e.value))).toList(), onChanged: (v) { if (v != null) setDialogState(() { type = v; categoryId = ''; categoryName = ''; }); }),
+        if (widget.sectionType == null)
+          DropdownButtonFormField<String>(value: type, decoration: const InputDecoration(labelText: 'Examination type'), items: types.entries.map((e) => DropdownMenuItem(value: e.key, child: Text(e.value))).toList(), onChanged: (v) { if (v != null) setDialogState(() { type = v; categoryId = ''; categoryName = ''; }); })
+        else
+          Padding(padding: const EdgeInsets.only(bottom: 12), child: Align(alignment: Alignment.centerLeft, child: Text(types[type] ?? 'Examination', style: const TextStyle(fontWeight: FontWeight.w800)))),
         if (type != 'grand_mock') StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(stream: db.collection('exam_categories').where('categoryType', isEqualTo: type.startsWith('subject') ? 'subject' : 'system').snapshots(), builder: (c, s) {
           if (!s.hasData) return const Padding(padding: EdgeInsets.all(12), child: LinearProgressIndicator());
           final docs = s.data!.docs.where((d) => d.data()['isActive'] != false).toList();
@@ -66,7 +70,7 @@ class _AdminExamManagementScreenState extends State<AdminExamManagementScreen> {
     final subjectName = categoryName.isEmpty ? 'Grand Mock' : categoryName;
     await ref.set({
       'name': title.text.trim(), 'description': description.text.trim(),
-      'trackType': 'mbbs', 'yearId': 'exam_centre', 'yearName': 'Examination Centre',
+      'trackType': 'structured',
       'subjectId': subjectId, 'subjectName': subjectName,
       'examSetId': ref.id, 'examSetName': title.text.trim(),
       'examCategory': type, 'categoryId': categoryId, 'categoryName': categoryName,
@@ -136,15 +140,22 @@ class _AdminExamManagementScreenState extends State<AdminExamManagementScreen> {
         SizedBox(height: 6), Text('Manage subjects, systems, subject and system mocks, and grand mocks in one organized workspace.', style: TextStyle(color: Colors.white70, height: 1.5)),
       ])),
       const SizedBox(height: 14),
-      _categoryPanel('subject', 'Subject categories', Icons.menu_book_rounded),
-      _categoryPanel('system', 'System categories', Icons.account_tree_rounded),
+      if (widget.sectionType == null || widget.sectionType == 'subject_exam' || widget.sectionType == 'subject_mock')
+        _categoryPanel('subject', 'Subject categories', Icons.menu_book_rounded),
+      if (widget.sectionType == null || widget.sectionType == 'system_exam' || widget.sectionType == 'system_mock')
+        _categoryPanel('system', 'System categories', Icons.account_tree_rounded),
       FilledButton.icon(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminMcqImportScreen())), icon: const Icon(Icons.upload_file_rounded), label: const Text('Import MCQs')),
       const SizedBox(height: 14),
-      StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(stream: db.collection('mcq_exam_sets').where('yearId', isEqualTo: 'exam_centre').snapshots(), builder: (c, s) {
+      StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(stream: db.collection('mcq_exam_sets').snapshots(), builder: (c, s) {
         if (s.hasError) return Text('Unable to load exams: ${s.error}');
         if (!s.hasData) return const Center(child: CircularProgressIndicator());
-        if (s.data!.docs.isEmpty) return const Center(child: Padding(padding: EdgeInsets.all(20), child: Text('No structured exams yet. Create your first exam.')));
-        return Column(children: s.data!.docs.map((d) {
+        final visibleDocs = s.data!.docs.where((d) {
+          final data = d.data();
+          final structured = data['trackType'] == 'structured' || data['yearId'] == 'exam_centre';
+          return structured && (widget.sectionType == null || data['examCategory'] == widget.sectionType);
+        }).toList();
+        if (visibleDocs.isEmpty) return const Center(child: Padding(padding: EdgeInsets.all(20), child: Text('No exams in this section yet. Create your first exam.')));
+        return Column(children: visibleDocs.map((d) {
           final x = d.data(); final published = x['isPublished'] == true;
           return Card(color: Colors.white, child: ListTile(
             title: Text((x['name'] ?? 'Exam').toString(), style: const TextStyle(color: AtlasColors.navy, fontWeight: FontWeight.w900)),
