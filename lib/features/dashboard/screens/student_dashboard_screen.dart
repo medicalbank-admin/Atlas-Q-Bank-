@@ -44,7 +44,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen>{
    final p=Map<String,dynamic>.from(d['subscriptionAccessPermissions']??const{});final e=d['subscriptionExpiryAt'];
    final valid=e is Timestamp&&e.toDate().isAfter(DateTime.now());
    final permissionKey=key=='clinicalCases'?'clinicalCases':key;
-   final allowed=key=='pastPapers'?(p['pastPapers']==true||p['examinations']==true):p[permissionKey]==true;
+   final allowed=key=='pastPapers'?(p['pastPapers']==true||p['examinations']==true):key=='examsHistory'?(p['examinations']==true||p['mcqPractice']==true||p['pastPapers']==true):p[permissionKey]==true;
    if(!mounted)return;
    if(d['subscriptionStatus']!='active'||d['accessEnabled']!=true||!valid||!allowed){await Navigator.push(context,MaterialPageRoute(builder:(_)=>const SubscriptionPlansScreen()));return;}
    Widget? page;
