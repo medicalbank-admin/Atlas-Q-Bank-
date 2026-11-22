@@ -467,9 +467,29 @@ async function submitSession(env, uid, body) {
     totalQuestions, correctAnswers, incorrectAnswers, unansweredQuestions, percentage };
 }
 
+async function checkBackendReady(env) {
+  await getServiceAccessToken(env);
+  // A no-result/one-result query confirms the service account can reach Firestore.
+  await firestoreRequest(env, ":runQuery", {
+    method: "POST",
+    body: JSON.stringify({
+      structuredQuery: { from: [{ collectionId: "users" }], limit: 1 },
+    }),
+  });
+}
+
 export default {
   async fetch(request, env) {
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
+    const healthUrl = new URL(request.url);
+    if (request.method === "GET" && healthUrl.pathname === "/health") {
+      try {
+        await checkBackendReady(env);
+        return response({ success: true, status: "ready" });
+      } catch (error) {
+        return response({ success: false, status: "not_ready", message: error?.message || "Backend unavailable." }, 503);
+      }
+    }
     const url = new URL(request.url);
     if (request.method !== "POST" || !["/start", "/submit"].includes(url.pathname)) {
       return fail("Endpoint not found.", 404);
