@@ -479,8 +479,14 @@ exports.submitMcqPractice = onCall(
           if (!examSetSnapshot.exists || examSetSnapshot.data().isPublished !== true) {
             throw new HttpsError("failed-precondition", "This exam set is no longer published.");
           }
-          const feature = examSetSnapshot.data().trackType === "licensing" ? "examPathways" : "examinations";
-          if ((user.subscriptionAccessPermissions || {})[feature] !== true) {
+          const trackType = examSetSnapshot.data().trackType;
+          const permissions = user.subscriptionAccessPermissions || {};
+          const allowed = trackType === "licensing"
+            ? permissions.examPathways === true
+            : trackType === "past_paper"
+              ? permissions.pastPapers === true || permissions.examinations === true
+              : permissions.examinations === true;
+          if (!allowed) {
             throw new HttpsError("permission-denied", "Your subscription no longer includes this exam set.");
           }
         } else if ((user.subscriptionAccessPermissions || {}).mcqPractice !== true) {
