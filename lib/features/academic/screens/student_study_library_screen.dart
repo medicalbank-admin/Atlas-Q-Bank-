@@ -32,18 +32,18 @@ class _StudentStudyLibraryScreenState extends State<StudentStudyLibraryScreen> {
   Widget _banner() => Container(
     padding: const EdgeInsets.all(20),
     decoration: BoxDecoration(
-      gradient: const LinearGradient(colors: [AtlasColors.navy, AtlasColors.royalBlue]),
+      gradient: const LinearGradient(colors: [Color(0xFFE4F0FF), Color(0xFFD5E8FF)]),
       borderRadius: BorderRadius.circular(19),
     ),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const Icon(Icons.local_library_rounded, color: AtlasColors.champagne, size: 30),
+      const Icon(Icons.local_library_rounded, color: AtlasColors.royalBlue, size: 30),
       const SizedBox(height: 10),
-      const Text('Your Study Library', style: TextStyle(color: Colors.white, fontSize: 21, fontWeight: FontWeight.w900)),
+      const Text('Your Study Library', style: TextStyle(color: AtlasColors.navy, fontSize: 21, fontWeight: FontWeight.w900)),
       const SizedBox(height: 6),
       Text([yearName, subjectName, topicName].where((e) => e.isNotEmpty).join('  •  ').isEmpty
         ? 'Browse published notes, videos and learning materials.'
         : [yearName, subjectName, topicName].where((e) => e.isNotEmpty).join('  •  '),
-        style: const TextStyle(color: Colors.white70, height: 1.5)),
+        style: const TextStyle(color: const Color(0xFF526B87), height: 1.5)),
     ]),
   );
 
