@@ -38,7 +38,7 @@ class _AdminLearningResourcesScreenState
       backgroundColor: const Color(0xFFF2F7FF),
       appBar: AppBar(
         title: const Text('Learning Resources'),
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFFF2F7FF),
         foregroundColor: AtlasColors.navy,
         elevation: 0,
       ),
