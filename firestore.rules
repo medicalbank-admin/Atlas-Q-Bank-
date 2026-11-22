@@ -226,6 +226,23 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
+    match /clinical_case_attempts/{attemptId} {
+      allow create: if signedIn() &&
+        hasFeatureAccess('clinicalCases') &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.caseId is string &&
+        request.resource.data.totalQuestions is int &&
+        request.resource.data.correctAnswers is int &&
+        request.resource.data.percentage is number &&
+        request.resource.data.answers is list;
+      allow read: if isAdmin() || (
+        signedIn() &&
+        resource.data.userId == request.auth.uid &&
+        hasFeatureAccess('clinicalCases')
+      );
+      allow update, delete: if false;
+    }
+
     // ==================================================
     // STUDENT MISTAKES NOTEBOOK
     // ==================================================
