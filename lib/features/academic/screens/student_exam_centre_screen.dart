@@ -23,10 +23,10 @@ class StudentExamCentreScreen extends StatelessWidget {
       backgroundColor: AtlasColors.ivory,
       appBar: AppBar(title: Text(title)),
       body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        // Read all published sets and classify them locally. This keeps old
-        // structured sets available without relying on an MBBS/licensing track.
+        // Restrict the stream to the new structured exam model.
         stream: FirebaseFirestore.instance
             .collection('mcq_exam_sets')
+            .where('trackType', isEqualTo: 'structured')
             .where('isPublished', isEqualTo: true)
             .snapshots(),
         builder: (context, snapshot) {
@@ -43,8 +43,7 @@ class StudentExamCentreScreen extends StatelessWidget {
           final docs = snapshot.data!.docs.where((doc) {
             final data = doc.data();
             final category = (data['examCategory'] ?? '').toString();
-            final isAcademyExam = data['yearId'] == 'exam_centre' ||
-                data['trackType'] == 'structured';
+            final isAcademyExam = data['trackType'] == 'structured';
             return isAcademyExam && (section == 'mocks' ? category.endsWith('_mock') : category == section) &&
                 data['isActive'] != false;
           }).toList()
