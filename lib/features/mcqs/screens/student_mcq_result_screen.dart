@@ -47,9 +47,10 @@ class _StudentMcqResultScreenState
       backgroundColor: AtlasColors.ivory,
       appBar: AppBar(
         title: const Text('Practice Result'),
-        backgroundColor: AtlasColors.navy,
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.white,
+        foregroundColor: AtlasColors.navy,
         elevation: 0,
+        scrolledUnderElevation: 1,
       ),
       body: FutureBuilder<Map<String, dynamic>?>(
         future: _resultFuture,
