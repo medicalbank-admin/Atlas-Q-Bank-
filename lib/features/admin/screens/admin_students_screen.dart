@@ -52,7 +52,7 @@ future: _authorizationFuture,
 builder: (context, snapshot) {
 if (snapshot.connectionState == ConnectionState.waiting) {
 return const Scaffold(
-backgroundColor: AtlasColors.ivory,
+backgroundColor: const Color(0xFFF3F7FF),
 body: Center(
 child: CircularProgressIndicator(
 color: AtlasColors.royalBlue,
@@ -63,7 +63,7 @@ color: AtlasColors.royalBlue,
 
     if (snapshot.data != true) {
       return Scaffold(
-        backgroundColor: AtlasColors.ivory,
+        backgroundColor: const Color(0xFFF3F7FF),
         appBar: AppBar(title: const Text('Student Management')),
         body: const Center(
           child: Text('Administrator access required.'),
@@ -78,14 +78,14 @@ color: AtlasColors.royalBlue,
 
 Widget _buildStudentList() {
 return Scaffold(
-backgroundColor: AtlasColors.ivory,
+backgroundColor: const Color(0xFFF3F7FF),
 appBar: AppBar(
 title: const Text(
 'Student Management',
 style: TextStyle(fontWeight: FontWeight.w800),
 ),
-backgroundColor: AtlasColors.navy,
-foregroundColor: Colors.white,
+backgroundColor: Colors.white,
+foregroundColor: AtlasColors.navy,
 elevation: 0,
 ),
 body: Column(
@@ -214,7 +214,7 @@ crossAxisAlignment: CrossAxisAlignment.start,
 children: [
 Icon(
 Icons.school_rounded,
-color: AtlasColors.champagne,
+color: AtlasColors.royalBlue,
 size: 30,
 ),
 SizedBox(height: 13),
@@ -301,7 +301,7 @@ return Container(
   decoration: BoxDecoration(
     color: Colors.white,
     borderRadius: BorderRadius.circular(19),
-    border: Border.all(color: AtlasColors.border),
+    border: Border.all(color: const Color(0xFFE0EAF5)),
     boxShadow: [
       BoxShadow(
         color: AtlasColors.navy.withValues(alpha: 0.035),
