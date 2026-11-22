@@ -135,7 +135,7 @@ class _MySubscriptionRequestsScreenState
           Text(
             '$count',
             style: const TextStyle(
-              color: AtlasColors.champagne,
+              color: AtlasColors.royalBlue,
               fontSize: 23,
               fontWeight: FontWeight.bold,
             ),
@@ -145,7 +145,7 @@ class _MySubscriptionRequestsScreenState
             label,
             textAlign: TextAlign.center,
             style: const TextStyle(
-              color: Colors.white70,
+              color: const Color(0xFF526B87),
               fontSize: 10,
             ),
           ),
