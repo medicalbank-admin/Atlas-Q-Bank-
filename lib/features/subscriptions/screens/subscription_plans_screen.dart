@@ -134,7 +134,7 @@ class SubscriptionPlansScreen extends StatelessWidget {
         children: [
           Icon(
             Icons.school_rounded,
-            color: AtlasColors.champagne,
+            color: AtlasColors.royalBlue,
             size: 32,
           ),
           SizedBox(height: 15),
@@ -151,7 +151,7 @@ class SubscriptionPlansScreen extends StatelessWidget {
             'Unlock your learning journey with The Atlas Academy '
             'membership plans.',
             style: TextStyle(
-              color: Colors.white70,
+              color: const Color(0xFF526B87),
               fontSize: 13,
               height: 1.5,
             ),
