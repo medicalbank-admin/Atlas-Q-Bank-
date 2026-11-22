@@ -29,7 +29,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen>{
  Future<void> _handleNotificationTap(RemoteMessage message) async {
   final destination=(message.data['destination']??'').toString();
   if(destination.startsWith('forum_thread:')){await openFeature('discussionForum');return;}
-  const destinations={'study_library':'studyLibrary','mcq_practice':'mcqPractice','past_papers':'pastPapers','examinations':'examinations','exams_history':'examsHistory','exam_pathways':'examPathways','clinical_cases':'clinicalCases','mistakes_notebook':'mistakesNotebook','mock_predictions':'mockPredictions','discussion_forum':'discussionForum','ask_teacher':'askTeacher','membership':'membership'};
+  const destinations={'study_library':'studyLibrary','mcq_practice':'mcqPractice','past_papers':'pastPapers','exams_history':'examsHistory','clinical_cases':'clinicalCases','mistakes_notebook':'mistakesNotebook','mock_predictions':'mockPredictions','discussion_forum':'discussionForum','ask_teacher':'askTeacher','membership':'membership'};
   final key=destinations[destination];
   if(key!=null&&mounted)await openFeature(key);
  }
@@ -43,7 +43,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen>{
    final snap=await FirebaseFirestore.instance.collection('users').doc(u.uid).get();final d=snap.data()??{};
    final p=Map<String,dynamic>.from(d['subscriptionAccessPermissions']??const{});final e=d['subscriptionExpiryAt'];
    final valid=e is Timestamp&&e.toDate().isAfter(DateTime.now());
-   final permissionKey=key=='clinicalCases'?'clinicalCases':key;
+   final permissionKey=key=='clinicalCases'?'clinicalCases':(['subjectExams','systemExams','mockExams'].contains(key)?'examinations':key);
    final allowed=key=='pastPapers'?(p['pastPapers']==true||p['examinations']==true):key=='examsHistory'?(p['examinations']==true||p['mcqPractice']==true||p['pastPapers']==true):p[permissionKey]==true;
    if(!mounted)return;
    if(d['subscriptionStatus']!='active'||d['accessEnabled']!=true||!valid||!allowed){await Navigator.push(context,MaterialPageRoute(builder:(_)=>const SubscriptionPlansScreen()));return;}
@@ -54,7 +54,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen>{
    if(key=='examsHistory')page=const StudentExamsHistoryScreen();
    if(key=='subjectExams'||key=='systemExams'||key=='mockExams') {
     final section = key=='subjectExams' ? 'subject_exam' :
-        key=='systemExams' ? 'system_exam' : 'subject_mock';
+        key=='systemExams' ? 'system_exam' : 'mocks';
     page=StudentExamCentreScreen(section:section);
    }
    if(key=='clinicalCases')page=const ClinicalCaseLearningScreen();
