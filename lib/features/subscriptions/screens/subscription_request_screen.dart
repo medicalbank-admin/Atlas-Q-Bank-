@@ -98,8 +98,8 @@ class _SubscriptionRequestScreenState extends State<SubscriptionRequestScreen> {
   Widget build(BuildContext context) {
     final plan = widget.plan;
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F7FF),
-      appBar: AppBar(title: const Text('Complete Subscription Payment'), backgroundColor: const Color(0xFFF3F7FF), foregroundColor: AtlasColors.navy, elevation: 0),
+      backgroundColor: const Color(0xFFF2F7FF),
+      appBar: AppBar(title: const Text('Complete Subscription Payment'), backgroundColor: const Color(0xFFF2F7FF), foregroundColor: AtlasColors.navy, elevation: 0),
       body: SafeArea(
         child: StreamBuilder<Map<String, dynamic>>(
           stream: _settingsService.watchSettings(),
