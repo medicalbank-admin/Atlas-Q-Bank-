@@ -151,7 +151,7 @@ class _AdminExamManagementScreenState extends State<AdminExamManagementScreen> {
         if (!s.hasData) return const Center(child: CircularProgressIndicator());
         final visibleDocs = s.data!.docs.where((d) {
           final data = d.data();
-          final structured = data['trackType'] == 'structured' || data['yearId'] == 'exam_centre';
+          final structured = data['trackType'] == 'structured';
           return structured && (widget.sectionType == null || (widget.sectionType == 'mocks' ? (data['examCategory'] ?? '').toString().endsWith('_mock') : data['examCategory'] == widget.sectionType));
         }).toList();
         if (visibleDocs.isEmpty) return const Center(child: Padding(padding: EdgeInsets.all(20), child: Text('No exams in this section yet. Create your first exam.')));
