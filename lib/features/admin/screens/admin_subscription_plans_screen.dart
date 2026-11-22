@@ -11,9 +11,9 @@ class AdminSubscriptionPlansScreen extends StatefulWidget {
 
 class _AdminSubscriptionPlansScreenState
     extends State<AdminSubscriptionPlansScreen> {
-  static const Color navy = Color(0xFF071B3D);
-  static const Color teal = Color(0xFF174A91);
-  static const Color gold = Color(0xFFE4BE68);
+  static const Color navy = Color(0xFF123B68);
+  static const Color teal = Color(0xFF2563A6);
+  static const Color gold = Color(0xFF9CC9ED);
   static const Color ivory = Color(0xFFF2F7FF);
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
