@@ -144,8 +144,6 @@ class McqBulkImportService {
       'options': question.options,
       'yearId': question.yearId.trim(),
       'trackType': question.trackType,
-      'pathwayId': question.pathwayId,
-      'pathwayName': question.pathwayName,
       'subjectId': question.subjectId,
       'examSetId': question.examSetId,
       'examSetName': question.examSetName,
@@ -217,7 +215,7 @@ class McqBulkImportService {
         question.subject.trim().isEmpty ||
         question.topic.trim().isEmpty) {
       throw Exception(
-        'Academic year, subject and topic are required.',
+        'Choose a valid exam destination, subject and topic.',
       );
     }
   }
