@@ -42,7 +42,6 @@ class _AdminSubscriptionPlansScreenState
     'mcqPractice': 'MCQ Practice',
     'examinations': 'Examinations',
     'pastPapers': 'Past Papers',
-    'examPathways': 'Exam Pathways',
     'clinicalCases': 'Clinical Case-Based Learning',
     'mistakesNotebook': 'Mistakes Notebook',
     'mockPredictions': 'Mock Exam Readiness & Predictions',
