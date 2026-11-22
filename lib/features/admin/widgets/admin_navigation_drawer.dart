@@ -31,20 +31,20 @@ class AdminNavigationDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     final selectedIndex = items.indexWhere((item) => item.route == selectedRoute);
     return NavigationDrawer(
-      backgroundColor: Colors.white,
-      indicatorColor: AtlasColors.paleBlue,
+      backgroundColor: const Color(0xFFF8FBFF),
+      indicatorColor: const Color(0xFFDCEBFC),
       selectedIndex: selectedIndex < 0 ? 0 : selectedIndex,
       onDestinationSelected: (index) {
         if (index >= 0 && index < items.length) onDestinationSelected(items[index].route);
       },
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(22, 27, 20, 23),
+          padding: const EdgeInsets.fromLTRB(19, 23, 17, 19),
           child: Row(children: [
-            const AtlasLogo(size: 49),
+            const AtlasLogo(size: 55),
             const SizedBox(width: 13),
             const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('THE ATLAS ACADEMY', style: TextStyle(color: AtlasColors.navy, fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: .8)),
+              Text('THE ATLAS ACADEMY', style: TextStyle(color: AtlasColors.navy, fontFamily: 'Georgia', fontSize: 16, fontWeight: FontWeight.w700, letterSpacing: -.2)),
               SizedBox(height: 5),
               Text('Administrator workspace', style: TextStyle(color: AtlasColors.secondaryText, fontSize: 11)),
             ])),
@@ -59,7 +59,7 @@ class AdminNavigationDrawer extends StatelessWidget {
           NavigationDrawerDestination(
             icon: Icon(item.icon, color: AtlasColors.secondaryText),
             selectedIcon: Icon(item.icon, color: AtlasColors.royalBlue),
-            label: Text(item.title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AtlasColors.charcoal)),
+            label: Text(item.title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AtlasColors.charcoal)),
           ),
         const Padding(
           padding: EdgeInsets.fromLTRB(27, 24, 16, 22),
