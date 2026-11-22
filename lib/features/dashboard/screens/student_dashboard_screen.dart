@@ -22,8 +22,9 @@ class StudentDashboardScreen extends StatefulWidget {
 }
 class _StudentDashboardScreenState extends State<StudentDashboardScreen>{
  int selected=0;
- @override void initState(){super.initState();PushNotificationService().registerDevice(context);}
- Future<void> signOut()async{try{await PushNotificationService().unregisterCurrentDevice();await StudentAuthService().signOut();if(mounted)Navigator.of(context).popUntil((r)=>r.isFirst);}catch(_){if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Unable to sign out.')));}}
+ final PushNotificationService pushService=PushNotificationService();
+ @override void initState(){super.initState();pushService.registerDevice(context);}
+ Future<void> signOut()async{try{await pushService.unregisterCurrentDevice();await StudentAuthService().signOut();if(mounted)Navigator.of(context).popUntil((r)=>r.isFirst);}catch(_){if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Unable to sign out.')));}}
  Future<void> openFeature(String key)async{
   final u=FirebaseAuth.instance.currentUser;if(u==null)return;
   if(key=='profile'){await Navigator.push(context,MaterialPageRoute(builder:(_)=>const ProfileScreen()));return;}
