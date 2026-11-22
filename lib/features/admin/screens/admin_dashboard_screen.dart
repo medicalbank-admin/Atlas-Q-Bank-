@@ -8,7 +8,6 @@ import 'admin_academic_screen.dart';
 import '../../academic/screens/admin_learning_resources_screen.dart';
 import 'admin_mcq_bank_screen.dart';
 import 'admin_past_papers_screen.dart';
-import 'admin_mcq_curriculum_screen.dart';
 import 'admin_exam_management_screen.dart';
 import 'admin_students_screen.dart';
 import 'admin_subscription_plans_screen.dart';
@@ -446,18 +445,25 @@ class AdminDashboardScreen extends StatelessWidget {
         page: const AdminAnalyticsScreen(),
       ),
       _AdminItem(
-        icon: Icons.fact_check_rounded,
-        title: 'Examination Management',
-        subtitle: 'Manage subject exams, system exams and all mock categories',
+        icon: Icons.menu_book_rounded,
+        title: 'Subject-Wise Exams',
+        subtitle: 'Create and manage subject categories and exams',
         color: AtlasColors.royalBlue,
-        page: const AdminExamManagementScreen(),
+        page: const AdminExamManagementScreen(sectionType: 'subject_exam'),
       ),
       _AdminItem(
         icon: Icons.account_tree_rounded,
-        title: 'MCQ Curriculum',
-        subtitle: 'Manage pathways, subjects and exam sets',
+        title: 'System-Wise Exams',
+        subtitle: 'Create and manage system categories and exams',
         color: AtlasColors.gold,
-        page: const AdminMcqCurriculumScreen(),
+        page: const AdminExamManagementScreen(sectionType: 'system_exam'),
+      ),
+      _AdminItem(
+        icon: Icons.fact_check_rounded,
+        title: 'Mock Exams',
+        subtitle: 'Manage subject mocks, system mocks and grand mocks',
+        color: AtlasColors.brightBlue,
+        page: const AdminExamManagementScreen(sectionType: 'mocks'),
       ),
       _AdminItem(
         icon: Icons.history_edu_rounded,
