@@ -9,7 +9,7 @@ class StudentMcqHistoryScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
     return Scaffold(
-      backgroundColor: AtlasColors.ivory,
+      backgroundColor: const Color(0xFFF3F7FF),
       appBar: AppBar(
         title: const Text('Practice History'),
         backgroundColor: Colors.white,
@@ -343,7 +343,7 @@ class _SessionCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 17),
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(19),
                   child: LinearProgressIndicator(
                     value: percentage / 100,
                     minHeight: 7,
