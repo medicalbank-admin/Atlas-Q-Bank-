@@ -11,7 +11,7 @@ class AtlasColors {
   static const Color paleBlue = Color(0xFFEAF4FC);
   static const Color champagne = Color(0xFF9CC9ED);
   static const Color gold = Color(0xFF5A9BD5);
-  static const Color ivory = Color(0xFFF5F9FD);
+  static const Color ivory = Color(0xFFF2F7FF);
   static const Color white = Color(0xFFFFFFFF);
   static const Color charcoal = Color(0xFF1D344A);
   static const Color secondaryText = Color(0xFF71869A);
@@ -119,7 +119,7 @@ class AtlasAcademyApp extends StatelessWidget {
       useMaterial3: true,
       brightness: Brightness.light,
       colorScheme: scheme,
-      scaffoldBackgroundColor: AtlasColors.ivory,
+      scaffoldBackgroundColor: const Color(0xFFF2F7FF),
       visualDensity: VisualDensity.standard,
     );
 
@@ -134,7 +134,7 @@ class AtlasAcademyApp extends StatelessWidget {
       primaryTextTheme: _textTheme(AtlasColors.white),
       scaffoldBackgroundColor: AtlasColors.ivory,
       appBarTheme: const AppBarTheme(
-        backgroundColor: AtlasColors.white,
+        backgroundColor: const Color(0xFFF2F7FF),
         foregroundColor: AtlasColors.navy,
         elevation: 0,
         centerTitle: false,
@@ -148,7 +148,8 @@ class AtlasAcademyApp extends StatelessWidget {
       ),
       cardTheme: CardThemeData(
         color: AtlasColors.white,
-        elevation: 0,
+        elevation: 1,
+        shadowColor: Color(0x160E315A),
         margin: EdgeInsets.zero,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
