@@ -59,9 +59,10 @@
     "drug": "Ceftriaxone",
     "slug": "ceftriaxone",
     "pubchem_name": "Ceftriaxone",
-    "target": "Penicillin-binding proteins (PBPs; bacterial target family)",
-    "uniprot": null,
-    "organism": "Bacterial, species-dependent"
+    "target": "Representative beta-lactam target: penicillin-binding protein 2x (PBP2x; pbpX)",
+    "uniprot": "P14677",
+    "organism": "Streptococcus pneumoniae TIGR4 reference strain",
+    "scientific_note": "Beta-lactams act on multiple species-dependent penicillin-binding proteins. PBP2x from Streptococcus pneumoniae TIGR4 is shown as a representative target, not the only target in every infection."
   },
   {
     "drug": "Losartan",
@@ -174,9 +175,10 @@
     "drug": "Amoxicillin",
     "slug": "amoxicillin",
     "pubchem_name": "Amoxicillin",
-    "target": "Penicillin-binding proteins (PBPs; bacterial target family)",
-    "uniprot": null,
-    "organism": "Bacterial, species-dependent"
+    "target": "Representative beta-lactam target: penicillin-binding protein 2x (PBP2x; pbpX)",
+    "uniprot": "P14677",
+    "organism": "Streptococcus pneumoniae TIGR4 reference strain",
+    "scientific_note": "Beta-lactams act on multiple species-dependent penicillin-binding proteins. PBP2x from Streptococcus pneumoniae TIGR4 is shown as a representative target, not the only target in every infection."
   },
   {
     "drug": "Azithromycin",
