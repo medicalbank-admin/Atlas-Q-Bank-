@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -215,7 +214,7 @@ class _AdminInboxScreenState extends State<AdminInboxScreen> {
           const AtlasVerifiedBadge(),
         ]),
         actions: [
-          IconButton(tooltip: 'Start a conversation', onPressed: _chooseStudent, icon: const Icon(Icons.edit_square, color: _inboxBlue)),
+          IconButton(tooltip: 'Start a conversation', onPressed: _chooseStudent, icon: const Icon(Icons.edit_rounded, color: _inboxBlue)),
           const SizedBox(width: 5),
         ],
       ),
@@ -502,14 +501,13 @@ class _InboxChatScreenState extends State<InboxChatScreen> {
         final bytes = _pendingImage!;
         final name = _pendingName ?? 'attachment.jpg';
         final type = _pendingType ?? 'image/jpeg';
-        imageUrl = await _service.uploadImage(studentUid: widget.studentUid, bytes: bytes, fileName: name, contentType: type);
-        imagePath = 'inbox_media/${widget.studentUid}/${FirebaseAuth.instance.currentUser!.uid}/';
+        imagePath = await _service.uploadImage(studentUid: widget.studentUid, bytes: bytes, fileName: name, contentType: type);
       }
       await _service.sendMessage(
         studentUid: widget.studentUid,
         body: text,
         imageUrl: imageUrl,
-        imagePath: imageUrl == null ? null : imagePath,
+        imagePath: imagePath,
         fromAdmin: widget.isAdmin,
       );
       _composer.clear();
@@ -568,7 +566,7 @@ class _MessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final body = (data['body'] ?? '').toString();
-    final image = (data['imageUrl'] ?? '').toString();
+    final imagePath = (data['imagePath'] ?? '').toString();
     final time = _shortTime(data['createdAt']);
     final read = data['readAt'] != null;
     final delivered = data['deliveredAt'] != null;
@@ -588,14 +586,8 @@ class _MessageBubble extends StatelessWidget {
           boxShadow: const [BoxShadow(color: Color(0x080E315A), blurRadius: 9, offset: Offset(0, 3))],
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          if (image.isNotEmpty) ...[
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.network(image, width: 230, fit: BoxFit.cover,
-                loadingBuilder: (context, child, progress) => progress == null ? child : Container(width: 230, height: 150, color: const Color(0xFFE8EFF6), child: const Center(child: CircularProgressIndicator(strokeWidth: 2))),
-                errorBuilder: (_, __, ___) => Container(width: 230, height: 90, color: const Color(0xFFE8EFF6), child: const Center(child: Icon(Icons.broken_image_outlined))),
-              ),
-            ),
+          if (imagePath.isNotEmpty) ...[
+            ClipRRect(borderRadius: BorderRadius.circular(12), child: _SecureInboxImage(path: imagePath)),
             if (body.isNotEmpty) const SizedBox(height: 8),
           ],
           if (body.isNotEmpty) Text(body, style: const TextStyle(color: _inboxNavy, fontSize: 13, height: 1.45)),
@@ -611,6 +603,21 @@ class _MessageBubble extends StatelessWidget {
       ),
     );
   }
+}
+
+class _SecureInboxImage extends StatelessWidget {
+  const _SecureInboxImage({required this.path});
+  final String path;
+
+  @override
+  Widget build(BuildContext context) => FutureBuilder<Uint8List?>(
+    future: FirebaseStorage.instance.ref(path).getData(8 * 1024 * 1024),
+    builder: (context, snapshot) {
+      if (snapshot.hasError) return Container(width: 230, height: 100, color: const Color(0xFFE8EFF6), child: const Center(child: Icon(Icons.image_not_supported_outlined, color: Color(0xFF8195AA))));
+      if (!snapshot.hasData) return Container(width: 230, height: 150, color: const Color(0xFFE8EFF6), child: const Center(child: CircularProgressIndicator(strokeWidth: 2)));
+      return Image.memory(snapshot.data!, width: 230, fit: BoxFit.cover);
+    },
+  );
 }
 
 class _Composer extends StatelessWidget {
