@@ -18,7 +18,6 @@ import 'admin_notifications_screen.dart';
 import 'admin_analytics_screen.dart';
 import 'admin_advanced_learning_screens.dart';
 import '../../inbox/screens/inbox_screens.dart';
-import '../../inbox/screens/inbox_screens.dart';
 import '../../anatomy/screens/admin_anatomy_management_screen.dart';
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
