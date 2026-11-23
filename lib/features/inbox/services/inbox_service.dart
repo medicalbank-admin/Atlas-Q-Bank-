@@ -199,6 +199,7 @@ class InboxService {
       'folder': folder,
       'public_id': publicId,
       'overwrite': 'false',
+      'type': 'authenticated',
     });
 
     final normalizedName =
