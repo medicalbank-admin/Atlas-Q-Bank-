@@ -7,6 +7,7 @@ import 'atlas_osce_simulator_screen.dart';
 import 'atlas_ecg_interpretation_screen.dart';
 import 'atlas_radiology_learning_screen.dart';
 import 'atlas_daily_medical_challenge_screen.dart';
+import 'atlas_clinical_pharmacology_screen.dart';
 
 class AtlasPremiumLearningHomeSection extends StatelessWidget {
   const AtlasPremiumLearningHomeSection({super.key});
@@ -137,7 +138,9 @@ class AtlasPremiumLearningHomeSection extends StatelessWidget {
             return _PremiumFeatureCard(
               feature: feature,
               onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                builder: (_) => feature.title == 'Smart Flashcards'
+                builder: (_) => feature.title == 'Clinical Pharmacology'
+                    ? const AtlasClinicalPharmacologyScreen()
+                    : feature.title == 'Smart Flashcards'
                     ? const AtlasFlashcardsScreen()
                     : feature.title == 'AI Medical Tutor'
                         ? const AtlasAiMedicalTutorScreen()
