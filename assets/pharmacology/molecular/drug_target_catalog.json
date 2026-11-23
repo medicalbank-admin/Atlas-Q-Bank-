@@ -1,0 +1,330 @@
+[
+  {
+    "drug": "Metoprolol",
+    "slug": "metoprolol",
+    "pubchem_name": "Metoprolol",
+    "target": "β1-adrenergic receptor (ADRB1)",
+    "uniprot": "P08588",
+    "organism": "Human"
+  },
+  {
+    "drug": "Amlodipine",
+    "slug": "amlodipine",
+    "pubchem_name": "Amlodipine",
+    "target": "L-type calcium channel CaV1.2 (CACNA1C)",
+    "uniprot": "Q13936",
+    "organism": "Human"
+  },
+  {
+    "drug": "Lisinopril",
+    "slug": "lisinopril",
+    "pubchem_name": "Lisinopril",
+    "target": "Angiotensin-converting enzyme (ACE)",
+    "uniprot": "P12821",
+    "organism": "Human"
+  },
+  {
+    "drug": "Furosemide",
+    "slug": "furosemide",
+    "pubchem_name": "Furosemide",
+    "target": "Na-K-2Cl cotransporter NKCC2 (SLC12A1)",
+    "uniprot": "Q13621",
+    "organism": "Human"
+  },
+  {
+    "drug": "Salbutamol",
+    "slug": "salbutamol",
+    "pubchem_name": "Salbutamol",
+    "target": "β2-adrenergic receptor (ADRB2)",
+    "uniprot": "P07550",
+    "organism": "Human"
+  },
+  {
+    "drug": "Metformin",
+    "slug": "metformin",
+    "pubchem_name": "Metformin",
+    "target": "Mitochondrial complex I / AMPK signalling (indirect, multi-step)",
+    "uniprot": null,
+    "organism": "Human"
+  },
+  {
+    "drug": "Omeprazole",
+    "slug": "omeprazole",
+    "pubchem_name": "Omeprazole",
+    "target": "Gastric H+/K+-ATPase alpha subunit (ATP4A)",
+    "uniprot": "P20648",
+    "organism": "Human"
+  },
+  {
+    "drug": "Ceftriaxone",
+    "slug": "ceftriaxone",
+    "pubchem_name": "Ceftriaxone",
+    "target": "Penicillin-binding proteins (PBPs; bacterial target family)",
+    "uniprot": null,
+    "organism": "Bacterial, species-dependent"
+  },
+  {
+    "drug": "Losartan",
+    "slug": "losartan",
+    "pubchem_name": "Losartan",
+    "target": "Angiotensin II type 1 receptor (AGTR1)",
+    "uniprot": "P30556",
+    "organism": "Human"
+  },
+  {
+    "drug": "Hydrochlorothiazide",
+    "slug": "hydrochlorothiazide",
+    "pubchem_name": "Hydrochlorothiazide",
+    "target": "Thiazide-sensitive Na-Cl cotransporter (SLC12A3)",
+    "uniprot": "P55017",
+    "organism": "Human"
+  },
+  {
+    "drug": "Atorvastatin",
+    "slug": "atorvastatin",
+    "pubchem_name": "Atorvastatin",
+    "target": "HMG-CoA reductase (HMGCR)",
+    "uniprot": "P04035",
+    "organism": "Human"
+  },
+  {
+    "drug": "Aspirin",
+    "slug": "aspirin",
+    "pubchem_name": "Aspirin",
+    "target": "Cyclo-oxygenase-1 (PTGS1)",
+    "uniprot": "P23219",
+    "organism": "Human"
+  },
+  {
+    "drug": "Apixaban",
+    "slug": "apixaban",
+    "pubchem_name": "Apixaban",
+    "target": "Coagulation factor Xa (F10)",
+    "uniprot": "P00742",
+    "organism": "Human"
+  },
+  {
+    "drug": "Amiodarone",
+    "slug": "amiodarone",
+    "pubchem_name": "Amiodarone",
+    "target": "hERG potassium channel (KCNH2); multi-channel effects",
+    "uniprot": "Q12809",
+    "organism": "Human"
+  },
+  {
+    "drug": "Empagliflozin",
+    "slug": "empagliflozin",
+    "pubchem_name": "Empagliflozin",
+    "target": "Sodium-glucose cotransporter 2 (SLC5A2)",
+    "uniprot": "Q9NPD5",
+    "organism": "Human"
+  },
+  {
+    "drug": "Semaglutide",
+    "slug": "semaglutide",
+    "pubchem_name": "Semaglutide",
+    "target": "Glucagon-like peptide-1 receptor (GLP1R)",
+    "uniprot": "P43220",
+    "organism": "Human"
+  },
+  {
+    "drug": "Levothyroxine",
+    "slug": "levothyroxine",
+    "pubchem_name": "Levothyroxine",
+    "target": "Thyroid hormone receptors alpha/beta (THRA/THRB)",
+    "uniprot": "P10827",
+    "organism": "Human"
+  },
+  {
+    "drug": "Prednisolone",
+    "slug": "prednisolone",
+    "pubchem_name": "Prednisolone",
+    "target": "Glucocorticoid receptor (NR3C1)",
+    "uniprot": "P04150",
+    "organism": "Human"
+  },
+  {
+    "drug": "Cetirizine",
+    "slug": "cetirizine",
+    "pubchem_name": "Cetirizine",
+    "target": "Histamine H1 receptor (HRH1)",
+    "uniprot": "P35367",
+    "organism": "Human"
+  },
+  {
+    "drug": "Budesonide",
+    "slug": "budesonide",
+    "pubchem_name": "Budesonide",
+    "target": "Glucocorticoid receptor (NR3C1)",
+    "uniprot": "P04150",
+    "organism": "Human"
+  },
+  {
+    "drug": "Ipratropium",
+    "slug": "ipratropium",
+    "pubchem_name": "Ipratropium",
+    "target": "Muscarinic acetylcholine receptor M3 (CHRM3)",
+    "uniprot": "P20309",
+    "organism": "Human"
+  },
+  {
+    "drug": "Amoxicillin",
+    "slug": "amoxicillin",
+    "pubchem_name": "Amoxicillin",
+    "target": "Penicillin-binding proteins (PBPs; bacterial target family)",
+    "uniprot": null,
+    "organism": "Bacterial, species-dependent"
+  },
+  {
+    "drug": "Azithromycin",
+    "slug": "azithromycin",
+    "pubchem_name": "Azithromycin",
+    "target": "23S rRNA in the 50S ribosomal subunit",
+    "uniprot": null,
+    "organism": "Bacterial, species-dependent"
+  },
+  {
+    "drug": "Ciprofloxacin",
+    "slug": "ciprofloxacin",
+    "pubchem_name": "Ciprofloxacin",
+    "target": "DNA gyrase subunit A (gyrA)",
+    "uniprot": "P0AES4",
+    "organism": "Escherichia coli reference"
+  },
+  {
+    "drug": "Gentamicin",
+    "slug": "gentamicin",
+    "pubchem_name": "Gentamicin",
+    "target": "16S rRNA in the 30S ribosomal subunit",
+    "uniprot": null,
+    "organism": "Bacterial, species-dependent"
+  },
+  {
+    "drug": "Acyclovir",
+    "slug": "acyclovir",
+    "pubchem_name": "Acyclovir",
+    "target": "Herpes simplex virus DNA polymerase (UL30)",
+    "uniprot": "P10211",
+    "organism": "HSV-1"
+  },
+  {
+    "drug": "Fluconazole",
+    "slug": "fluconazole",
+    "pubchem_name": "Fluconazole",
+    "target": "Lanosterol 14-alpha-demethylase (CYP51)",
+    "uniprot": "P10613",
+    "organism": "Candida albicans"
+  },
+  {
+    "drug": "Isoniazid",
+    "slug": "isoniazid",
+    "pubchem_name": "Isoniazid",
+    "target": "Enoyl-ACP reductase (InhA; after KatG activation)",
+    "uniprot": "P9WGR1",
+    "organism": "Mycobacterium tuberculosis"
+  },
+  {
+    "drug": "Ibuprofen",
+    "slug": "ibuprofen",
+    "pubchem_name": "Ibuprofen",
+    "target": "Cyclo-oxygenase-1 (PTGS1)",
+    "uniprot": "P23219",
+    "organism": "Human"
+  },
+  {
+    "drug": "Morphine",
+    "slug": "morphine",
+    "pubchem_name": "Morphine",
+    "target": "Mu-opioid receptor (OPRM1)",
+    "uniprot": "P35372",
+    "organism": "Human"
+  },
+  {
+    "drug": "Lidocaine",
+    "slug": "lidocaine",
+    "pubchem_name": "Lidocaine",
+    "target": "Voltage-gated sodium channel Nav1.5 (SCN5A)",
+    "uniprot": "Q14524",
+    "organism": "Human"
+  },
+  {
+    "drug": "Sertraline",
+    "slug": "sertraline",
+    "pubchem_name": "Sertraline",
+    "target": "Serotonin transporter (SLC6A4)",
+    "uniprot": "P31645",
+    "organism": "Human"
+  },
+  {
+    "drug": "Sodium valproate",
+    "slug": "sodium-valproate",
+    "pubchem_name": "Sodium valproate",
+    "target": "GABA transaminase (ABAT) and voltage-gated channels",
+    "uniprot": "P80404",
+    "organism": "Human"
+  },
+  {
+    "drug": "Haloperidol",
+    "slug": "haloperidol",
+    "pubchem_name": "Haloperidol",
+    "target": "Dopamine D2 receptor (DRD2)",
+    "uniprot": "P14416",
+    "organism": "Human"
+  },
+  {
+    "drug": "Diazepam",
+    "slug": "diazepam",
+    "pubchem_name": "Diazepam",
+    "target": "GABA-A receptor alpha-1 subunit (GABRA1)",
+    "uniprot": "P14867",
+    "organism": "Human"
+  },
+  {
+    "drug": "Methotrexate",
+    "slug": "methotrexate",
+    "pubchem_name": "Methotrexate",
+    "target": "Dihydrofolate reductase (DHFR)",
+    "uniprot": "P00374",
+    "organism": "Human"
+  },
+  {
+    "drug": "Nitroglycerin",
+    "slug": "nitroglycerin",
+    "pubchem_name": "Nitroglycerin",
+    "target": "Mitochondrial aldehyde dehydrogenase (ALDH2) bioactivation",
+    "uniprot": "P05091",
+    "organism": "Human"
+  },
+  {
+    "drug": "Gliclazide",
+    "slug": "gliclazide",
+    "pubchem_name": "Gliclazide",
+    "target": "Sulfonylurea receptor 1 (ABCC8/SUR1)",
+    "uniprot": "Q09428",
+    "organism": "Human"
+  },
+  {
+    "drug": "Metronidazole",
+    "slug": "metronidazole",
+    "pubchem_name": "Metronidazole",
+    "target": "Reduced reactive intermediates damage microbial DNA; multi-target",
+    "uniprot": null,
+    "organism": "Anaerobic microorganisms"
+  },
+  {
+    "drug": "Pantoprazole",
+    "slug": "pantoprazole",
+    "pubchem_name": "Pantoprazole",
+    "target": "Gastric H+/K+-ATPase alpha subunit (ATP4A)",
+    "uniprot": "P20648",
+    "organism": "Human"
+  },
+  {
+    "drug": "Ondansetron",
+    "slug": "ondansetron",
+    "pubchem_name": "Ondansetron",
+    "target": "5-HT3A serotonin receptor (HTR3A)",
+    "uniprot": "P46098",
+    "organism": "Human"
+  }
+]
