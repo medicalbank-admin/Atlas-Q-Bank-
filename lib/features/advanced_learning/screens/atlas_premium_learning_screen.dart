@@ -75,12 +75,12 @@ class AtlasPremiumLearningHomeSection extends StatelessWidget {
     _PremiumFeature(
       title: 'Daily Medical Challenge',
       subtitle: 'One challenge every day',
-      count: '200+ DAYS',
+      count: 'DAILY ROTATION',
       icon: Icons.local_fire_department_rounded,
       colors: [Color(0xFFB64E24), Color(0xFFE58A45)],
-      description: 'A daily medical question or clinical challenge with an explanation, completion history, streak calendar and achievement milestones.',
-      topics: ['Clinical MCQs and vignettes', 'Image-based spotters', 'Daily explanations', 'Streaks and achievement badges'],
-      deliverable: 'At least 200 scheduled challenges',
+      description: 'A daily question selected from the academy’s published medical MCQ bank, with secure answer checking, a teaching explanation, completion history and streak tracking.',
+      topics: ['One scheduled medical MCQ each day', 'Secure answer validation', 'Evidence-led explanations from the academy question bank', 'Daily completion history and streak tracking'],
+      deliverable: 'One secure daily challenge with progress tracking',
     ),
   ];
 
