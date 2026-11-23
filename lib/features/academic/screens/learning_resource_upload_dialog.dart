@@ -80,7 +80,7 @@ class _LearningResourceUploadDialogState extends State<LearningResourceUploadDia
         final file = _file!;
         final safeName = file.name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
         final storageRef = FirebaseStorage.instance.ref().child(
-          'learning_resources/${DateTime.now().millisecondsSinceEpoch}_$safeName',
+          'learning_resources/general/general/general/${DateTime.now().millisecondsSinceEpoch}_$safeName',
         );
         final extension = file.extension?.toLowerCase();
         final contentType = _type == LearningResourceType.pdf ? 'application/pdf'
