@@ -695,7 +695,7 @@ service cloud.firestore {
           resource.data.studentUid == request.auth.uid;
       }
 
-      allow read: if isAdmin() || isConversationStudent();
+      allow read: if isAdmin() || (signedIn() && request.auth.uid == studentUid);
 
       allow create: if signedIn() &&
         request.resource.data.studentUid == request.auth.uid &&
@@ -719,7 +719,8 @@ service cloud.firestore {
         request.resource.data.studentProfileImageUrl is string &&
         request.resource.data.studentProfileImageUrl.size() <= 2048 &&
         request.resource.data.adminName == 'The Atlas Administrator' &&
-        request.resource.data.adminUid == null &&
+        (request.resource.data.adminUid == null ||
+          (isAdmin() && request.resource.data.adminUid == request.auth.uid)) &&
         request.resource.data.lastMessage == '' &&
         request.resource.data.lastSenderUid == '' &&
         request.resource.data.unreadForStudent == 0 &&
