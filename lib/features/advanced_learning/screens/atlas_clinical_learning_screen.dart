@@ -58,6 +58,60 @@ class _Mode extends StatelessWidget {
   ));
 }
 
+const _spotterLessons = <String, Map<String, String>>{
+  "heart": {'label': "Heart", 'region': "Thorax", 'clue': "Identify the four chambers, septa and great-vessel connections.", 'function': "Right ventricle pumps to pulmonary artery; left ventricle pumps to aorta. Coronary perfusion is mainly diastolic.", 'clinical': "Coronary occlusion causes myocardial infarction; chamber and valve disease alter flow and heart sounds."},
+  "brain": {'label': "Brain", 'region': "Cranial cavity", 'clue': "Identify cerebral lobes and major midline structures.", 'function': "Cortex integrates motor, sensory, language, memory and visual functions.", 'clinical': "MCA stroke often affects face-arm function and dominant-hemisphere language."},
+  "brainstem": {'label': "Brainstem", 'region': "Posterior cranial fossa", 'clue': "Locate midbrain, pons and medulla between diencephalon and spinal cord.", 'function': "Contains cranial nerve nuclei, long tracts and vital autonomic networks.", 'clinical': "Lesions may combine ipsilateral cranial nerve signs with contralateral limb deficits."},
+  "cerebellum": {'label': "Cerebellum", 'region': "Posterior cranial fossa", 'clue': "Locate hemispheres and vermis beneath occipital lobes.", 'function': "Coordinates precision, balance, timing and motor learning.", 'clinical': "Lesions cause ipsilateral dysmetria, intention tremor and gait ataxia."},
+  "liver": {'label': "Liver", 'region': "Right upper abdomen", 'clue': "Find the large organ beneath the diaphragm and identify lobes.", 'function': "Metabolism, detoxification, bile production and synthesis of albumin and clotting factors.", 'clinical': "Cirrhosis can cause portal hypertension, ascites and varices."},
+  "pancreas": {'label': "Pancreas", 'region': "Upper retroperitoneum", 'clue': "Identify head in duodenal curve, body and tail toward spleen.", 'function': "Acini secrete digestive enzymes; islets release insulin and glucagon.", 'clinical': "Pancreatitis causes epigastric pain radiating to back; head tumours may obstruct bile duct."},
+  "kidney_l": {'label': "Left kidney", 'region': "Left posterior abdomen", 'clue': "Identify cortex, medulla, renal pelvis and hilum.", 'function': "Nephrons filter plasma and regulate electrolytes, acid-base balance and blood pressure.", 'clinical': "Glomerulonephritis and obstruction can produce acute kidney injury."},
+  "lung_l": {'label': "Left lung", 'region': "Left thorax", 'clue': "Identify left lung, oblique fissure and cardiac notch.", 'function': "Alveoli provide a thin surface for gas exchange.", 'clinical': "Pneumonia, embolism and pneumothorax impair ventilation-perfusion matching."},
+  "stomach": {'label': "Stomach", 'region': "Epigastrium", 'clue': "Identify fundus, body, antrum and pylorus between oesophagus and duodenum.", 'function': "Stores and mixes food; acid and pepsin initiate protein digestion.", 'clinical': "Peptic ulcer may bleed or perforate; outlet obstruction causes vomiting."},
+  "spleen": {'label': "Spleen", 'region': "Left upper quadrant", 'clue': "Locate deep to ribs 9–11, lateral to stomach.", 'function': "Filters blood, removes aged erythrocytes and supports immune responses.", 'clinical': "Trauma can cause life-threatening haemorrhage; portal hypertension causes splenomegaly."},
+  "trachea": {'label': "Trachea", 'region': "Neck and superior mediastinum", 'clue': "Identify cartilaginous airway rings and bifurcation at carina.", 'function': "Conducts air to bronchi; mucociliary clearance removes particles.", 'clinical': "Aspiration may enter the right main bronchus; deviation can signal thoracic pathology."},
+  "appendix": {'label': "Vermiform appendix", 'region': "Right lower abdomen", 'clue': "Find blind-ended tube arising from caecum near taeniae coli.", 'function': "Contains lymphoid tissue and communicates with caecal lumen.", 'clinical': "Inflammation causes appendicitis and classically migratory right iliac fossa pain."},
+  "adrenal_l": {'label': "Left adrenal gland", 'region': "Superior kidney pole", 'clue': "Locate small retroperitoneal endocrine gland superior-medial to kidney.", 'function': "Cortex produces cortisol, aldosterone and androgens; medulla catecholamines.", 'clinical': "Adrenal crisis causes hypotension; catecholamine tumours cause episodic hypertension."},
+  "gallbladder": {'label': "Gallbladder and bile ducts", 'region': "Right upper quadrant", 'clue': "Identify gallbladder beneath liver and trace cystic and common bile ducts.", 'function': "Stores and concentrates bile for fat digestion.", 'clinical': "Gallstones can cause biliary colic, cholecystitis and obstructive jaundice."},
+  "aorta": {'label': "Aorta", 'region': "Thorax and abdomen", 'clue': "Trace ascending aorta, arch, descending segment and iliac bifurcation.", 'function': "Distributes oxygenated blood from left ventricle to systemic tissues.", 'clinical': "Aneurysm and dissection are life-threatening aortic disorders."},
+  "coronary_arteries": {'label': "Coronary arteries", 'region': "Heart surface", 'clue': "Locate right coronary and left main branches into LAD and circumflex.", 'function': "Supply myocardium; LAD commonly supplies anterior wall and septum.", 'clinical': "LAD occlusion can cause extensive anterior STEMI."},
+  "carotid_l": {'label': "Left carotid artery", 'region': "Left neck", 'clue': "Trace common carotid to bifurcation into internal and external branches.", 'function': "Internal carotid supplies anterior cerebral circulation.", 'clinical': "Atherosclerosis can cause retinal or hemispheric ischaemic events."},
+  "vena_cava_inferior": {'label': "Inferior vena cava", 'region': "Posterior abdomen", 'clue': "Find large vein right of aorta returning lower-body blood to right atrium.", 'function': "Returns venous blood from abdomen, pelvis and lower limbs.", 'clinical': "Obstruction may cause bilateral leg oedema; thrombus can extend from DVT."},
+  "pulmonary_vessels": {'label': "Pulmonary vessels", 'region': "Mediastinum and lung roots", 'clue': "Distinguish pulmonary arteries from pulmonary veins.", 'function': "Pulmonary circulation carries blood through alveolar capillaries.", 'clinical': "Pulmonary arterial obstruction causes acute RV strain."},
+  "diaphragm": {'label': "Diaphragm", 'region': "Thoracoabdominal boundary", 'clue': "Find dome-shaped musculotendinous partition and central tendon.", 'function': "Contraction flattens domes and drives inspiration; phrenic roots C3–C5.", 'clinical': "Phrenic nerve injury may elevate a hemidiaphragm."},
+  "intercostals_l": {'label': "External and internal intercostals", 'region': "Left thoracic wall", 'clue': "Identify muscle layers occupying spaces between ribs.", 'function': "External fibres assist inspiration; internal interosseous fibres assist forced expiration.", 'clinical': "Intercostal neurovascular bundle lies in costal groove; procedures pass above rib."},
+  "quadriceps_l": {'label': "Quadriceps femoris", 'region': "Anterior left thigh", 'clue': "Locate four-muscle extensor group converging into quadriceps tendon.", 'function': "Extends knee; rectus femoris also flexes hip; femoral nerve supplies it.", 'clinical': "Femoral neuropathy weakens knee extension and patellar reflex."},
+  "deltoid_l": {'label': "Deltoid", 'region': "Left shoulder", 'clue': "Find triangular shoulder cap from clavicle, acromion and scapular spine.", 'function': "Abducts arm after initial supraspinatus phase; axillary nerve supplies it.", 'clinical': "Axillary nerve injury causes deltoid weakness and regimental-badge sensory loss."},
+  "rotator_cuff_l": {'label': "Rotator cuff", 'region': "Left shoulder", 'clue': "Identify supraspinatus, infraspinatus, teres minor and subscapularis.", 'function': "Stabilises humeral head; muscles rotate and initiate abduction.", 'clinical': "Tears cause painful weakness with abduction or external rotation."},
+  "gluteal_l": {'label': "Gluteal muscles", 'region': "Left hip and buttock", 'clue': "Locate gluteus maximus, medius and minimus over posterolateral pelvis.", 'function': "Maximus extends hip; medius and minimus abduct and stabilise pelvis.", 'clinical': "Superior gluteal nerve injury causes Trendelenburg gait."},
+  "pelvic_floor": {'label': "Pelvic floor", 'region': "Pelvic outlet", 'clue': "Identify pelvic diaphragm, especially levator ani.", 'function': "Supports pelvic viscera and contributes to continence.", 'clinical': "Injury contributes to stress incontinence and pelvic organ prolapse."},
+  "cranial_nerves": {'label': "Cranial nerves", 'region': "Brain and skull base", 'clue': "Review twelve cranial nerve pairs and their skull-base exits.", 'function': "Mediate smell, vision, eye movement, facial sensation, swallowing and autonomic function.", 'clinical': "Patterns localise brainstem, cavernous sinus and skull-base lesions."},
+  "spinal_cord": {'label': "Spinal cord", 'region': "Vertebral canal", 'clue': "Identify cord, enlargements, conus medullaris and cauda equina roots.", 'function': "Carries ascending sensory and descending motor pathways and reflexes.", 'clinical': "Compression causes sensory level, upper motor neuron signs and sphincter dysfunction."},
+  "shoulder_l": {'label': "Glenohumeral joint", 'region': "Left shoulder", 'clue': "Locate humeral head articulating with shallow glenoid fossa.", 'function': "Mobile ball-and-socket joint stabilised by labrum, capsule and rotator cuff.", 'clinical': "Anterior dislocation may injure axillary nerve."},
+  "hip_l": {'label': "Left hip joint", 'region': "Left pelvis", 'clue': "Locate femoral head seated in acetabulum with labrum and capsule.", 'function': "Stable weight-bearing joint allowing flexion, extension, rotation and abduction.", 'clinical': "Intracapsular femoral neck fracture may compromise femoral-head blood supply."},
+  "knee_l": {'label': "Left knee joint", 'region': "Left lower limb", 'clue': "Identify femoral condyles, tibial plateau, patella, menisci and cruciates.", 'function': "Transfers weight and permits flexion, extension and rotation.", 'clinical': "ACL injury often follows pivoting trauma with haemarthrosis."},
+  "elbow_l": {'label': "Left elbow joint", 'region': "Left upper limb", 'clue': "Locate humeroulnar, humeroradial and proximal radioulnar articulations.", 'function': "Enables flexion-extension and pronation-supination.", 'clinical': "Supracondylar fracture can threaten brachial artery and median nerve."},
+  "ankle_l": {'label': "Left ankle joint", 'region': "Left lower limb", 'clue': "Identify distal tibia-fibula mortise around talar trochlea.", 'function': "Permits dorsiflexion and plantarflexion; ligaments stabilise joint.", 'clinical': "Inversion injuries commonly damage ATFL."},
+  "frontal-bone": {'label': "Frontal bone", 'region': "Anterior skull", 'clue': "Find forehead bone, orbital roof and anterior cranial fossa.", 'function': "Protects frontal lobes and contributes to orbit and frontal sinus.", 'clinical': "Trauma may involve frontal sinus and anterior cranial fossa."},
+  "mandible": {'label': "Mandible", 'region': "Lower face", 'clue': "Identify body, ramus, angle, condyle and mandibular canal.", 'function': "Forms lower jaw, supports teeth and moves at TM joints.", 'clinical': "Fractures may injure inferior alveolar nerve and alter occlusion."},
+  "atlas-c1": {'label': "Atlas C1", 'region': "Upper cervical spine", 'clue': "Locate ring-shaped first cervical vertebra with arches and lateral masses.", 'function': "Supports skull and articulates with occipital condyles for nodding.", 'clinical': "Jefferson burst fracture requires assessment of transverse ligament."},
+  "axis-c2": {'label': "Axis C2", 'region': "Upper cervical spine", 'clue': "Identify dens projecting superiorly from body of C2.", 'function': "Dens forms pivot for rotation of atlas and head.", 'clinical': "Odontoid fracture can destabilise atlantoaxial joint."},
+  "right-clavicle": {'label': "Right clavicle", 'region': "Shoulder girdle", 'clue': "Trace S-shaped strut from sternum to acromion.", 'function': "Transmits upper-limb forces to axial skeleton.", 'clinical': "Midshaft fracture can threaten subclavian structures."},
+  "right-scapula": {'label': "Right scapula", 'region': "Posterior thorax", 'clue': "Identify spine, acromion, coracoid, glenoid and borders.", 'function': "Provides muscle attachment and glenoid part of shoulder joint.", 'clinical': "Long thoracic nerve injury causes serratus weakness and winging."},
+  "right-humerus": {'label': "Right humerus", 'region': "Upper arm", 'clue': "Identify head, surgical neck, shaft, radial groove and condyles.", 'function': "Forms shoulder and elbow joints and provides muscle leverage.", 'clinical': "Surgical neck fracture may injure axillary nerve; shaft fracture radial nerve."},
+  "right-radius": {'label': "Right radius", 'region': "Forearm", 'clue': "Locate lateral thumb-side bone with broad distal end and radial head.", 'function': "Rotates around ulna during pronation-supination and contributes to wrist.", 'clinical': "Distal radius fracture can cause deformity and median nerve compression."},
+  "right-ulna": {'label': "Right ulna", 'region': "Forearm", 'clue': "Identify olecranon, trochlear notch and distal ulnar head.", 'function': "Forms stable hinge component of elbow and articulates with radius.", 'clinical': "Olecranon fracture impairs extension; ulnar nerve vulnerable at elbow."},
+  "right-femur": {'label': "Right femur", 'region': "Thigh", 'clue': "Identify head, neck, trochanters, shaft and condyles.", 'function': "Largest long bone; transmits body weight from hip to knee.", 'clinical': "Femoral neck fracture can disrupt retinacular blood supply."},
+  "right-patella": {'label': "Right patella", 'region': "Anterior knee", 'clue': "Find sesamoid bone embedded in quadriceps tendon.", 'function': "Improves quadriceps leverage and protects anterior knee.", 'clinical': "Fracture may disrupt extensor mechanism."},
+  "right-tibia": {'label': "Right tibia", 'region': "Leg", 'clue': "Identify medial weight-bearing bone, plateau, tuberosity and malleolus.", 'function': "Transfers body weight from femur to talus.", 'clinical': "Plateau fracture can involve articular surface and menisci."},
+  "right-fibula": {'label': "Right fibula", 'region': "Leg", 'clue': "Locate slender lateral bone ending in lateral malleolus.", 'function': "Provides muscle attachment and lateral ankle stability.", 'clinical': "Fibular neck fracture can injure common fibular nerve and cause foot drop."},
+  "body-of-sternum": {'label': "Body of sternum", 'region': "Anterior thorax", 'clue': "Identify elongated central sternum between manubrium and xiphoid.", 'function': "Protects mediastinal structures and anchors costal cartilages.", 'clinical': "Sternal angle marks second rib and T4/T5 plane."},
+  "right-first-rib": {'label': "Right first rib", 'region': "Thoracic inlet", 'clue': "Find short broad flattened rib with subclavian vessel grooves.", 'function': "Forms thoracic inlet and anchors scalene muscles.", 'clinical': "Cervical or first-rib anomalies may contribute to thoracic outlet syndrome."},
+  "sacrum": {'label': "Sacrum", 'region': "Posterior pelvis", 'clue': "Identify fused sacral vertebrae, promontory and sacral foramina.", 'function': "Transfers spinal load to pelvic ring and protects sacral roots.", 'clinical': "Fracture may injure sacral plexus and pelvic viscera."},
+  "skin": {'label': "Skin", 'region': "Body surface", 'clue': "Identify epidermis, dermis and subcutaneous tissue; compare thick and thin skin.", 'function': "Barrier, thermoregulation, sensation and immune defence.", 'clinical': "Burn depth, pressure injury and infection depend on tissue involvement."},
+};
+String _normaliseSpotterName(String value) => value.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+
 const _maleSpotterModel = 'https://cdn.jsdelivr.net/npm/open-anatomy-3d@0.1.0/models/anatomy-male.glb';
 const _femaleSpotterModel = 'https://cdn.jsdelivr.net/npm/open-anatomy-3d@0.1.0/models/anatomy-female.glb';
 const _skeletonSpotterModel = 'https://raw.githubusercontent.com/organui/skeleton-3d/120fc17278559057b37aff516eee89d263b604c6/public/models/skeleton.glb';
@@ -78,7 +132,7 @@ class _SpotterScreenState extends State<_SpotterScreen> {
   String get modelUrl => system == 'skeleton' ? _skeletonSpotterModel : (sex == 'male' ? _maleSpotterModel : _femaleSpotterModel);
   List<Map<String,String>> get targets {
     final source = system == 'skeleton' ? detailedSkeletonCatalog : anatomyCatalog;
-    return source.where((e) => e['system'] == system && e['key'] != null && e['label'] != null).map((e) => Map<String,String>.from(e)).toList();
+    return source.where((e) => e['system'] == system && e['key'] != null && e['label'] != null && _spotterLessons.containsKey(e['key'])).map((e) => Map<String,String>.from(e)).toList();
   }
   void start() {
     final list = targets;
@@ -98,8 +152,11 @@ class _SpotterScreenState extends State<_SpotterScreen> {
   void onSelection(List<EntityData> parts) {
     if (parts.isEmpty || target == null || finished) return;
     final name = parts.last.name;
+    final selected = _normaliseSpotterName(name);
+    final key = _normaliseSpotterName(target!['key'] ?? '');
+    final label = _normaliseSpotterName(target!['label'] ?? '');
     setState(() => selectedKey = name);
-    if (name == target!['key']) {
+    if (selected == key || selected == label || selected.contains(key) || key.contains(selected)) {
       setState(() { correct++; step++; });
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Correct identification.')));
       if (step >= total) { finish(); } else { nextTarget(); }
@@ -109,7 +166,7 @@ class _SpotterScreenState extends State<_SpotterScreen> {
   }
   @override Widget build(BuildContext context) {
     return ListView(padding: const EdgeInsets.fromLTRB(16,10,16,24), children: [
-      Text('Interactive 3D spotter challenge', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: AtlasColors.navy,fontWeight: FontWeight.w900)),
+      Text('Interactive 3D spotter challenge • 50 authored stations', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: AtlasColors.navy,fontWeight: FontWeight.w900)),
       const SizedBox(height: 5),
       const Text('Rotate, zoom and tap anatomical structures directly on the 3D model. Complete five identification stations per round.', style: TextStyle(color: AtlasColors.secondaryText,height:1.45)),
       const SizedBox(height: 12),
@@ -164,6 +221,19 @@ class _SpotterScreenState extends State<_SpotterScreen> {
         Text('Find: '+(target!['label']??'Target structure'),style:const TextStyle(color:AtlasColors.navy,fontSize:19,fontWeight:FontWeight.w900)),
         const SizedBox(height:6),
         Text('Tap the correct structure on the model. Your selection will be checked automatically.',style:const TextStyle(color:AtlasColors.secondaryText,height:1.4)),
+        if (_spotterLessons[target!['key']] != null) ...[
+          const SizedBox(height:10),
+          Text('REGION • '+_spotterLessons[target!['key']]!['region']!,style:const TextStyle(color:AtlasColors.royalBlue,fontSize:10,fontWeight:FontWeight.w900)),
+          const SizedBox(height:5),
+          const Text('ANATOMICAL CLUE',style:TextStyle(color:AtlasColors.navy,fontSize:10,fontWeight:FontWeight.w900)),
+          Text(_spotterLessons[target!['key']]!['clue']!,style:const TextStyle(color:AtlasColors.charcoal,height:1.4)),
+          const SizedBox(height:7),
+          const Text('FUNCTION & ANATOMY',style:TextStyle(color:AtlasColors.navy,fontSize:10,fontWeight:FontWeight.w900)),
+          Text(_spotterLessons[target!['key']]!['function']!,style:const TextStyle(color:AtlasColors.charcoal,height:1.4)),
+          const SizedBox(height:7),
+          const Text('CLINICAL CORRELATION',style:TextStyle(color:AtlasColors.navy,fontSize:10,fontWeight:FontWeight.w900)),
+          Text(_spotterLessons[target!['key']]!['clinical']!,style:const TextStyle(color:AtlasColors.charcoal,height:1.4)),
+        ],
         if(selectedKey!=null) Padding(padding:const EdgeInsets.only(top:8),child:Text('Selected: '+selectedKey!,style:const TextStyle(color:AtlasColors.royalBlue,fontWeight:FontWeight.w800)))
       ]))),
       if(finished) Card(child:Padding(padding:const EdgeInsets.all(18),child:Column(children:[
