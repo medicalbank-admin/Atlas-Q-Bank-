@@ -17,6 +17,7 @@ import 'admin_payment_settings_screen.dart';
 import 'admin_notifications_screen.dart';
 import 'admin_analytics_screen.dart';
 import 'admin_advanced_learning_screens.dart';
+import '../../anatomy/screens/admin_anatomy_management_screen.dart';
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
   Future<bool> _isAuthorizedAdmin() async {
@@ -515,6 +516,13 @@ class AdminDashboardScreen extends StatelessWidget {
         subtitle: 'Answer teacher questions and moderate discussions',
         color: AtlasColors.gold,
         page: const AdminStudentSupportScreen(),
+      ),
+      _AdminItem(
+        icon: Icons.view_in_ar_rounded,
+        title: '3D Anatomy Lab Management',
+        subtitle: 'Manage structure notes, Latin names and clinical details',
+        color: AtlasColors.royalBlue,
+        page: const AdminAnatomyManagementScreen(),
       ),
       _AdminItem(
         icon: Icons.quiz_rounded,
