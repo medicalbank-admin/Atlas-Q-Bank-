@@ -488,10 +488,12 @@ class _StudentAnatomyLabScreenState extends State<StudentAnatomyLabScreen> {
       boxShadow: const [BoxShadow(color: Color(0x180B2745),
         blurRadius: 18, offset: Offset(0, 7))]),
     child: Stack(children: [
-      Positioned.fill(child: Interactive3d(
+      if (_localModelPath != null) Positioned.fill(child: Interactive3d(
         key: ValueKey('$_activeSystem-$_sex-$_loadAttempt'),
         controller: _controller,
-        modelPath: _localModelPath,
+        modelPath: _localModelPath!,
+        enableCache: true,
+        cacheColor: const [0.25, 0.62, 0.95, 0.35],
         defaultZoom: 1.35,
         backgroundColor: const Color(0xFF07182C),
         selectionColor: const [0.20, 0.66, 1.0, 1.0],
@@ -527,7 +529,9 @@ class _StudentAnatomyLabScreenState extends State<StudentAnatomyLabScreen> {
             }), child: const Text('Retry')),
           ]),
         )),
-      )),
+      )) else Positioned.fill(child: Center(child: Text(
+        _modelError == null ? 'Preparing this anatomy model…' : 'Model unavailable',
+        style: const TextStyle(color: Colors.white70, fontSize: 12)))),
       if (_modelDownloading || _modelError != null)
         Positioned(left: 14, right: 62, bottom: 14, child: _modelStatus()),
       Positioned(top: 12, left: 12, child: Container(
