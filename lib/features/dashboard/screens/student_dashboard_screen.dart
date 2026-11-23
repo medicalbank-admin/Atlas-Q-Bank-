@@ -18,6 +18,7 @@ import '../../subscriptions/screens/subscription_plans_screen.dart';
 import '../../advanced_learning/screens/advanced_student_tools_screen.dart';
 import '../../advanced_learning/screens/atlas_clinical_learning_screen.dart';
 import '../../advanced_learning/screens/atlas_premium_learning_screen.dart';
+import '../../advanced_learning/screens/atlas_ai_medical_tutor_screen.dart';
 import '../../advanced_learning/services/push_notification_service.dart';
 import 'student_notifications_screen.dart';
 import '../../../shared/widgets/dashboard_announcement_welcome.dart';
@@ -123,6 +124,14 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen>{
           alignment: Alignment.centerLeft,
           child: AtlasLogo(size: 70),
         )),
+        IconButton(
+          tooltip: 'AI Medical Tutor',
+          onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+            builder: (_) => const AtlasAiMedicalTutorScreen(),
+          )),
+          icon: const Icon(Icons.support_agent_rounded,
+              size: 29, color: Color(0xFF5141A8)),
+        ),
         StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
           stream: FirebaseFirestore.instance.collection('notifications')
               .where('audience', isEqualTo: 'all')
@@ -389,8 +398,6 @@ class _Home extends StatelessWidget {
         const SizedBox(height: 16),
         if (uid != null) _ProgressOverview(uid: uid),
         const SizedBox(height: 19),
-        const AtlasPremiumLearningHomeSection(),
-        const SizedBox(height: 23),
         GridView.count(
           crossAxisCount: 2, crossAxisSpacing: 12, mainAxisSpacing: 12,
           childAspectRatio: 1.50, shrinkWrap: true,
@@ -455,7 +462,9 @@ class _Home extends StatelessWidget {
             ),
           ]),
         ),
-        const SizedBox(height: 15),
+        const SizedBox(height: 18),
+        const AtlasPremiumLearningHomeSection(),
+        const SizedBox(height: 20),
         if (uid != null) _MembershipDetails(uid: uid, onManage: onMembership),
         const SizedBox(height: 16),
       ]),
