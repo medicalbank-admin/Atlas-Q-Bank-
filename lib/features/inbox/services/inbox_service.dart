@@ -35,7 +35,6 @@ class InboxService {
       conversationRef(studentUid)
           .collection('messages')
           .orderBy('createdAt')
-          .limit(300)
           .snapshots();
 
   Stream<int> studentUnreadCount(String studentUid) =>
