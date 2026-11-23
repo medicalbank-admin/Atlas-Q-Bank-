@@ -144,10 +144,13 @@ class InboxService {
       'public_id': publicId,
       'overwrite': 'false',
     });
+    final safeName = fileName.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
+    final extension = contentType.split('/').last.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+    final uploadName = safeName.contains('.') ? safeName : '$safeName.${extension.isEmpty ? 'jpg' : extension}';
     request.files.add(http.MultipartFile.fromBytes(
       'file',
       bytes,
-      filename: fileName.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_'),
+      filename: uploadName,
     ));
     final streamed = await _client.send(request).timeout(const Duration(seconds: 90));
     final response = await http.Response.fromStream(streamed);
@@ -174,21 +177,44 @@ class InboxService {
   }
 
 
-  Future<String> loadImageUrl({
+  Future<Uint8List> loadImageBytes({
     required String studentUid,
     required String messageId,
     required String imagePath,
   }) async {
-    final result = await _workerRequest('/inbox/image-url', {
-      'studentUid': studentUid,
-      'messageId': messageId,
-      'imagePath': imagePath,
-    });
-    final url = result['url']?.toString() ?? '';
-    if (!url.startsWith('https://res.cloudinary.com/')) {
-      throw Exception('The image service returned an invalid viewing link.');
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('Please sign in again.');
+    final baseUrl = _workerBaseUrl.trim().replaceAll(RegExp(r'/+$'), '');
+    if (baseUrl.isEmpty) throw Exception('The secure image service is not configured in this app build.');
+    final token = await user.getIdToken();
+    if (token == null || token.isEmpty) throw Exception('Your sign-in could not be verified. Please sign in again.');
+    final response = await _client.post(
+      Uri.parse('$baseUrl/inbox/image'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+        'Accept': 'image/*',
+      },
+      body: jsonEncode({
+        'studentUid': studentUid,
+        'messageId': messageId,
+        'imagePath': imagePath,
+      }),
+    ).timeout(const Duration(seconds: 60));
+    final contentType = response.headers['content-type'] ?? '';
+    if (response.statusCode < 200 || response.statusCode >= 300 ||
+        !contentType.toLowerCase().startsWith('image/')) {
+      String message = 'The image could not be loaded.';
+      try {
+        final data = jsonDecode(response.body);
+        if (data is Map && data['message'] != null) message = data['message'].toString();
+      } catch (_) {}
+      throw Exception(message);
     }
-    return url;
+    if (response.bodyBytes.isEmpty || response.bodyBytes.length > 8 * 1024 * 1024) {
+      throw Exception('The downloaded image is empty or exceeds the 8 MB limit.');
+    }
+    return Uint8List.fromList(response.bodyBytes);
   }
 
   Future<void> sendMessage({
