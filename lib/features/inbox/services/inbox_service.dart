@@ -233,7 +233,17 @@ class InboxService {
       if (decoded is! Map) throw const FormatException();
       result = Map<String, dynamic>.from(decoded);
     } catch (_) {
-      throw Exception('Cloudinary returned an invalid upload response.');
+      final contentType = response.headers['content-type'] ?? 'unknown';
+      final bodyPreview = response.body
+          .replaceAll(RegExp(r'\\s+'), ' ')
+          .trim();
+      final safePreview = bodyPreview.length > 240
+          ? bodyPreview.substring(0, 240)
+          : bodyPreview;
+      throw Exception(
+        'Cloudinary response was not JSON (HTTP ${response.statusCode}, '
+        'content-type: $contentType). Response: $safePreview',
+      );
     }
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
