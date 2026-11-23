@@ -5,7 +5,7 @@ Coordinates are either PubChem 3D conformers or deterministic RDKit-generated
 conformers from PubChem isomeric SMILES. They are molecular conformers, NOT
 experimental protein-bound poses or docking/energy simulations.
 """
-import json, math, os, struct, urllib.parse, urllib.request
+import json, math, os, struct, time, urllib.parse, urllib.request, urllib.error
 
 ROOT = "assets/pharmacology/molecular"
 CATALOG = os.path.join(ROOT, "drug_target_catalog.json")
@@ -17,9 +17,22 @@ ELEMENTS = {
  "I": ([0.48,0.22,0.62,1],0.24), "H": ([0.88,0.90,0.94,1],0.09),
  "B": ([0.95,0.70,0.45,1],0.17), "SI": ([0.70,0.62,0.50,1],0.20)
 }
-def get(url):
+def get(url, attempts=7):
     req=urllib.request.Request(url,headers={"User-Agent":"AtlasAcademy-Pharmacology-Lab/1.0"})
-    with urllib.request.urlopen(req,timeout=60) as r: return r.read()
+    for attempt in range(attempts):
+        try:
+            with urllib.request.urlopen(req,timeout=90) as r: return r.read()
+        except urllib.error.HTTPError as error:
+            if error.code not in (429,500,502,503,504) or attempt == attempts-1:
+                raise
+            retry_after=error.headers.get("Retry-After")
+            delay=float(retry_after) if retry_after else min(2 ** attempt, 24)
+            print("PubChem/structure server returned HTTP %s; retrying in %ss"%(error.code,delay))
+            time.sleep(delay)
+        except urllib.error.URLError:
+            if attempt == attempts-1: raise
+            time.sleep(min(2 ** attempt,24))
+    raise RuntimeError("Network retries exhausted")
 def sphere():
     v=[(0,0,1),(0.894,0,0.447),(0.276,0.851,0.447),(-0.724,0.526,0.447),(-0.724,-0.526,0.447),(0.276,-0.851,0.447),
        (0.724,0.526,-0.447),(-0.276,0.851,-0.447),(-0.894,0,-0.447),(-0.276,-0.851,-0.447),(0.724,-0.526,-0.447),(0,0,-1)]
@@ -107,34 +120,49 @@ def parse_sdf(sdf):
     for line in lines[4+na:4+na+nb]:
         bonds.append((int(line[:3])-1,int(line[3:6])-1,int(line[6:9])))
     return atoms,bonds
-def pubchem_conformer(name):
-    q=urllib.parse.quote(name,safe="")
+def pubchem_conformer(item):
+    name=item["pubchem_name"]
+    cid=item.get("pubchem_cid")
+    base=("https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/%s"%cid) if cid else ("https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/%s"%urllib.parse.quote(name,safe=""))
     # Prefer PubChem's deposited 3D conformer.
     try:
-        sdf=get("https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/%s/SDF?record_type=3d"%q).decode("utf-8","replace")
+        sdf=get(base+"/SDF?record_type=3d").decode("utf-8","replace")
         atoms,bonds=parse_sdf(sdf)
         if atoms and any(abs(a["xyz"][2])>0.01 for a in atoms):
             return atoms,bonds,"PubChem 3D conformer"
     except Exception as e: print("PubChem 3D unavailable for %s: %s"%(name,e))
-    # Deterministic 3D conformer from PubChem isomeric SMILES using RDKit.
+    # Fall back to an RDKit 3D conformer generated from the PubChem isomeric structure.
     from rdkit import Chem
     from rdkit.Chem import AllChem
-    raw=json.loads(get("https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/%s/property/IsomericSMILES/JSON"%q))
-    smiles=raw["PropertyTable"]["Properties"][0]["IsomericSMILES"]
+    smiles=None
+    for prop in ("IsomericSMILES","CanonicalSMILES","SMILES"):
+        try:
+            raw=json.loads(get(base+"/property/"+prop+"/JSON"))
+            record=raw["PropertyTable"]["Properties"][0]
+            smiles=record.get(prop) or record.get("SMILES") or record.get("ConnectivitySMILES") or record.get("CanonicalSMILES") or record.get("IsomericSMILES")
+            if smiles: break
+        except Exception as error:
+            print("PubChem %s descriptor unavailable for %s: %s"%(prop,name,error))
+    if not smiles: raise RuntimeError("PubChem returned no usable isomeric/canonical SMILES for "+name)
     mol=Chem.MolFromSmiles(smiles)
     if mol is None: raise RuntimeError("Could not parse PubChem SMILES for "+name)
-    mol=Chem.AddHs(mol)
+    large=mol.GetNumHeavyAtoms()>200
+    if not large: mol=Chem.AddHs(mol)
     params=AllChem.ETKDGv3(); params.randomSeed=20261123; params.useRandomCoords=False
+    params.maxIterations=80 if large else 500
     status=AllChem.EmbedMolecule(mol,params)
     if status!=0: raise RuntimeError("RDKit could not generate 3D conformer for "+name)
-    if AllChem.MMFFHasAllMoleculeParams(mol): AllChem.MMFFOptimizeMolecule(mol,maxIters=500)
+    if not large and AllChem.MMFFHasAllMoleculeParams(mol):
+        AllChem.MMFFOptimizeMolecule(mol,maxIters=200)
     conf=mol.GetConformer()
     atoms=[]
     for i,a in enumerate(mol.GetAtoms()):
         p=conf.GetAtomPosition(i)
         atoms.append({"xyz":(p.x,p.y,p.z),"element":a.GetSymbol().upper(),"name":str(i+1)})
     bonds=[(b.GetBeginAtomIdx(),b.GetEndAtomIdx(),int(b.GetBondTypeAsDouble())) for b in mol.GetBonds()]
-    return atoms,bonds,"RDKit ETKDGv3 conformer from PubChem isomeric SMILES"
+    method="RDKit ETKDGv3 computed conformer from PubChem isomeric SMILES"
+    if large: method+=" (large flexible molecule; illustrative heavy-atom conformation)"
+    return atoms,bonds,method
 def main():
     os.makedirs(ROOT,exist_ok=True)
     with open(CATALOG) as f: catalog=json.load(f)
@@ -143,7 +171,12 @@ def main():
     for item in catalog:
         slug=item["slug"]; name=item["pubchem_name"]
         try:
-            atoms,bonds,method=pubchem_conformer(name)
+            if item.get("experimental_complex_only"):
+                manifest[slug]={**item,"asset":None,"structure_status":"experimental drug–target complex displayed in the clinical profile",
+                    "coordinate_method":"Experimental PDB complex; see profile viewer"}
+                print("SKIP isolated conformer for %s: exact experimental complex is integrated in its profile"%name)
+                continue
+            atoms,bonds,method=pubchem_conformer(item)
             asset=os.path.join(ROOT,"drugs",slug+".glb")
             os.makedirs(os.path.dirname(asset),exist_ok=True)
             glb(asset,atoms,bonds,name)
@@ -155,6 +188,7 @@ def main():
             failures.append({"drug":name,"error":str(e)})
             manifest[slug]={**item,"asset":None,"structure_status":"generation failed","error":str(e)}
             print("FAILED %s: %s"%(name,e))
+        time.sleep(1.4)
     # Add predicted, unbound target-protein structures from AlphaFold DB where a
     # single protein target is scientifically appropriate and a UniProt accession exists.
     target_cache={}
