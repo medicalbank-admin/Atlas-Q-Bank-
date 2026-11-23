@@ -1,0 +1,59 @@
+name: Build verified clinical image library
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/build_clinical_image_library.py'
+      - '.github/workflows/clinical-image-library.yml'
+permissions:
+  contents: write
+jobs:
+  curate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: \${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install wfdb pandas matplotlib pillow
+      - name: Curate real images
+        run: python scripts/build_clinical_image_library.py
+      - name: Commit image assets and attribution manifest
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/images/clinical
+          if ! git diff --cached --quiet; then
+            git commit -m "Add verified clinical image library"
+            git push
+          fi
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Build release APK
+        env:
+          ANDROID_KEYSTORE_BASE64: \${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: \${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: \${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: \${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          test -n "$ANDROID_KEYSTORE_BASE64"
+          mkdir -p android/app/keystore
+          printf "%s" "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/keystore/atlas-release.jks
+          flutter pub get
+          flutter build apk --release --build-number=\${{ github.run_number }} --dart-define=MCQ_API_URL=https://atlas-academy-mcq-api.medicalbankadmin.workers.dev --dart-define=PUSH_API_URL=https://atlas-academy-push-api.medicalbankadmin.workers.dev
+      - name: Remove signing material
+        if: always()
+        run: rm -rf android/app/keystore
+      - uses: actions/upload-artifact@v4
+        with:
+          name: atlas-academy-clinical-library-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 14
