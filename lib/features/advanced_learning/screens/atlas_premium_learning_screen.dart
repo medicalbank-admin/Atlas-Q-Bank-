@@ -5,6 +5,7 @@ import 'atlas_flashcards_screen.dart';
 import 'atlas_ai_medical_tutor_screen.dart';
 import 'atlas_osce_simulator_screen.dart';
 import 'atlas_ecg_interpretation_screen.dart';
+import 'atlas_radiology_learning_screen.dart';
 
 class AtlasPremiumLearningHomeSection extends StatelessWidget {
   const AtlasPremiumLearningHomeSection({super.key});
@@ -143,7 +144,9 @@ class AtlasPremiumLearningHomeSection extends StatelessWidget {
                             ? const AtlasOsceSimulatorScreen()
                             : feature.title == 'ECG Interpretation'
                                 ? const AtlasEcgInterpretationScreen()
-                                : _PremiumFeatureDetailScreen(feature: feature),
+                                : feature.title == 'Radiology Lab'
+                                    ? const AtlasRadiologyLearningScreen()
+                                    : _PremiumFeatureDetailScreen(feature: feature),
               )),
             );
           },
