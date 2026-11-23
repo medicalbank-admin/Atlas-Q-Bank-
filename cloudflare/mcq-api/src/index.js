@@ -688,6 +688,65 @@ async function dailyChallengeSubmit(env, uid, body) {
   };
 }
 
+
+async function cloudinarySha1Hex(value) {
+  const digest = await crypto.subtle.digest("SHA-1", new TextEncoder().encode(value));
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+async function cloudinaryDeliverySignature(value) {
+  const digest = await crypto.subtle.digest("SHA-1", new TextEncoder().encode(value));
+  return encodeBase64Url(new Uint8Array(digest)).slice(0, 8);
+}
+function getCloudinaryCredentials(env) {
+  const cloudName = String(env.CLOUDINARY_CLOUD_NAME || "").trim();
+  const apiKey = String(env.CLOUDINARY_API_KEY || "").trim();
+  const apiSecret = String(env.CLOUDINARY_API_SECRET || "").trim();
+  if (!cloudName || !apiKey || !apiSecret) throw new Error("The academy image service is not configured.");
+  return { cloudName, apiKey, apiSecret };
+}
+async function verifyInboxParticipant(env, claims, studentUid) {
+  if (!studentUid || studentUid.length > 128) throw new Error("A valid conversation is required.");
+  const conversation = await getDocument(env, "inbox_conversations", studentUid);
+  if (!conversation) throw new Error("This conversation could not be found.");
+  if (claims.admin !== true && claims.sub !== studentUid) throw new Error("You are not allowed to access this conversation.");
+  return conversation;
+}
+async function createInboxUploadSignature(env, claims, body) {
+  const studentUid = String(body.studentUid || "");
+  await verifyInboxParticipant(env, claims, studentUid);
+  const { cloudName, apiKey, apiSecret } = getCloudinaryCredentials(env);
+  const timestamp = Math.floor(Date.now() / 1000);
+  const folder = "atlas-inbox/" + studentUid;
+  const publicId = folder + "/" + crypto.randomUUID();
+  const params = { folder, overwrite: "false", public_id: publicId, timestamp: String(timestamp), type: "authenticated" };
+  const payload = Object.keys(params).sort().map((key) => key + "=" + params[key]).join("&") + apiSecret;
+  return { success: true, cloudName, apiKey, timestamp, folder, publicId,
+    overwrite: "false", type: "authenticated", signature: await cloudinarySha1Hex(payload) };
+}
+async function createInboxImageUrl(env, claims, body) {
+  const studentUid = String(body.studentUid || "");
+  const messageId = String(body.messageId || "");
+  const imagePath = String(body.imagePath || "");
+  if (!messageId || messageId.length > 150 || imagePath.length > 500) throw new Error("The image reference is invalid.");
+  await verifyInboxParticipant(env, claims, studentUid);
+  const message = await getDocument(env, "inbox_conversations/" + studentUid + "/messages", messageId);
+  if (!message || message.data.imagePath !== imagePath) throw new Error("This image is not available in this conversation.");
+  const parts = imagePath.split("|");
+  if (parts.length !== 3) throw new Error("The stored image reference is invalid.");
+  const [publicId, format, versionText] = parts;
+  const idParts = publicId.split("/");
+  if (idParts.length !== 3 || idParts[0] !== "atlas-inbox" || idParts[1] !== studentUid ||
+      !/^[A-Za-z0-9-]{20,80}$/.test(idParts[2]) ||
+      !/^[a-z0-9]{2,5}$/i.test(format) || !/^\d{1,16}$/.test(versionText)) {
+    throw new Error("The stored image reference is invalid.");
+  }
+  const { cloudName, apiSecret } = getCloudinaryCredentials(env);
+  const deliveryPath = "v" + versionText + "/" + publicId + "." + format;
+  const signature = await cloudinaryDeliverySignature(deliveryPath + apiSecret);
+  const encodedPath = deliveryPath.split("/").map(encodeURIComponent).join("/");
+  return { success: true, url: "https://res.cloudinary.com/" + cloudName +
+    "/image/authenticated/s--" + signature + "--/" + encodedPath, expiresInSeconds: 3600 };
+}
 async function checkBackendReady(env) {
   await getServiceAccessToken(env);
   // A no-result/one-result query confirms the service account can reach Firestore.
@@ -712,7 +771,9 @@ export default {
       }
     }
     const url = new URL(request.url);
-    if (request.method !== "POST" || !["/start", "/submit", "/daily/start", "/daily/status", "/daily/submit"].includes(url.pathname)) {
+    const allowedPaths = ["/start", "/submit", "/daily/start", "/daily/status", "/daily/submit",
+      "/inbox/upload-signature", "/inbox/image-url"];
+    if (request.method !== "POST" || !allowedPaths.includes(url.pathname)) {
       return fail("Endpoint not found.", 404);
     }
     try {
@@ -730,7 +791,11 @@ export default {
             ? await dailyChallengeStart(env, claims.sub)
             : url.pathname === "/daily/status"
               ? await dailyChallengeStatus(env, claims.sub)
-              : await dailyChallengeSubmit(env, claims.sub, body);
+              : url.pathname === "/daily/submit"
+                ? await dailyChallengeSubmit(env, claims.sub, body)
+                : url.pathname === "/inbox/upload-signature"
+                  ? await createInboxUploadSignature(env, claims, body)
+                  : await createInboxImageUrl(env, claims, body);
       return response(result);
     } catch (error) {
       const message = error?.message || "The MCQ request could not be completed.";
