@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_ai/firebase_ai.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -29,14 +30,61 @@ class _OsceStation {
   factory _OsceStation.parse(String line){final p=line.split('|');return _OsceStation(p[0],p[1],p[2],p[3],p[4],p[5],p[6],p[7],p[8]);}
 }
 class _OsceRunScreen extends StatefulWidget {final _OsceStation station;final Future<void> Function(int,int) onSave;const _OsceRunScreen({required this.station,required this.onSave});@override State<_OsceRunScreen> createState()=>_OsceRunScreenState();}
-class _OsceRunScreenState extends State<_OsceRunScreen>{final Set<int> checked={};bool feedback=false,saving=false;
-@override Widget build(BuildContext context){final s=widget.station;final points=s.points;return Scaffold(backgroundColor:AtlasColors.ivory,appBar:AppBar(title:Text('Station '+s.id)),body:ListView(padding:const EdgeInsets.all(16),children:[
-Container(padding:const EdgeInsets.all(18),decoration:BoxDecoration(gradient:const LinearGradient(colors:[Color(0xFF075B59),Color(0xFF15958A)]),borderRadius:BorderRadius.circular(20)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(s.specialty.toUpperCase()+' • '+s.category.toUpperCase(),style:const TextStyle(color:Color(0xFFD8FFF7),fontSize:9,letterSpacing:1,fontWeight:FontWeight.w900)),const SizedBox(height:8),Text(s.title,style:const TextStyle(color:Colors.white,fontSize:21,fontWeight:FontWeight.w900)),const SizedBox(height:8),const Text('8 MINUTES • SIMULATED OSCE STATION',style:TextStyle(color:Colors.white70,fontSize:9,fontWeight:FontWeight.w800))])),
-_OscePanel(title:'PATIENT BRIEF',icon:Icons.person_outline_rounded,child:Text(s.scenario,style:const TextStyle(color:AtlasColors.charcoal,fontSize:13,height:1.6))),const SizedBox(height:9),
-_OscePanel(title:'YOUR TASK',icon:Icons.assignment_outlined,child:Text(s.task,style:const TextStyle(color:AtlasColors.charcoal,fontSize:13,height:1.6))),const SizedBox(height:15),
-Row(children:[const Expanded(child:Text('EXAMINER CHECKLIST',style:TextStyle(color:AtlasColors.royalBlue,fontSize:10,letterSpacing:1,fontWeight:FontWeight.w900))),Text(checked.length.toString()+'/'+points.length.toString(),style:const TextStyle(color:AtlasColors.navy,fontWeight:FontWeight.w900))]),const SizedBox(height:7),LinearProgressIndicator(value:points.isEmpty?0:checked.length/points.length,minHeight:6),const SizedBox(height:8),
-...List.generate(points.length,(i)=>Container(margin:const EdgeInsets.only(bottom:7),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(12),border:Border.all(color:checked.contains(i)?const Color(0xFF9BD8CC):const Color(0xFFE0EAF1))),child:CheckboxListTile(value:checked.contains(i),onChanged:feedback?null:(v)=>setState(()=>v==true?checked.add(i):checked.remove(i)),activeColor:const Color(0xFF13877D),controlAffinity:ListTileControlAffinity.leading,dense:true,title:Text(points[i],style:const TextStyle(color:AtlasColors.charcoal,fontSize:12,fontWeight:FontWeight.w600))))),
-if(!feedback)FilledButton.icon(style:FilledButton.styleFrom(backgroundColor:const Color(0xFF087D78),padding:const EdgeInsets.symmetric(vertical:14)),onPressed:()=>setState(()=>feedback=true),icon:const Icon(Icons.fact_check_rounded),label:const Text('Finish station & view feedback'))else ...[_OscePanel(title:'CRITICAL SAFETY POINT',icon:Icons.flag_outlined,child:Text(s.critical,style:const TextStyle(color:AtlasColors.charcoal,fontSize:13,height:1.55))),const SizedBox(height:9),_OscePanel(title:'EXAMINER FEEDBACK',icon:Icons.lightbulb_outline_rounded,child:Text(s.feedback,style:const TextStyle(color:AtlasColors.charcoal,fontSize:13,height:1.55))),const SizedBox(height:12),Container(padding:const EdgeInsets.all(16),decoration:BoxDecoration(color:const Color(0xFFE7F5F3),borderRadius:BorderRadius.circular(15)),child:Column(children:[Text(checked.length.toString()+'/'+points.length.toString(),style:const TextStyle(color:Color(0xFF087D78),fontSize:30,fontWeight:FontWeight.w900)),Text((checked.length/points.length*100).round().toString()+'% checklist completion',style:const TextStyle(color:AtlasColors.charcoal,fontWeight:FontWeight.w700)),const Text('Self-assessment only; not a formal competency assessment.',textAlign:TextAlign.center,style:TextStyle(color:AtlasColors.secondaryText,fontSize:10))])),const SizedBox(height:12),FilledButton(style:FilledButton.styleFrom(backgroundColor:const Color(0xFF087D78),padding:const EdgeInsets.symmetric(vertical:14)),onPressed:saving?null:()async{setState(()=>saving=true);await widget.onSave(checked.length,points.length);if(mounted)Navigator.pop(context);},child:Text(saving?'Saving...':'Save completion'))],const SizedBox(height:12),const Text('Educational practice only. Use current local guidelines and supervised clinical training for patient care.',textAlign:TextAlign.center,style:TextStyle(color:AtlasColors.secondaryText,fontSize:10,height:1.5))]));}}
+class _OsceRunScreenState extends State<_OsceRunScreen>{
+ final Set<int> checked={};
+ bool feedback=false,saving=false,caseLoading=false;
+ String? expandedCase,caseError;
+ @override void initState(){super.initState();_expandCase();}
+ Future<void> _expandCase() async {
+   final s=widget.station;
+   setState(()=>caseLoading=true);
+   try {
+     final model=FirebaseAI.googleAI().generativeModel(
+       model:'gemini-3.8-flash',
+       systemInstruction:Content.system('You are a senior clinical OSCE examiner and experienced medical educator. Create realistic, safe, detailed medical-student OSCE teaching stations. Do not invent guideline citations. Clearly distinguish simulated findings from real patient data.'),
+       generationConfig:GenerationConfig(maxOutputTokens:5000),
+     );
+     final prompt='Expand this brief into a complete realistic guided OSCE station for medical students.\nStation: ${s.title}\nSpecialty: ${s.specialty}\nCategory: ${s.category}\nStarting scenario: ${s.scenario}\nCandidate task: ${s.task}\nExisting safety points: ${s.critical}\n\nReturn clearly headed sections: (1) candidate instructions and time allocation; (2) detailed simulated patient profile and opening statement; (3) presenting complaint and full history with realistic patient answers to likely questions; (4) relevant past medical, medication, allergy, family and social history; (5) vital signs and stepwise examination findings, including normal and abnormal findings; (6) investigations with plausible values/results and interpretation; (7) differential diagnosis ranked with reasons; (8) immediate priorities and stepwise management including escalation; (9) examiner viva questions with model answers; (10) detailed marking rubric with essential actions and critical fail points; (11) common student errors and personalised feedback. Keep the clinical scenario internally consistent. Use metric units. Include a note that this is a simulated educational case and local protocols take precedence.';
+     final response=await model.generateContent([Content.text(prompt)]);
+     final text=response.text?.trim();
+     if(text==null||text.isEmpty) throw StateError('The case generator returned an empty response.');
+     if(mounted)setState(()=>expandedCase=text);
+   } catch(e) { if(mounted)setState(()=>caseError=e.toString()); }
+   finally { if(mounted)setState(()=>caseLoading=false); }
+ }
+ @override Widget build(BuildContext context){
+  final s=widget.station;final points=s.points;
+  return Scaffold(backgroundColor:AtlasColors.ivory,appBar:AppBar(title:Text('Station '+s.id)),body:ListView(padding:const EdgeInsets.all(16),children:[
+   Container(padding:const EdgeInsets.all(18),decoration:BoxDecoration(gradient:const LinearGradient(colors:[Color(0xFF075B59),Color(0xFF15958A)]),borderRadius:BorderRadius.circular(20)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(s.specialty.toUpperCase()+' • '+s.category.toUpperCase(),style:const TextStyle(color:Color(0xFFD8FFF7),fontSize:9,letterSpacing:1,fontWeight:FontWeight.w900)),const SizedBox(height:8),Text(s.title,style:const TextStyle(color:Colors.white,fontSize:21,fontWeight:FontWeight.w900)),const SizedBox(height:8),const Text('GUIDED CLINICAL SIMULATION • 8–12 MINUTES',style:TextStyle(color:Colors.white70,fontSize:9,fontWeight:FontWeight.w800))])),
+   const SizedBox(height:10),
+   _OscePanel(title:'PATIENT BRIEF',icon:Icons.person_outline_rounded,child:Text(s.scenario,style:const TextStyle(color:AtlasColors.charcoal,fontSize:13,height:1.6))),
+   const SizedBox(height:9),
+   _OscePanel(title:'YOUR TASK',icon:Icons.assignment_outlined,child:Text(s.task,style:const TextStyle(color:AtlasColors.charcoal,fontSize:13,height:1.6))),
+   const SizedBox(height:12),
+   Container(padding:const EdgeInsets.all(15),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(15),border:Border.all(color:const Color(0xFFDCE8EF))),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+    const Row(children:[Icon(Icons.psychology_alt_rounded,color:Color(0xFF087D78)),SizedBox(width:8),Expanded(child:Text('COMPLETE GUIDED CASE',style:TextStyle(color:AtlasColors.navy,fontSize:11,fontWeight:FontWeight.w900)))]),
+    const SizedBox(height:8),
+    const Text('Build a detailed simulated encounter with a full history, examination findings, investigation results, differential diagnosis, management, examiner viva and marking rubric.',style:TextStyle(color:AtlasColors.charcoal,fontSize:12,height:1.5)),
+    const SizedBox(height:10),
+    if(caseLoading)const Row(children:[SizedBox(width:18,height:18,child:CircularProgressIndicator(strokeWidth:2)),SizedBox(width:9),Expanded(child:Text('Preparing your detailed clinical station…',style:TextStyle(fontSize:11,color:AtlasColors.secondaryText)))]),
+    if(caseError!=null)Text('Detailed case generation failed: '+caseError!,style:const TextStyle(color:Colors.deepOrange,fontSize:11)),
+    if(caseError!=null||expandedCase==null)Align(alignment:Alignment.centerLeft,child:TextButton.icon(onPressed:caseLoading?_expandCase:null,icon:const Icon(Icons.refresh_rounded),label:const Text('Retry detailed case'))),
+    if(expandedCase!=null)SelectableText(expandedCase!,style:const TextStyle(color:AtlasColors.charcoal,fontSize:12,height:1.65)),
+   ])),
+   const SizedBox(height:16),
+   Row(children:[const Expanded(child:Text('EXAMINER CHECKLIST',style:TextStyle(color:AtlasColors.royalBlue,fontSize:10,letterSpacing:1,fontWeight:FontWeight.w900))),Text(checked.length.toString()+'/'+points.length.toString(),style:const TextStyle(color:AtlasColors.navy,fontWeight:FontWeight.w900))]),
+   const SizedBox(height:7),LinearProgressIndicator(value:points.isEmpty?0:checked.length/points.length,minHeight:6),const SizedBox(height:8),
+   ...List.generate(points.length,(i)=>Container(margin:const EdgeInsets.only(bottom:7),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(12),border:Border.all(color:checked.contains(i)?const Color(0xFF9BD8CC):const Color(0xFFE0EAF1))),child:CheckboxListTile(value:checked.contains(i),onChanged:feedback?null:(v)=>setState(()=>v==true?checked.add(i):checked.remove(i)),activeColor:const Color(0xFF13877D),controlAffinity:ListTileControlAffinity.leading,dense:true,title:Text(points[i],style:const TextStyle(color:AtlasColors.charcoal,fontSize:12,fontWeight:FontWeight.w600))))),
+   if(!feedback)FilledButton.icon(style:FilledButton.styleFrom(backgroundColor:const Color(0xFF087D78),padding:const EdgeInsets.symmetric(vertical:14)),onPressed:()=>setState(()=>feedback=true),icon:const Icon(Icons.fact_check_rounded),label:const Text('Finish station & view feedback'))else ...[
+    _OscePanel(title:'CRITICAL SAFETY POINT',icon:Icons.flag_outlined,child:Text(s.critical,style:const TextStyle(color:AtlasColors.charcoal,fontSize:13,height:1.55))),
+    const SizedBox(height:9),_OscePanel(title:'EXAMINER FEEDBACK',icon:Icons.lightbulb_outline_rounded,child:Text(s.feedback,style:const TextStyle(color:AtlasColors.charcoal,fontSize:13,height:1.55))),
+    const SizedBox(height:12),Container(padding:const EdgeInsets.all(16),decoration:BoxDecoration(color:const Color(0xFFE7F5F3),borderRadius:BorderRadius.circular(15)),child:Column(children:[Text(checked.length.toString()+'/'+points.length.toString(),style:const TextStyle(color:Color(0xFF087D78),fontSize:30,fontWeight:FontWeight.w900)),Text((checked.length/points.length*100).round().toString()+'% checklist completion',style:const TextStyle(color:AtlasColors.charcoal,fontWeight:FontWeight.w700)),const Text('Self-assessment only; not a formal competency assessment.',textAlign:TextAlign.center,style:TextStyle(color:AtlasColors.secondaryText,fontSize:10))])),
+    const SizedBox(height:12),FilledButton(style:FilledButton.styleFrom(backgroundColor:const Color(0xFF087D78),padding:const EdgeInsets.symmetric(vertical:14)),onPressed:saving?null:()async{setState(()=>saving=true);await widget.onSave(checked.length,points.length);if(mounted)Navigator.pop(context);},child:Text(saving?'Saving...':'Save completion'))
+   ],
+   const SizedBox(height:12),const Text('Educational simulation only. Follow current local guidelines and supervised clinical training for patient care.',textAlign:TextAlign.center,style:TextStyle(color:AtlasColors.secondaryText,fontSize:10,height:1.5))
+  ]));
+ }
+}
 class _OscePanel extends StatelessWidget{final String title;final IconData icon;final Widget child;const _OscePanel({required this.title,required this.icon,required this.child});@override Widget build(BuildContext context)=>Container(padding:const EdgeInsets.all(14),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(15),border:Border.all(color:const Color(0xFFE0EAF1))),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Row(children:[Icon(icon,color:const Color(0xFF13877D),size:18),const SizedBox(width:8),Text(title,style:const TextStyle(color:AtlasColors.navy,fontSize:10,letterSpacing:.8,fontWeight:FontWeight.w900))]),const SizedBox(height:8),child]));}
 
 const String _rawOsce = r'''01|Cardiology|Chest pain focused history|History|A 56-year-old man has central tightness on walking for 40 minutes.|Take focused history and identify acute coronary syndrome red flags.|Characterise pain and radiation; Ask associated symptoms; Establish cardiac risks; Review medicines and family history; Summarise and escalate|Do not delay emergency ECG and assessment for possible ACS.|Use SOCRATES and state the need for urgent ECG and senior review.
