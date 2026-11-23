@@ -216,7 +216,7 @@ class _AtlasDailyMedicalChallengeScreenState
           style: TextStyle(color: Colors.white70, fontSize: 9,
             letterSpacing: 1.3, fontWeight: FontWeight.w900)),
         const SizedBox(height: 7),
-        const Text('Build your clinical\\nthinking habit.',
+        const Text('Build your clinical thinking habit.',
           style: TextStyle(color: Colors.white, fontSize: 21,
             height: 1.2, fontWeight: FontWeight.w900)),
         const SizedBox(height: 7),
