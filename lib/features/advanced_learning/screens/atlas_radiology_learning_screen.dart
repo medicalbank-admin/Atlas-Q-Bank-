@@ -64,15 +64,15 @@ class _RadiologyCaseScreen extends StatefulWidget{
 }
 class _RadiologyCaseScreenState extends State<_RadiologyCaseScreen>{
  bool reveal=false,saving=false;
- String? get imageUrl=>_verifiedRadiologyImages[widget.caseData.id];
- String get attribution=>_radiologyAttributions[widget.caseData.id]??'';
+ String? get imageUrl=>'assets/images/clinical/radiology/${widget.caseData.id}.jpg';
+ String get attribution=>'Source, author and license details are bundled in image_manifest.json.';
  @override Widget build(BuildContext context){final c=widget.caseData;return Scaffold(backgroundColor:AtlasColors.ivory,appBar:AppBar(title:Text('Imaging Case ${c.id}')),body:ListView(padding:const EdgeInsets.all(16),children:[
  Container(padding:const EdgeInsets.all(20),decoration:BoxDecoration(gradient:const LinearGradient(colors:[Color(0xFF174B68),Color(0xFF287F99)]),borderRadius:BorderRadius.circular(20)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(c.mod.toUpperCase(),style:const TextStyle(color:Colors.white70,fontSize:10,fontWeight:FontWeight.w900,letterSpacing:1)),const SizedBox(height:10),Text(c.title,style:const TextStyle(color:Colors.white,fontSize:22,fontWeight:FontWeight.w900)),const SizedBox(height:8),const Text('SYSTEMATIC IMAGE REVIEW',style:TextStyle(color:Colors.white70,fontSize:10,fontWeight:FontWeight.w800,letterSpacing:1))])),
  const SizedBox(height:14),
  Container(padding:const EdgeInsets.all(14),decoration:BoxDecoration(color:const Color(0xFF172D3C),borderRadius:BorderRadius.circular(17)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
  Row(children:[const Icon(Icons.photo_library_rounded,color:Color(0xFF8DD1D4)),const SizedBox(width:8),Expanded(child:Text(imageUrl==null?'REAL CASE IMAGE NOT YET VERIFIED':'REAL CLINICAL CASE IMAGE',style:const TextStyle(color:Colors.white,fontSize:10,fontWeight:FontWeight.w900)))]),
  const SizedBox(height:12),
- if(imageUrl!=null)ClipRRect(borderRadius:BorderRadius.circular(10),child:Image.network(imageUrl!,width:double.infinity,height:250,fit:BoxFit.contain,errorBuilder:(_,__,___)=>_imageUnavailable())) else _imageUnavailable(),
+ if(imageUrl!=null)ClipRRect(borderRadius:BorderRadius.circular(10),child:Image.asset(imageUrl!,width:double.infinity,height:250,fit:BoxFit.contain,errorBuilder:(_,__,___)=>_imageUnavailable())) else _imageUnavailable(),
  const SizedBox(height:9),
  Text(imageUrl==null?'No unverified illustration is substituted. This case needs a diagnosis-matched, licensed clinical image before it can be published as image-complete.':attribution,style:const TextStyle(color:Color(0xFFB8C8D3),fontSize:9,height:1.4))
  ])),
@@ -83,28 +83,6 @@ class _RadiologyCaseScreenState extends State<_RadiologyCaseScreen>{
  ]));}
  Widget _imageUnavailable()=>Container(height:180,width:double.infinity,alignment:Alignment.center,padding:const EdgeInsets.all(18),decoration:BoxDecoration(color:const Color(0xFF203848),borderRadius:BorderRadius.circular(10)),child:const Column(mainAxisAlignment:MainAxisAlignment.center,children:[Icon(Icons.image_not_supported_outlined,color:Color(0xFF8DD1D4),size:34),SizedBox(height:9),Text('Verified clinical image is being curated for this diagnosis.',textAlign:TextAlign.center,style:TextStyle(color:Colors.white70,fontSize:11,height:1.5))]));
 }
-const Map<String,String> _verifiedRadiologyImages={
- '01':'https://commons.wikimedia.org/wiki/Special:FilePath/X-ray_of_lobar_pneumonia.jpg?width=1400',
- '02':'https://commons.wikimedia.org/wiki/Special:FilePath/Pleural_effusion.jpg?width=1400',
- '03':'https://commons.wikimedia.org/wiki/Special:FilePath/Pneumothorax_CXR.jpg?width=1400',
- '04':'https://commons.wikimedia.org/wiki/Special:FilePath/Chest_radiograph_with_signs_of_congestive_heart_failure_-_annotated.jpg?width=1400',
- '05':'https://openi.nlm.nih.gov/imgs/512/PMC3808860_kcj-43-632-g001.png',
- '06':'https://commons.wikimedia.org/wiki/Special:FilePath/TB_CXR.jpg?width=1400',
- '24':'https://commons.wikimedia.org/wiki/Special:FilePath/Intracerebral_hemorrage_%28CT_scan%29.jpg?width=1400',
- '27':'https://commons.wikimedia.org/wiki/Special:FilePath/Intracranial_bleed_with_significant_midline_shift.png?width=1400',
- '55':'https://commons.wikimedia.org/wiki/Special:FilePath/SWE_of_breast_cancer.jpg?width=1400',
-};
-const Map<String,String> _radiologyAttributions={
- '01':'Mikael Häggström, MD — Wikimedia Commons, CC0. Chest radiograph of right middle-lobe pneumonia.',
- '02':'InvictaHOG — Wikimedia Commons. Pleural effusion chest radiograph; public-domain edits.',
- '03':'Clinical Cases — Wikimedia Commons, CC BY-SA 2.5. Left pneumothorax chest radiograph.',
- '04':'Wikimedia Commons. Chest radiograph demonstrating cardiomegaly, vascular congestion and Kerley B lines.',
- '05':'Open-i / NLM. Chest X-ray showing cardiomegaly without pulmonary oedema; open-access literature image.',
- '06':'US Centers for Disease Control and Prevention (CDC) — public domain. Upper-lobe cavitary tuberculosis chest radiograph.',
- '24':'Wikimedia Commons. CT showing intraparenchymal and intraventricular haemorrhage; source image attribution on Commons file page.',
- '27':'James Heilman, MD — Wikimedia Commons, CC BY-SA 3.0.',
- '55':'Sigrist et al. — Wikimedia Commons, CC BY 4.0.',
-};
 class _Case {
  final String id,mod,title,find,diag;
  const _Case(this.id,this.mod,this.title,this.find,this.diag);
