@@ -18,6 +18,7 @@ import 'admin_notifications_screen.dart';
 import 'admin_analytics_screen.dart';
 import 'admin_advanced_learning_screens.dart';
 import '../../inbox/screens/inbox_screens.dart';
+import '../../advanced_learning/services/push_notification_service.dart';
 import '../../anatomy/screens/admin_anatomy_management_screen.dart';
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
@@ -120,6 +121,7 @@ class AdminDashboardScreen extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 28),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
+                  const _AdminPushRegistration(),
                   _buildHeader(context),
                   const SizedBox(height: 15),
                   _buildWelcomeBanner(user?.email ?? 'Administrator'),
@@ -739,4 +741,23 @@ class _AdminManagementCard extends StatelessWidget {
       ),
     );
   }
+}
+
+
+class _AdminPushRegistration extends StatefulWidget {
+  const _AdminPushRegistration();
+  @override
+  State<_AdminPushRegistration> createState() => _AdminPushRegistrationState();
+}
+
+class _AdminPushRegistrationState extends State<_AdminPushRegistration> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) PushNotificationService().registerDevice(context);
+    });
+  }
+  @override
+  Widget build(BuildContext context) => const SizedBox.shrink();
 }
