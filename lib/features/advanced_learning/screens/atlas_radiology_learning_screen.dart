@@ -30,7 +30,67 @@ class _DetailState extends State<_Detail>{bool reveal=false,saving=false;@overri
  const SizedBox(height:14),const Text('Educational content only. Review original imaging and formal reports for clinical decisions.',textAlign:TextAlign.center,style:TextStyle(color:AtlasColors.secondaryText,fontSize:10,height:1.5))
  ]));}}
 class _Panel extends StatelessWidget{final String title,body;const _Panel({required this.title,required this.body});@override Widget build(BuildContext context)=>Container(width:double.infinity,padding:const EdgeInsets.all(14),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(15),border:Border.all(color:const Color(0xFFE0EAF1))),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(title,style:const TextStyle(color:AtlasColors.navy,fontSize:10,letterSpacing:.8,fontWeight:FontWeight.w900)),const SizedBox(height:8),Text(body,style:const TextStyle(color:AtlasColors.charcoal,fontSize:13,height:1.55))]));}
-class _ScanPainter extends CustomPainter{final String mod,id;const _ScanPainter(this.mod,this.id);@override void paint(Canvas canvas,Size s){canvas.drawRect(Offset.zero&s,Paint()..color=const Color(0xFF0C1B27));final line=Paint()..color=const Color(0xFF9DB6C5)..style=PaintingStyle.stroke..strokeWidth=1.5;final fill=Paint()..color=const Color(0xFF6E8796).withValues(alpha:.32);final x=s.width/2,y=s.height/2;if(mod=='X-ray'||mod=='CT'){canvas.drawOval(Rect.fromCenter(center:Offset(x,y),width:s.width*.64,height:s.height*.92),line);canvas.drawLine(Offset(x,y-s.height*.42),Offset(x,y+s.height*.42),line);for(int i=0;i<6;i++){final yy=y-s.height*.30+i*s.height*.12;canvas.drawArc(Rect.fromCenter(center:Offset(x-s.width*.13,yy),width:s.width*.34,height:s.height*.13),3.14,3.14,false,line);canvas.drawArc(Rect.fromCenter(center:Offset(x+s.width*.13,yy),width:s.width*.34,height:s.height*.13),0,3.14,false,line);}canvas.drawOval(Rect.fromCenter(center:Offset(x-s.width*.15,y),width:s.width*.2,height:s.height*.62),fill);canvas.drawOval(Rect.fromCenter(center:Offset(x+s.width*.15,y),width:s.width*.2,height:s.height*.62),fill);}else if(mod=='Ultrasound'){final path=Path()..moveTo(x,y-s.height*.45)..lineTo(x-s.width*.42,y+s.height*.42)..lineTo(x+s.width*.42,y+s.height*.42)..close();canvas.drawPath(path,fill);for(int i=0;i<12;i++){final yy=y-s.height*.28+i*s.height*.06;canvas.drawLine(Offset(x-s.width*.28,yy),Offset(x+s.width*.28,yy),Paint()..color=Colors.white24..strokeWidth:1);}canvas.drawOval(Rect.fromCenter(center:Offset(x,y),width:s.width*.24,height:s.height*.2),line);}else{canvas.drawOval(Rect.fromCenter(center:Offset(x,y),width:s.width*.68,height:s.height*.92),fill);for(int i=0;i<4;i++)canvas.drawOval(Rect.fromCenter(center:Offset(x,y),width:s.width*(.22+i*.12),height:s.height*(.28+i*.18)),line);}final marker=Paint()..color=const Color(0xFF65D5C9)..style=PaintingStyle.stroke..strokeWidth=2;final px=s.width*(.58+(int.parse(id)%5)*.035),py=s.height*(.34+(int.parse(id)%4)*.07);canvas.drawCircle(Offset(px,py),7,marker);canvas.drawLine(Offset(px-12,py),Offset(px+12,py),marker);canvas.drawLine(Offset(px,py-12),Offset(px,py+12),marker);}@override bool shouldRepaint(covariant _ScanPainter old)=>old.mod!=mod||old.id!=id;}
+class _ScanPainter extends CustomPainter {
+  final String mod;
+  final String id;
+  const _ScanPainter(this.mod, this.id);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.drawRect(Offset.zero & size, Paint()..color = const Color(0xFF0C1B27));
+    final outline = Paint()
+      ..color = const Color(0xFF9DB6C5)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    final shade = Paint()
+      ..color = const Color(0xFF6E8796).withValues(alpha: 0.32);
+    final cx = size.width / 2;
+    final cy = size.height / 2;
+
+    if (mod == 'X-ray' || mod == 'CT') {
+      canvas.drawOval(Rect.fromCenter(center: Offset(cx, cy), width: size.width * 0.64, height: size.height * 0.92), outline);
+      canvas.drawLine(Offset(cx, cy - size.height * 0.42), Offset(cx, cy + size.height * 0.42), outline);
+      for (var i = 0; i < 6; i++) {
+        final yy = cy - size.height * 0.30 + i * size.height * 0.12;
+        canvas.drawArc(Rect.fromCenter(center: Offset(cx - size.width * 0.13, yy), width: size.width * 0.34, height: size.height * 0.13), 3.14, 3.14, false, outline);
+        canvas.drawArc(Rect.fromCenter(center: Offset(cx + size.width * 0.13, yy), width: size.width * 0.34, height: size.height * 0.13), 0, 3.14, false, outline);
+      }
+      canvas.drawOval(Rect.fromCenter(center: Offset(cx - size.width * 0.15, cy), width: size.width * 0.20, height: size.height * 0.62), shade);
+      canvas.drawOval(Rect.fromCenter(center: Offset(cx + size.width * 0.15, cy), width: size.width * 0.20, height: size.height * 0.62), shade);
+    } else if (mod == 'Ultrasound') {
+      final sector = Path()
+        ..moveTo(cx, cy - size.height * 0.45)
+        ..lineTo(cx - size.width * 0.42, cy + size.height * 0.42)
+        ..lineTo(cx + size.width * 0.42, cy + size.height * 0.42)
+        ..close();
+      canvas.drawPath(sector, shade);
+      for (var i = 0; i < 12; i++) {
+        final yy = cy - size.height * 0.28 + i * size.height * 0.06;
+        canvas.drawLine(Offset(cx - size.width * 0.28, yy), Offset(cx + size.width * 0.28, yy), Paint()..color = Colors.white24..strokeWidth = 1);
+      }
+      canvas.drawOval(Rect.fromCenter(center: Offset(cx, cy), width: size.width * 0.24, height: size.height * 0.20), outline);
+    } else {
+      canvas.drawOval(Rect.fromCenter(center: Offset(cx, cy), width: size.width * 0.68, height: size.height * 0.92), shade);
+      for (var i = 0; i < 4; i++) {
+        canvas.drawOval(Rect.fromCenter(center: Offset(cx, cy), width: size.width * (0.22 + i * 0.12), height: size.height * (0.28 + i * 0.18)), outline);
+      }
+    }
+
+    final marker = Paint()
+      ..color = const Color(0xFF65D5C9)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+    final seed = int.parse(id);
+    final px = size.width * (0.58 + (seed % 5) * 0.035);
+    final py = size.height * (0.34 + (seed % 4) * 0.07);
+    canvas.drawCircle(Offset(px, py), 7, marker);
+    canvas.drawLine(Offset(px - 12, py), Offset(px + 12, py), marker);
+    canvas.drawLine(Offset(px, py - 12), Offset(px, py + 12), marker);
+  }
+
+  @override
+  bool shouldRepaint(covariant _ScanPainter old) => old.mod != mod || old.id != id;
+}
 const List<_Case> _cases=[
   _Case('01','X-ray','Lobar pneumonia','Air-space opacity with air bronchograms confined to one lobe','Lobar consolidation'),
   _Case('02','X-ray','Pleural effusion','Meniscus-shaped basal opacity and blunted costophrenic angle','Pleural fluid'),
