@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AtlasFlashcard {
@@ -234,14 +235,24 @@ class _AtlasFlashcardsScreenState extends State<AtlasFlashcardsScreen> {
   final Set<int> review = {};
 
   String get _progressKey => 'atlas_flashcards_${FirebaseAuth.instance.currentUser?.uid ?? 'guest'}';
+  String? get _userId => FirebaseAuth.instance.currentUser?.uid;
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _progressSubscription;
+  bool _applyingRemoteProgress = false;
+
+  DocumentReference<Map<String, dynamic>>? get _progressDocument {
+    final uid = _userId;
+    if (uid == null) return null;
+    return FirebaseFirestore.instance.collection('user_flashcard_progress').doc(uid);
+  }
 
   @override
   void initState() {
     super.initState();
-    _loadProgress();
+    _initializeProgressSync();
   }
 
-  Future<void> _loadProgress() async {
+  Future<void> _initializeProgressSync() async {
+    // Load this account's local copy first so the cards remain usable offline.
     final prefs = await SharedPreferences.getInstance();
     final savedBookmarks = prefs.getStringList('${_progressKey}_bookmarks') ?? [];
     final savedMastered = prefs.getStringList('${_progressKey}_mastered') ?? [];
@@ -252,13 +263,86 @@ class _AtlasFlashcardsScreenState extends State<AtlasFlashcardsScreen> {
       mastered.addAll(savedMastered.map(int.tryParse).whereType<int>());
       review.addAll(savedReview.map(int.tryParse).whereType<int>());
     });
+
+    final doc = _progressDocument;
+    if (doc == null) return; // Signed-out/guest use remains local only.
+
+    try {
+      final remote = await doc.get();
+      if (!mounted) return;
+      if (remote.exists) {
+        _applyProgressMap(remote.data() ?? const <String, dynamic>{});
+        await _saveLocalProgress();
+      } else {
+        await _writeCloudProgress();
+      }
+      _progressSubscription = doc.snapshots().listen((snapshot) async {
+        if (!snapshot.exists || !mounted) return;
+        _applyProgressMap(snapshot.data() ?? const <String, dynamic>{});
+        await _saveLocalProgress();
+      }, onError: (Object error) {
+        debugPrint('Flashcard cloud sync listener error: $error');
+      });
+    } catch (error) {
+      debugPrint('Flashcard cloud sync unavailable; using local progress: $error');
+    }
   }
 
-  Future<void> _saveProgress() async {
+  void _applyProgressMap(Map<String, dynamic> data) {
+    _applyingRemoteProgress = true;
+    setState(() {
+      bookmarks
+        ..clear()
+        ..addAll(_readIds(data['bookmarks']));
+      mastered
+        ..clear()
+        ..addAll(_readIds(data['mastered']));
+      review
+        ..clear()
+        ..addAll(_readIds(data['review']));
+    });
+    _applyingRemoteProgress = false;
+  }
+
+  Set<int> _readIds(dynamic value) {
+    if (value is! List) return <int>{};
+    return value.whereType<num>().map((item) => item.toInt())
+        .where((item) => item >= 0 && item < atlasFlashcards.length).toSet();
+  }
+
+  Future<void> _saveLocalProgress() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList('${_progressKey}_bookmarks', bookmarks.map((e) => e.toString()).toList());
     await prefs.setStringList('${_progressKey}_mastered', mastered.map((e) => e.toString()).toList());
     await prefs.setStringList('${_progressKey}_review', review.map((e) => e.toString()).toList());
+  }
+
+  Future<void> _writeCloudProgress() async {
+    final doc = _progressDocument;
+    if (doc == null) return;
+    await doc.set({
+      'userId': _userId,
+      'bookmarks': bookmarks.toList()..sort(),
+      'mastered': mastered.toList()..sort(),
+      'review': review.toList()..sort(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> _saveProgress() async {
+    await _saveLocalProgress();
+    if (_applyingRemoteProgress || _userId == null) return;
+    try {
+      await _writeCloudProgress();
+    } catch (error) {
+      debugPrint('Flashcard cloud save failed; local progress is preserved: $error');
+    }
+  }
+
+  @override
+  void dispose() {
+    _progressSubscription?.cancel();
+    super.dispose();
   }
 
   List<int> get visible {
