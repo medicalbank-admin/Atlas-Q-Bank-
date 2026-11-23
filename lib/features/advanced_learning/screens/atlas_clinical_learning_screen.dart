@@ -409,7 +409,7 @@ class _QuizScreenState extends State<_QuizScreen> {
         const Icon(Icons.emoji_events_rounded, color: Color(0xFFFFD88A), size: 40), const SizedBox(height: 8),
         const Text('Quiz completed', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900)),
         const SizedBox(height: 8), Text(score.toString()+' / '+questions.length.toString(), style: const TextStyle(color: Colors.white, fontSize: 34, fontWeight: FontWeight.w900)),
-        Text((score / questions.length * 100).round().toString()+'% accuracy', style: const TextStyle(color: Color(0xFFDCEBFA))
+        Text((score / questions.length * 100).round().toString()+'% accuracy', style: const TextStyle(color: Color(0xFFDCEBFA)))
       ])),
       const SizedBox(height: 12), Row(children: [Expanded(child: OutlinedButton(onPressed: reset, child: const Text('Back to setup'))), const SizedBox(width: 8), Expanded(child: FilledButton(onPressed: begin, child: const Text('Try another')))]),
       ...List.generate(questions.length, (i) {
