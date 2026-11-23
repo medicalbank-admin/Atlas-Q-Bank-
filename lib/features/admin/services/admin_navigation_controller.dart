@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../screens/admin_academic_screen.dart';
 import '../screens/admin_dashboard_screen.dart';
 import '../screens/admin_students_screen.dart';
+import '../../inbox/screens/inbox_screens.dart';
 import '../screens/admin_subscription_requests_screen.dart';
 
 class AdminNavigationController {
@@ -15,6 +16,9 @@ class AdminNavigationController {
 
       case 'students':
         return AdminStudentsScreen();
+
+      case 'inbox':
+        return const AdminInboxScreen();
 
       case 'academic':
         return AdminAcademicScreen();
