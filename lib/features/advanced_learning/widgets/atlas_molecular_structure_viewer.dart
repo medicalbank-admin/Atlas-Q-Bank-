@@ -14,6 +14,7 @@ class AtlasMolecularStructureViewer extends StatefulWidget {
   final String ligandName;
   final String resolution;
   final String note;
+  final String method;
 
   const AtlasMolecularStructureViewer({
     super.key,
@@ -23,6 +24,7 @@ class AtlasMolecularStructureViewer extends StatefulWidget {
     required this.ligandName,
     required this.resolution,
     required this.note,
+    this.method = 'X-ray structure',
   });
 
   @override
@@ -162,7 +164,7 @@ class _AtlasMolecularStructureViewerState
               style: const TextStyle(color: Colors.white, fontSize: 13,
                 fontWeight: FontWeight.w900)),
             const SizedBox(height: 4),
-            Text('PDB ${widget.pdbId} • X-ray structure • ${widget.resolution}',
+            Text('PDB ${widget.pdbId} • ${widget.method} • ${widget.resolution}',
               style: const TextStyle(color: Color(0xFF8EADC4), fontSize: 10)),
             const SizedBox(height: 8),
             Row(children: [
