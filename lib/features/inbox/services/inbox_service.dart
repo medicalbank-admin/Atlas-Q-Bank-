@@ -164,6 +164,31 @@ class InboxService {
     });
   }
 
+  Future<void> markIncomingAsDelivered({
+    required String studentUid,
+  }) async {
+    final uid = currentUid;
+    if (uid.isEmpty) return;
+    try {
+      final ref = conversationRef(studentUid);
+      final pending = await ref.collection('messages')
+          .where('senderUid', isNotEqualTo: uid)
+          .limit(300)
+          .get();
+      final batch = _db.batch();
+      var count = 0;
+      for (final doc in pending.docs) {
+        if (doc.data()['deliveredAt'] == null) {
+          batch.update(doc.reference, {'deliveredAt': FieldValue.serverTimestamp()});
+          count++;
+        }
+      }
+      if (count > 0) await batch.commit();
+    } catch (_) {
+      // Delivery receipts retry when the inbox stream reconnects.
+    }
+  }
+
   Future<void> markConversationRead({
     required String studentUid,
     required bool forAdmin,
