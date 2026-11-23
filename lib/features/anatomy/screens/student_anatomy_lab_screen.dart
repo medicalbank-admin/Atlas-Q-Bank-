@@ -317,6 +317,8 @@ class _StudentAnatomyLabScreenState extends State<StudentAnatomyLabScreen> {
       ]),
       body: ListView(padding: const EdgeInsets.fromLTRB(16, 8, 16, 24), children: [
         _introCard(),
+        const SizedBox(height: 10),
+        _progressSummary(),
         const SizedBox(height: 14),
         _bodySelector(),
         const SizedBox(height: 12),
@@ -338,6 +340,49 @@ class _StudentAnatomyLabScreenState extends State<StudentAnatomyLabScreen> {
           textAlign: TextAlign.center,
           style: TextStyle(color: AtlasColors.secondaryText, fontSize: 9, height: 1.45)),
       ]),
+    );
+  }
+
+  Widget _progressSummary() {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return const SizedBox.shrink();
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance.collection('anatomy_progress')
+          .where('userId', isEqualTo: uid).snapshots(),
+      builder: (context, snapshot) {
+        final docs = snapshot.data?.docs ?? const [];
+        final reviewed = docs.where((doc) => doc.data()['reviewed'] == true).length;
+        final quizzes = docs.where((doc) => doc.data()['structureKey'] == 'spotter_quiz').toList();
+        final attempts = quizzes.length;
+        final best = quizzes.fold<int>(0, (score, doc) {
+          final value = doc.data()['score'];
+          return value is num && value.toInt() > score ? value.toInt() : score;
+        });
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+          decoration: BoxDecoration(color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AtlasColors.border)),
+          child: Row(children: [
+            const Icon(Icons.insights_rounded, color: AtlasColors.royalBlue, size: 23),
+            const SizedBox(width: 10),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const Text('YOUR ANATOMY PROGRESS', style: TextStyle(
+                color: AtlasColors.navy, fontSize: 9, letterSpacing: .8,
+                fontWeight: FontWeight.w900)),
+              const SizedBox(height: 3),
+              Text('$reviewed structures reviewed  •  $attempts spotter attempts',
+                style: const TextStyle(color: AtlasColors.secondaryText, fontSize: 10)),
+            ])),
+            Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+              Text('$best/$_quizLength', style: const TextStyle(
+                color: AtlasColors.royalBlue, fontWeight: FontWeight.w900, fontSize: 15)),
+              const Text('BEST SCORE', style: TextStyle(
+                color: AtlasColors.secondaryText, fontSize: 8, fontWeight: FontWeight.w800)),
+            ]),
+          ]),
+        );
+      },
     );
   }
 
@@ -580,6 +625,14 @@ class _StudentAnatomyLabScreenState extends State<StudentAnatomyLabScreen> {
               _detail('BLOOD SUPPLY', data['bloodSupply'].toString()),
             if (published && (data['innervation'] ?? '').toString().isNotEmpty)
               _detail('INNERVATION', data['innervation'].toString()),
+            if (published && (data['anatomicalRelations'] ?? '').toString().isNotEmpty)
+              _detail('ANATOMICAL RELATIONS', data['anatomicalRelations'].toString()),
+            if (published && (data['attachments'] ?? '').toString().isNotEmpty)
+              _detail('MUSCLE / LIGAMENT ATTACHMENTS', data['attachments'].toString()),
+            if (published && (data['landmarks'] ?? '').toString().isNotEmpty)
+              _detail('SURFACE LANDMARKS', data['landmarks'].toString()),
+            if (published && (data['articulations'] ?? '').toString().isNotEmpty)
+              _detail('ARTICULATIONS', data['articulations'].toString()),
             Align(alignment: Alignment.centerRight, child: TextButton.icon(
               onPressed: () => _markReviewed(item['key']!),
               icon: const Icon(Icons.bookmark_added_outlined, size: 17),
