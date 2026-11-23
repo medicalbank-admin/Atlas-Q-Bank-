@@ -750,12 +750,12 @@ service cloud.firestore {
               request.resource.data.lastSenderUid == request.auth.uid &&
               request.resource.data.lastMessageId is string &&
               request.resource.data.lastMessageId.size() > 0 &&
-              existsAfter(/databases/$(database)/documents/inbox_conversations/$(studentUid)/messages/$(request.resource.data.lastMessageId)) &&
-              getAfter(/databases/$(database)/documents/inbox_conversations/$(studentUid)/messages/$(request.resource.data.lastMessageId)).data.senderUid == request.auth.uid &&
               request.resource.data.unreadForStudent == 0 &&
               request.resource.data.unreadForAdmin is int &&
               request.resource.data.unreadForAdmin ==
-                resource.data.unreadForAdmin + 1) ||
+                (resource.data.unreadForAdmin is int
+                  ? resource.data.unreadForAdmin + 1
+                  : 1)) ||
             // Opening the thread clears only the student's unread counter.
             (request.resource.data.diff(resource.data).affectedKeys().hasOnly([
                 'unreadForStudent', 'updatedAt'
