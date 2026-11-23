@@ -116,7 +116,7 @@ class InboxService {
         'uploadedBy': currentUid,
       }),
     );
-    return ref.getDownloadURL();
+    return path;
   }
 
   Future<void> sendMessage({
@@ -129,7 +129,7 @@ class InboxService {
     final uid = currentUid;
     if (uid.isEmpty) throw Exception('Please sign in again.');
     final text = body.trim();
-    if (text.isEmpty && (imageUrl == null || imageUrl.isEmpty)) return;
+    if (text.isEmpty && (imagePath == null || imagePath.isEmpty) && (imageUrl == null || imageUrl.isEmpty)) return;
 
     final conversation = conversationRef(studentUid);
     final message = conversation.collection('messages').doc();
