@@ -21,6 +21,7 @@ import '../../advanced_learning/screens/atlas_premium_learning_screen.dart';
 import '../../advanced_learning/screens/atlas_ai_medical_tutor_screen.dart';
 import '../../advanced_learning/services/push_notification_service.dart';
 import 'student_notifications_screen.dart';
+import '../../inbox/screens/inbox_screens.dart';
 import '../../../shared/widgets/dashboard_announcement_welcome.dart';
 
 class StudentDashboardScreen extends StatefulWidget {
@@ -124,13 +125,33 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen>{
           alignment: Alignment.centerLeft,
           child: AtlasLogo(size: 70),
         )),
-        IconButton(
-          tooltip: 'AI Medical Tutor',
-          onPressed: () => Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => const AtlasAiMedicalTutorScreen(),
-          )),
-          icon: const Icon(Icons.headset_mic_rounded,
-              size: 29, color: Color(0xFF5141A8)),
+        StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+          stream: FirebaseAuth.instance.currentUser == null
+              ? const Stream.empty()
+              : FirebaseFirestore.instance.collection('inbox_conversations')
+                  .doc(FirebaseAuth.instance.currentUser!.uid).snapshots(),
+          builder: (context, inboxSnapshot) {
+            final unread = (inboxSnapshot.data?.data()?['unreadForStudent'] as num?)?.toInt() ?? 0;
+            return Stack(clipBehavior: Clip.none, children: [
+              IconButton(
+                tooltip: 'Inbox',
+                onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => const StudentInboxScreen(),
+                )),
+                icon: const Icon(Icons.headset_mic_rounded,
+                    size: 29, color: Color(0xFF1768C8)),
+              ),
+              if (unread > 0)
+                Positioned(right: 0, top: -1, child: Container(
+                  constraints: const BoxConstraints(minWidth: 19, minHeight: 19),
+                  padding: const EdgeInsets.symmetric(horizontal: 5),
+                  alignment: Alignment.center,
+                  decoration: const BoxDecoration(color: Color(0xFFE34C55), shape: BoxShape.circle),
+                  child: Text(unread > 99 ? '99+' : '$unread',
+                    style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900)),
+                )),
+            ]);
+          },
         ),
         StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
           stream: FirebaseFirestore.instance.collection('notifications')
