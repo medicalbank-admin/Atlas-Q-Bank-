@@ -1,0 +1,25 @@
+material {
+    name : AtlasAnatomySection,
+    shadingModel : lit,
+    parameters : [
+        { type : float3, name : sectionPlaneNormal },
+        { type : float, name : sectionPlaneOffset },
+        { type : float, name : sectionEnabled }
+    ],
+    requires : [ position ],
+    doubleSided : true
+}
+
+fragment {
+    void material(inout MaterialInputs material) {
+        prepareMaterial(material);
+        if (materialParams.sectionEnabled > 0.5) {
+            float3 userPosition = getUserWorldPosition();
+            float signedDistance = dot(userPosition, normalize(materialParams.sectionPlaneNormal))
+                - materialParams.sectionPlaneOffset;
+            if (signedDistance < 0.0) {
+                discard;
+            }
+        }
+    }
+}
