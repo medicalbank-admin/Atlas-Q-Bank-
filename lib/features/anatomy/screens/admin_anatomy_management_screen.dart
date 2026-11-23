@@ -116,6 +116,10 @@ class _AdminAnatomyManagementScreenState extends State<AdminAnatomyManagementScr
     final clinical = TextEditingController(text: existing['clinicalRelevance'] ?? '');
     final blood = TextEditingController(text: existing['bloodSupply'] ?? '');
     final nerves = TextEditingController(text: existing['innervation'] ?? '');
+    final relations = TextEditingController(text: existing['anatomicalRelations'] ?? '');
+    final attachments = TextEditingController(text: existing['attachments'] ?? '');
+    final landmarks = TextEditingController(text: existing['landmarks'] ?? '');
+    final articulations = TextEditingController(text: existing['articulations'] ?? '');
     bool published = existing['isPublished'] == true;
     final formKey = GlobalKey<FormState>();
     final save = await showModalBottomSheet<bool>(
@@ -142,6 +146,10 @@ class _AdminAnatomyManagementScreenState extends State<AdminAnatomyManagementScr
                     _field(clinical, 'Clinical relevance', lines: 3),
                     _field(blood, 'Blood supply', lines: 2),
                     _field(nerves, 'Innervation', lines: 2),
+                    _field(relations, 'Anatomical relations', lines: 3),
+                    _field(attachments, 'Muscle / ligament attachments', lines: 3),
+                    _field(landmarks, 'Surface landmarks and foramina', lines: 3),
+                    _field(articulations, 'Articulations and joints', lines: 3),
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
                       title: const Text('Publish to active students',
@@ -171,6 +179,9 @@ class _AdminAnatomyManagementScreenState extends State<AdminAnatomyManagementScr
         'latinName': latin.text.trim(), 'description': description.text.trim(),
         'function': function.text.trim(), 'clinicalRelevance': clinical.text.trim(),
         'bloodSupply': blood.text.trim(), 'innervation': nerves.text.trim(),
+        'anatomicalRelations': relations.text.trim(),
+        'attachments': attachments.text.trim(), 'landmarks': landmarks.text.trim(),
+        'articulations': articulations.text.trim(),
         'isPublished': published, 'updatedBy': uid,
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
