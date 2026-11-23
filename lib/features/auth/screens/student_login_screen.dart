@@ -269,31 +269,8 @@ class _StudentLoginScreenState extends State<StudentLoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Container(
-                      height: 82,
-                      width: 82,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(25),
-                        border: Border.all(
-                          color: AtlasColors.royalBlue.withValues(
-                            alpha: 0.7,
-                          ),
-                        ),
-                      ),
-                      child: const AtlasLogo(size: 68),
-                    ),
-                    const SizedBox(height: 19),
-                    const Text(
-                      'THE ATLAS ACADEMY',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 15,
-                        letterSpacing: 2,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
+                    const AtlasLogo(size: 104),
+                    const SizedBox(height: 20),
                     const Text(
                       'LEARN  •  PREPARE  •  EXCEL',
                       style: TextStyle(
