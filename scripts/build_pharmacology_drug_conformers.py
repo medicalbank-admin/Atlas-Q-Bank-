@@ -243,7 +243,10 @@ def main():
             if record.get("error"):
                 manifest[item_slug]["target_structure_error"]=record["error"]
     with open(os.path.join(ROOT,"drug_manifest.json"),"w") as f: json.dump(manifest,f,indent=2)
-    print("Generated %d/%d molecular conformers"%(len(catalog)-len(failures),len(catalog)))
+    ready=sum(1 for v in manifest.values() if v.get("asset") or v.get("experimental_complex_only"))
+    conformers=sum(1 for v in manifest.values() if v.get("asset"))
+    experimental=sum(1 for v in manifest.values() if v.get("experimental_complex_only"))
+    print("Prepared %d/%d drug 3D structures (%d computed conformers + %d experimental complexes)"%(ready,len(catalog),conformers,experimental))
     print("Unique predicted protein target models: %d/%d"%(sum(1 for v in target_cache.values() if v.get("asset")),len(target_cache)))
     if failures:
         print("Molecular generation failures: "+json.dumps(failures))
