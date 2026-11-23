@@ -632,15 +632,15 @@ class _SecureInboxImage extends StatefulWidget {
 }
 
 class _SecureInboxImageState extends State<_SecureInboxImage> {
-  late Future<String> _urlFuture;
+  late Future<Uint8List> _imageFuture;
 
   @override
   void initState() {
     super.initState();
-    _urlFuture = _loadUrl();
+    _imageFuture = _loadImage();
   }
 
-  Future<String> _loadUrl() => widget.service.loadImageUrl(
+  Future<Uint8List> _loadImage() => widget.service.loadImageBytes(
     studentUid: widget.studentUid,
     messageId: widget.messageId,
     imagePath: widget.path,
@@ -652,13 +652,13 @@ class _SecureInboxImageState extends State<_SecureInboxImage> {
     if (oldWidget.path != widget.path ||
         oldWidget.messageId != widget.messageId ||
         oldWidget.studentUid != widget.studentUid) {
-      _urlFuture = _loadUrl();
+      _imageFuture = _loadImage();
     }
   }
 
   @override
-  Widget build(BuildContext context) => FutureBuilder<String>(
-    future: _urlFuture,
+  Widget build(BuildContext context) => FutureBuilder<Uint8List>(
+    future: _imageFuture,
     builder: (context, snapshot) {
       if (snapshot.hasError) {
         return Container(
@@ -678,7 +678,7 @@ class _SecureInboxImageState extends State<_SecureInboxImage> {
           child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
         );
       }
-      return Image.network(
+      return Image.memory(
         snapshot.data!,
         width: 230,
         fit: BoxFit.cover,
