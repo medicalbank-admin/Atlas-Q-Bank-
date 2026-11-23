@@ -922,6 +922,54 @@ Widget? _molecularStructureFor(_Drug drug) {
         pdbId: '2ET3', ligandName: 'Gentamicin C1a', resolution: '2.80 Å',
         note: 'Experimental X-ray complex of gentamicin C1a with an isolated 16S rRNA decoding-site oligonucleotide. It is the RNA binding site, not a full 30S ribosome model.',
       );
+    case 'Furosemide':
+      return const AtlasMolecularStructureViewer(
+        structureKey: 'nkcc1_furosemide',
+        structureTitle: 'Human NKCC1 transporter + furosemide',
+        pdbId: '9C0E', ligandName: 'Furosemide', resolution: '2.70 Å',
+        method: 'Cryo-EM structure',
+        note: 'Experimental phosphorylated human NKCC1–furosemide complex. NKCC1 is a closely related cotransporter to renal NKCC2; this is not an NKCC2 structure.',
+      );
+    case 'Salbutamol':
+      return const AtlasMolecularStructureViewer(
+        structureKey: 'adrb2_salbutamol',
+        structureTitle: 'β2-adrenergic receptor + salbutamol',
+        pdbId: '7DHI', ligandName: 'Salbutamol', resolution: '3.26 Å',
+        method: 'Cryo-EM structure',
+        note: 'Experimental partial-agonist-bound β2 receptor complex. The in-app model shows receptor chain R and salbutamol; the Gs partner is omitted.',
+      );
+    case 'Empagliflozin':
+      return const AtlasMolecularStructureViewer(
+        structureKey: 'sglt2_empagliflozin',
+        structureTitle: 'Human SGLT2-MAP17 + empagliflozin',
+        pdbId: '7VSI', ligandName: 'Empagliflozin', resolution: '2.95 Å',
+        method: 'Cryo-EM structure',
+        note: 'Experimental human SGLT2-MAP17 transporter complex with bound empagliflozin.',
+      );
+    case 'Diazepam':
+      return const AtlasMolecularStructureViewer(
+        structureKey: 'gaba_a_diazepam',
+        structureTitle: 'GABAA receptor + diazepam',
+        pdbId: '6X3X', ligandName: 'Diazepam', resolution: '2.92 Å',
+        method: 'Cryo-EM structure',
+        note: 'Experimental GABAA receptor complex with GABA and diazepam. Receptor subunits are retained to show the benzodiazepine allosteric environment.',
+      );
+    case 'Morphine':
+      return const AtlasMolecularStructureViewer(
+        structureKey: 'muopioid_morphine',
+        structureTitle: 'Mu-opioid receptor + morphine',
+        pdbId: '8EF6', ligandName: 'Morphine', resolution: '3.20 Å',
+        method: 'Cryo-EM structure',
+        note: 'Experimental human mu-opioid receptor–Gi complex. The in-app model shows receptor chain R and bound morphine; Gi and accessory chains are omitted.',
+      );
+    case 'Acyclovir':
+      return const AtlasMolecularStructureViewer(
+        structureKey: 'hsv_pol_acyclovir',
+        structureTitle: 'HSV-1 DNA polymerase + acyclovir triphosphate',
+        pdbId: '8V1T', ligandName: 'Acyclovir triphosphate', resolution: '2.80 Å',
+        method: 'Cryo-EM structure',
+        note: 'Acyclovir is activated by phosphorylation. This experimental structure shows the active triphosphate form bound to HSV-1 DNA polymerase, not unphosphorylated acyclovir.',
+      );
     case 'Semaglutide':
       return const AtlasMolecularStructureViewer(
         structureKey: 'glp1r_semaglutide',
