@@ -1005,7 +1005,6 @@ class _DrugDetailScreen extends StatelessWidget {
             number: entry.key + 1, text: entry.value,
             isLast: entry.key == drug.steps.length - 1)),
         ])),
-        ])),
       if (_molecularStructureFor(drug) != null)
         _SectionCard(title: '3D MOLECULAR STRUCTURE & BINDING SITE',
           icon: Icons.view_in_ar_rounded,
