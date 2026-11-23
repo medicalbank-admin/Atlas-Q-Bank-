@@ -129,7 +129,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen>{
           onPressed: () => Navigator.of(context).push(MaterialPageRoute(
             builder: (_) => const AtlasAiMedicalTutorScreen(),
           )),
-          icon: const Icon(Icons.support_agent_rounded,
+          icon: const Icon(Icons.headset_mic_rounded,
               size: 29, color: Color(0xFF5141A8)),
         ),
         StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
@@ -396,7 +396,7 @@ class _Home extends StatelessWidget {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         DashboardAnnouncementWelcome(displayName: firstName),
         const SizedBox(height: 16),
-        if (uid != null) _ProgressOverview(uid: uid),
+        const AtlasDashboardCoreFeatures(),
         const SizedBox(height: 19),
         GridView.count(
           crossAxisCount: 2, crossAxisSpacing: 12, mainAxisSpacing: 12,
@@ -429,7 +429,9 @@ class _Home extends StatelessWidget {
               action: 'Practice', onTap: onAdvancedQuizzes),
           ],
         ),
-        const SizedBox(height: 19),
+        const SizedBox(height: 15),
+        const AtlasDashboardDailyChallenge(),
+        const SizedBox(height: 15),
         Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
           const Text('Your Activity', style: TextStyle(
             color: AtlasColors.navy, fontSize: 18, fontWeight: FontWeight.w900)),
@@ -462,8 +464,6 @@ class _Home extends StatelessWidget {
             ),
           ]),
         ),
-        const SizedBox(height: 18),
-        const AtlasPremiumLearningHomeSection(),
         const SizedBox(height: 20),
         if (uid != null) _MembershipDetails(uid: uid, onManage: onMembership),
         const SizedBox(height: 16),
