@@ -500,7 +500,7 @@ class _StudentAnatomyLabScreenState extends State<StudentAnatomyLabScreen> {
       if (_localModelPath != null) Positioned.fill(child: Interactive3d(
         key: ValueKey('$_activeSystem-$_sex-$_loadAttempt'),
         controller: _controller,
-        modelPath: _localModelPath!,
+        modelFilePath: _localModelPath!,
         enableCache: true,
         cacheColor: const [0.25, 0.62, 0.95, 0.35],
         defaultZoom: 1.35,
