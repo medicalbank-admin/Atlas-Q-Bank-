@@ -23,10 +23,10 @@ emblem.thumbnail((850, 850), Image.Resampling.LANCZOS)
 
 foreground = Image.new("RGBA", (1024, 1024), (0, 0, 0, 0))
 foreground.alpha_composite(emblem, ((1024 - emblem.width) // 2, (1024 - emblem.height) // 2))
-foreground.save(OUT / "atlas_launcher_foreground.png")
+foreground_path = OUT / "atlas_launcher_foreground.png"\nif not foreground_path.exists():\n    foreground.save(foreground_path)
 
 # A subtle navy-to-blue background keeps the book/emblem legible at small sizes.
-background = Image.new("RGBA", (1024, 1024), (11, 31, 58, 255))
+icon_path = OUT / "atlas_launcher_icon.png"\nif not icon_path.exists():\n    background = Image.new("RGBA", (1024, 1024), (11, 31, 58, 255))
 pixels = background.load()
 for y in range(1024):
     t = y / 1023
@@ -41,4 +41,4 @@ for y in range(1024):
 background.alpha_composite(foreground)
 background.convert("RGB").save(OUT / "atlas_launcher_icon.png", quality=95)
 rendered.unlink(missing_ok=True)
-print("Prepared text-free book-and-emblem launcher artwork.")
+print("Prepared launcher icon artwork; existing user-supplied PNG files are preserved.")
