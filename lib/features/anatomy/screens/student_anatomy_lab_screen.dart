@@ -50,6 +50,12 @@ class _StudentAnatomyLabScreenState extends State<StudentAnatomyLabScreen> {
       : (_sex == 'male' ? 'whole-body-male-0.1.0.glb' : 'whole-body-female-0.1.0.glb');
 
   @override
+  void dispose() {
+    _preparationToken++;
+    super.dispose();
+  }
+
+  @override
   void initState() {
     super.initState();
     _prepareActiveModel();
@@ -66,11 +72,13 @@ class _StudentAnatomyLabScreenState extends State<StudentAnatomyLabScreen> {
     });
     HttpClient? client;
     File? destination;
+    File? temporary;
     try {
       final directory = await getApplicationSupportDirectory();
       final modelDirectory = Directory('${directory.path}/anatomy_models');
       if (!await modelDirectory.exists()) await modelDirectory.create(recursive: true);
       destination = File('${modelDirectory.path}/$_activeModelFileName');
+      temporary = File('${destination.path}.part');
       if (await destination.exists() && await destination.length() > 1024) {
         if (!mounted || token != _preparationToken) return;
         setState(() {
@@ -89,7 +97,8 @@ class _StudentAnatomyLabScreenState extends State<StudentAnatomyLabScreen> {
       }
       final total = response.contentLength;
       var received = 0;
-      final sink = destination.openWrite();
+      if (await temporary.exists()) await temporary.delete();
+      final sink = temporary.openWrite();
       try {
         await for (final chunk in response) {
           if (!mounted || token != _preparationToken) {
@@ -105,14 +114,19 @@ class _StudentAnatomyLabScreenState extends State<StudentAnatomyLabScreen> {
         await sink.close();
       }
       if (received <= 1024) throw const FormatException('Downloaded model is incomplete.');
-      if (!mounted || token != _preparationToken) return;
+      if (!mounted || token != _preparationToken) {
+        await temporary.delete();
+        return;
+      }
+      if (await destination.exists()) await destination.delete();
+      await temporary.rename(destination.path);
       setState(() {
         _localModelPath = destination!.path;
         _modelDownloading = false;
         _downloadProgress = 1;
       });
     } catch (error) {
-      if (destination != null && await destination.exists()) await destination.delete();
+      if (temporary != null && await temporary.exists()) await temporary.delete();
       if (!mounted || token != _preparationToken) return;
       setState(() {
         _modelDownloading = false;
@@ -360,11 +374,14 @@ class _StudentAnatomyLabScreenState extends State<StudentAnatomyLabScreen> {
         ButtonSegment(value: 'female', label: Text('Female')),
       ],
       selected: {_sex},
-      onSelectionChanged: (value) => setState(() {
-        _sex = value.first;
-        _modelReady = false;
-        _loadAttempt++;
-      }),
+      onSelectionChanged: (value) {
+        setState(() {
+          _sex = value.first;
+          _modelReady = false;
+          _loadAttempt++;
+        });
+        _prepareActiveModel();
+      },
       showSelectedIcon: false,
       style: SegmentedButton.styleFrom(
         visualDensity: VisualDensity.compact,
