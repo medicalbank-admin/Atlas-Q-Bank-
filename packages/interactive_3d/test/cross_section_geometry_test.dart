@@ -38,6 +38,28 @@ void main() {
       }
     });
 
+
+    test('stitches unordered segments into a closed contour', () {
+      const a=SectionVector3(0,0,0), b=SectionVector3(1,0,0);
+      const c=SectionVector3(1,1,0), d=SectionVector3(0,1,0);
+      final loops=AnatomyCrossSectionGeometry.stitchContours([
+        [c,d], [a,b], [d,a], [b,c],
+      ]);
+      expect(loops, hasLength(1));
+      expect(loops.single, hasLength(4));
+    });
+
+    test('triangulates a concave cap polygon', () {
+      const polygon=[
+        SectionVector3(0,0,0), SectionVector3(2,0,0),
+        SectionVector3(2,2,0), SectionVector3(1,1,0),
+        SectionVector3(0,2,0),
+      ];
+      final cap=AnatomyCrossSectionGeometry.triangulateCap(
+        polygon, const SectionVector3(0,0,1));
+      expect(cap.vertices, hasLength(9));
+    });
+
     test('rejects a zero plane normal', () {
       expect(
         () => clipper.clip(
