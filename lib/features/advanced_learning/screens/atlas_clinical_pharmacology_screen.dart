@@ -908,6 +908,20 @@ Widget? _molecularStructureFor(_Drug drug) {
         pdbId: '2P16', ligandName: 'Apixaban', resolution: '2.30 Å',
         note: 'Experimental co-crystal: apixaban is ligand component GG2 in the deposited factor Xa complex.',
       );
+    case 'Azithromycin':
+      return const AtlasMolecularStructureViewer(
+        structureKey: 'rrna_azithromycin',
+        structureTitle: '50S ribosomal subunit 23S rRNA + azithromycin',
+        pdbId: '1M1K', ligandName: 'Azithromycin', resolution: '3.20 Å',
+        note: 'Experimental X-ray co-crystal from Haloarcula marismortui. This archaeal 50S ribosomal-subunit homolog shows azithromycin in the conserved 23S rRNA macrolide-binding pocket.',
+      );
+    case 'Gentamicin':
+      return const AtlasMolecularStructureViewer(
+        structureKey: 'rrna_gentamicin',
+        structureTitle: '16S rRNA decoding A-site + gentamicin C1a',
+        pdbId: '2ET3', ligandName: 'Gentamicin C1a', resolution: '2.80 Å',
+        note: 'Experimental X-ray complex of gentamicin C1a with an isolated 16S rRNA decoding-site oligonucleotide. It is the RNA binding site, not a full 30S ribosome model.',
+      );
     case 'Semaglutide':
       return const AtlasMolecularStructureViewer(
         structureKey: 'glp1r_semaglutide',
