@@ -49,7 +49,7 @@ class _OsceRunScreenState extends State<_OsceRunScreen>{
      final text=response.text?.trim();
      if(text==null||text.isEmpty) throw StateError('The case generator returned an empty response.');
      if(mounted)setState(()=>expandedCase=text);
-   } catch(e) { if(mounted)setState(()=>caseError=e.toString()); }
+   } catch(e) { if(mounted)setState(()=>caseError=e.toString().toLowerCase().contains('app check')||e.toString().toLowerCase().contains('attestation')?'Firebase App Check rejected this device. Register the app and Play Integrity certificate in Firebase Console → Security → App Check.':e.toString()); }
    finally { if(mounted)setState(()=>caseLoading=false); }
  }
  @override Widget build(BuildContext context){
