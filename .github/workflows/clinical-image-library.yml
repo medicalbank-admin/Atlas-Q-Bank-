@@ -23,6 +23,8 @@ jobs:
         run: pip install wfdb pandas matplotlib pillow
       - name: Curate real images
         run: python scripts/build_clinical_image_library.py
+      - name: Sync latest repository changes before publishing generated images
+        run: git pull --rebase origin main
       - name: Commit image assets and attribution manifest
         run: |
           git config user.name "github-actions[bot]"
@@ -37,8 +39,6 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-      - name: Refresh source after publishing generated assets
-        run: git pull --rebase origin main
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
