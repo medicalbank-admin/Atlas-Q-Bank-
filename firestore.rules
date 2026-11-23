@@ -330,6 +330,21 @@ service cloud.firestore {
     }
 
     // ==================================================
+    // ACCOUNT DEVICE SECURITY (server-owned)
+    // The Cloudflare Worker uses the Firebase service account.
+    // Students cannot read or modify device bindings or risk events.
+    // ==================================================
+    match /device_sessions/{uid} {
+      allow read: if isAdmin();
+      allow create, update, delete: if false;
+    }
+
+    match /device_security_events/{eventId} {
+      allow read: if isAdmin();
+      allow create, update, delete: if false;
+    }
+
+    // ==================================================
     // FCM DEVICE REGISTRATIONS
     // ==================================================
     match /user_device_tokens/{tokenId} {
