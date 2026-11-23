@@ -72,7 +72,7 @@ class _AtlasDrugConformerViewerState extends State<AtlasDrugConformerViewer> {
         if (_targetAsset != null) ...[
           const Padding(
             padding: EdgeInsets.fromLTRB(14, 13, 14, 6),
-            child: Text('PREDICTED TARGET PROTEIN STRUCTURE',
+            child: Text('TARGET MACROMOLECULE STRUCTURE',
               style: TextStyle(color: Color(0xFF73DDE1), fontSize: 9,
                 fontWeight: FontWeight.w900, letterSpacing: .8)),
           ),
@@ -99,7 +99,7 @@ class _AtlasDrugConformerViewerState extends State<AtlasDrugConformerViewer> {
           const SizedBox(height: 4),
           Text('$_atomCount • $_method', style: const TextStyle(color: Color(0xFF8EADC4),fontSize: 9)),
           const SizedBox(height: 8),
-          const Text('TARGET / DOWNSTREAM PROTEIN', style: TextStyle(color: Color(0xFF73DDE1),fontSize: 8,fontWeight: FontWeight.w900,letterSpacing: .7)),
+          const Text('TARGET / DOWNSTREAM MACROMOLECULE', style: TextStyle(color: Color(0xFF73DDE1),fontSize: 8,fontWeight: FontWeight.w900,letterSpacing: .7)),
           const SizedBox(height: 3),
           Text(_target, style: const TextStyle(color: Color(0xFFE4F1F8),fontSize: 11,fontWeight: FontWeight.w700)),
           if (_organism.isNotEmpty) Text('Reference organism: $_organism',style: const TextStyle(color: Color(0xFF8EADC4),fontSize: 9)),
