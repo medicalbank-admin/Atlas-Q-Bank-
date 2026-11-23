@@ -107,7 +107,7 @@ def make_glb(atoms, out_path, title):
         el = element if element in ELEMENTS else "C"
         _, radius = ELEMENTS[el]
         nodes.append({
-            "name":("%s_%s_%s_%s" % ("LIG" if is_ligand else "PRO", residue, chain, res_seq, atom_name))[:60],
+            "name":("%s_%s_%s_%s_%s" % ("LIG" if is_ligand else "PRO", residue, chain, res_seq, atom_name))[:60],
             "mesh":material_index[(el, is_ligand)],
             "translation":[(xyz[i]-center[i])*scale for i in range(3)],
             "scale":[radius*scale*1.35]*3,
@@ -143,7 +143,7 @@ def main():
             chain=line[21:22].strip() or "A"
             if line.startswith("ATOM  ") and chain != "A": continue
             is_ligand=line.startswith("HETATM") and residue==ligand_code
-            if line.startswith("HETATM") and not is_ligand: continue
+            if line.startswith("HETATM") and (not is_ligand or chain != "A"): continue
             if residue in WATER: continue
             element=line[76:78].strip().upper()
             if element in ("H","D"): continue
