@@ -129,7 +129,7 @@ local protocols. Keep answers readable with headings and concise bullet points.
             ? 'Firebase AI Logic is not enabled for this Firebase project yet. Enable the Gemini Developer API in Firebase Console → AI Logic, then try again.'
             : message.contains('QuotaExceeded') || message.contains('429')
                 ? 'The AI service has reached its current usage limit. Please wait and try again later.'
-                : 'The tutor could not connect. Check your internet connection and Firebase AI Logic setup, then try again.';
+                : 'Tutor request failed: ${message.replaceAll(RegExp(r'[\\r\\n]+'), ' ').substring(0, message.length > 220 ? 220 : message.length)}';
       });
     } finally {
       if (mounted) {
