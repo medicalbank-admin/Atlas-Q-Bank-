@@ -28,9 +28,11 @@
     "drug": "Furosemide",
     "slug": "furosemide",
     "pubchem_name": "Furosemide",
-    "target": "Na-K-2Cl cotransporter NKCC2 (SLC12A1)",
+    "target": "Renal NKCC2 (SLC12A1); experimental complex shown is human NKCC1 (SLC12A2), a closely related cotransporter",
     "uniprot": "Q13621",
-    "organism": "Human"
+    "organism": "Human",
+    "experimental_complex_only": true,
+    "scientific_note": "The experimental cryo-EM structure is human NKCC1, not renal NKCC2. It directly visualizes furosemide binding to the closely related NKCC cotransporter family."
   },
   {
     "drug": "Salbutamol",
@@ -38,7 +40,9 @@
     "pubchem_name": "Salbutamol",
     "target": "β2-adrenergic receptor (ADRB2)",
     "uniprot": "P07550",
-    "organism": "Human"
+    "organism": "Human",
+    "experimental_complex_only": true,
+    "scientific_note": "Experimental cryo-EM structure of salbutamol as a partial agonist bound to β2-adrenergic receptor. The in-app model shows receptor chain R and the ligand; the Gs partner is omitted."
   },
   {
     "drug": "Metformin",
@@ -122,7 +126,9 @@
     "pubchem_name": "Empagliflozin",
     "target": "Sodium-glucose cotransporter 2 (SLC5A2)",
     "uniprot": "Q9NPD5",
-    "organism": "Human"
+    "organism": "Human",
+    "experimental_complex_only": true,
+    "scientific_note": "Experimental cryo-EM structure of human SGLT2-MAP17 with empagliflozin. The model displays the transporter chain and bound inhibitor."
   },
   {
     "drug": "Semaglutide",
@@ -217,9 +223,11 @@
     "drug": "Acyclovir",
     "slug": "acyclovir",
     "pubchem_name": "Acyclovir",
-    "target": "Herpes simplex virus DNA polymerase (UL30)",
-    "uniprot": "P10211",
-    "organism": "HSV-1"
+    "target": "Herpes simplex virus type 1 DNA polymerase (UL30); active acyclovir triphosphate form",
+    "uniprot": "H9E937",
+    "organism": "Human herpesvirus 1 strain KOS",
+    "experimental_complex_only": true,
+    "scientific_note": "Acyclovir must be phosphorylated to acyclovir triphosphate (ACV-TP). The experimental cryo-EM structure shows ACV-TP bound to HSV-1 DNA polymerase, not the unphosphorylated parent drug."
   },
   {
     "drug": "Fluconazole",
@@ -252,7 +260,9 @@
     "pubchem_name": "Morphine",
     "target": "Mu-opioid receptor (OPRM1)",
     "uniprot": "P35372",
-    "organism": "Human"
+    "organism": "Human",
+    "experimental_complex_only": true,
+    "scientific_note": "Experimental cryo-EM human mu-opioid receptor–Gi complex with morphine. The in-app model shows the receptor and bound morphine; Gi and other accessory chains are omitted."
   },
   {
     "drug": "Lidocaine",
@@ -291,9 +301,11 @@
     "drug": "Diazepam",
     "slug": "diazepam",
     "pubchem_name": "Diazepam",
-    "target": "GABA-A receptor alpha-1 subunit (GABRA1)",
+    "target": "GABA-A receptor benzodiazepine allosteric site (α1/γ2 interface)",
     "uniprot": "P14867",
-    "organism": "Human"
+    "organism": "Human",
+    "experimental_complex_only": true,
+    "scientific_note": "Experimental cryo-EM GABAA receptor complex containing GABA and diazepam. The in-app model retains receptor subunits and one diazepam ligand copy to show the allosteric binding environment."
   },
   {
     "drug": "Methotrexate",
