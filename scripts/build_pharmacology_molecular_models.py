@@ -20,6 +20,7 @@ STRUCTURES = {
     "factorxa_apixaban": ("2P16", "GG2", "Factor Xa with apixaban"),
     "dhfr_methotrexate": ("4DFR", "MTX", "Dihydrofolate reductase with methotrexate"),
     "adrb2_carazolol": ("2RH1", "CAU", "Beta-2 adrenergic receptor with carazolol"),
+    "glp1r_semaglutide": ("7KI0", "", "Human GLP-1 receptor with experimentally bound semaglutide", "B"),
 }
 
 ELEMENTS = {
@@ -130,7 +131,9 @@ def make_glb(atoms, out_path, title):
 def main():
     os.makedirs(ROOT,exist_ok=True)
     manifest = {}
-    for key,(pdb_id,ligand_code,label) in STRUCTURES.items():
+    for key,structure in STRUCTURES.items():
+        pdb_id,ligand_code,label = structure[:3]
+        peptide_chain = structure[3] if len(structure) > 3 else None
         url = "https://files.rcsb.org/download/%s.pdb" % pdb_id
         req = urllib.request.Request(url,headers={"User-Agent":"AtlasAcademy-educational-molecular-viewer/1.0"})
         with urllib.request.urlopen(req,timeout=60) as response:
@@ -141,9 +144,17 @@ def main():
             if len(line)<78: continue
             residue=line[17:20].strip()
             chain=line[21:22].strip() or "A"
-            if line.startswith("ATOM  ") and chain != "A": continue
-            is_ligand=line.startswith("HETATM") and residue==ligand_code
-            if line.startswith("HETATM") and (not is_ligand or chain != "A"): continue
+            is_atom=line.startswith("ATOM  ")
+            if is_atom:
+                if peptide_chain:
+                    if chain not in ("A", peptide_chain): continue
+                    is_ligand=(chain == peptide_chain)
+                else:
+                    if chain != "A": continue
+                    is_ligand=False
+            else:
+                is_ligand=bool(ligand_code) and residue==ligand_code and chain=="A"
+                if not is_ligand: continue
             if residue in WATER: continue
             element=line[76:78].strip().upper()
             if element in ("H","D"): continue
