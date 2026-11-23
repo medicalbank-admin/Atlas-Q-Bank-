@@ -50,8 +50,8 @@ service cloud.firestore {
       ).data;
       let permissions = userData.get('subscriptionAccessPermissions', {});
       return hasActiveAccess() &&
-        userData.get('subscriptionExpiryAt', timestamp.value(0)) is timestamp &&
-        userData.get('subscriptionExpiryAt', timestamp.value(0)) > request.time &&
+        userData.get('subscriptionExpiryAt', request.time) is timestamp &&
+        userData.get('subscriptionExpiryAt', request.time) > request.time &&
         permissions is map &&
         (
           permissions.get(feature, false) == true ||
