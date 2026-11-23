@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AtlasFlashcard {
   final String subject, question, answer;
@@ -231,6 +233,34 @@ class _AtlasFlashcardsScreenState extends State<AtlasFlashcardsScreen> {
   final Set<int> mastered = {};
   final Set<int> review = {};
 
+  String get _progressKey => 'atlas_flashcards_${FirebaseAuth.instance.currentUser?.uid ?? 'guest'}';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProgress();
+  }
+
+  Future<void> _loadProgress() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedBookmarks = prefs.getStringList('${_progressKey}_bookmarks') ?? [];
+    final savedMastered = prefs.getStringList('${_progressKey}_mastered') ?? [];
+    final savedReview = prefs.getStringList('${_progressKey}_review') ?? [];
+    if (!mounted) return;
+    setState(() {
+      bookmarks.addAll(savedBookmarks.map(int.tryParse).whereType<int>());
+      mastered.addAll(savedMastered.map(int.tryParse).whereType<int>());
+      review.addAll(savedReview.map(int.tryParse).whereType<int>());
+    });
+  }
+
+  Future<void> _saveProgress() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('${_progressKey}_bookmarks', bookmarks.map((e) => e.toString()).toList());
+    await prefs.setStringList('${_progressKey}_mastered', mastered.map((e) => e.toString()).toList());
+    await prefs.setStringList('${_progressKey}_review', review.map((e) => e.toString()).toList());
+  }
+
   List<int> get visible {
     final ids = <int>[];
     for (var i = 0; i < atlasFlashcards.length; i++) {
@@ -368,6 +398,7 @@ class _AtlasFlashcardsScreenState extends State<AtlasFlashcardsScreen> {
                           IconButton(
                             onPressed: () => setState(() {
                               if (!bookmarks.add(id)) bookmarks.remove(id);
+                              _saveProgress();
                             }),
                             icon: Icon(bookmarks.contains(id) ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
                               color: const Color(0xFF3477B9)),
@@ -397,14 +428,14 @@ class _AtlasFlashcardsScreenState extends State<AtlasFlashcardsScreen> {
               const SizedBox(height: 13),
               Row(children: [
                 Expanded(child: OutlinedButton.icon(
-                  onPressed: () => setState(() { review.add(id); mastered.remove(id); }),
+                  onPressed: () { setState(() { review.add(id); mastered.remove(id); }); _saveProgress(); },
                   icon: const Icon(Icons.replay_rounded, size: 17), label: const Text('Review again'),
                   style: OutlinedButton.styleFrom(foregroundColor: const Color(0xFFB66B24),
                     side: const BorderSide(color: Color(0xFFE7C99F))),
                 )),
                 const SizedBox(width: 9),
                 Expanded(child: FilledButton.icon(
-                  onPressed: () => setState(() { mastered.add(id); review.remove(id); }),
+                  onPressed: () { setState(() { mastered.add(id); review.remove(id); }); _saveProgress(); },
                   icon: const Icon(Icons.check_circle_outline_rounded, size: 17), label: const Text('I know this'),
                   style: FilledButton.styleFrom(backgroundColor: const Color(0xFF16856C), foregroundColor: Colors.white),
                 )),
