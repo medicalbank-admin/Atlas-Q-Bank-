@@ -3,7 +3,10 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:interactive_3d/interactive_3d.dart';
 import '../../../app/atlas_academy_app.dart';
+import '../../anatomy/data/anatomy_catalog.dart';
+import '../../anatomy/data/detailed_skeleton_catalog.dart';
 
 class AtlasClinicalLearningScreen extends StatefulWidget {
   final String initialMode;
@@ -78,52 +81,124 @@ const _spotters = <_Spotter>[
   _Spotter('Subthalamic nucleus','Neuroanatomy','A deep cerebral lesion causes violent flinging movements of the contralateral limbs. Which structure is classically implicated?','Subthalamic nucleus','A lesion disrupts basal ganglia circuitry and can cause contralateral hemiballismus.','Sudden hemiballismus warrants urgent stroke evaluation.')
 ];
 
+const _maleSpotterModel = 'https://cdn.jsdelivr.net/npm/open-anatomy-3d@0.1.0/models/anatomy-male.glb';
+const _femaleSpotterModel = 'https://cdn.jsdelivr.net/npm/open-anatomy-3d@0.1.0/models/anatomy-female.glb';
+const _skeletonSpotterModel = 'https://raw.githubusercontent.com/organui/skeleton-3d/120fc17278559057b37aff516eee89d263b604c6/public/models/skeleton.glb';
+
 class _SpotterScreen extends StatefulWidget {
   const _SpotterScreen();
   @override State<_SpotterScreen> createState() => _SpotterScreenState();
 }
 class _SpotterScreenState extends State<_SpotterScreen> {
-  int index = 0, right = 0, tried = 0; bool reveal = false;
-  final input = TextEditingController();
-  @override void dispose() { input.dispose(); super.dispose(); }
+  final Interactive3dController controller = Interactive3dController();
+  String system = 'organs';
+  String sex = 'male';
+  String? selectedKey;
+  Map<String,String>? target;
+  int correct = 0, step = 0;
+  static const int total = 5;
+  bool finished = false;
+  String get modelUrl => system == 'skeleton' ? _skeletonSpotterModel : (sex == 'male' ? _maleSpotterModel : _femaleSpotterModel);
+  List<Map<String,String>> get targets {
+    final source = system == 'skeleton' ? detailedSkeletonCatalog : anatomyCatalog;
+    return source.where((e) => e['system'] == system && e['key'] != null && e['label'] != null).map((e) => Map<String,String>.from(e)).toList();
+  }
+  void start() {
+    final list = targets;
+    if (list.isEmpty) return;
+    list.shuffle(Random());
+    setState(() { target = list.first; step = 0; correct = 0; finished = false; selectedKey = null; });
+  }
+  void nextTarget() {
+    final list = targets.where((e) => e['key'] != target?['key']).toList()..shuffle(Random());
+    if (list.isEmpty) { finish(); return; }
+    setState(() { target = list.first; selectedKey = null; });
+  }
+  void finish() {
+    setState(() { finished = true; target = null; });
+    _saveAttempt('3d_spotter', system, correct, total);
+  }
+  void onSelection(List<EntityData> parts) {
+    if (parts.isEmpty || target == null || finished) return;
+    final name = parts.last.name;
+    setState(() => selectedKey = name);
+    if (name == target!['key']) {
+      setState(() { correct++; step++; });
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Correct identification.')));
+      if (step >= total) { finish(); } else { nextTarget(); }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Not quite. Rotate or zoom the model and try again.')));
+    }
+  }
   @override Widget build(BuildContext context) {
-    final s = _spotters[index];
-    return ListView(padding: const EdgeInsets.all(16), children: [
-      Row(children: [Expanded(child: Text('Clinical identification stations', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: AtlasColors.navy, fontWeight: FontWeight.w900))), Text('Score '+right.toString()+'/'+tried.toString(), style: const TextStyle(color: AtlasColors.royalBlue, fontWeight: FontWeight.w900))]),
+    return ListView(padding: const EdgeInsets.fromLTRB(16,10,16,24), children: [
+      Text('Interactive 3D spotter challenge', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: AtlasColors.navy,fontWeight: FontWeight.w900)),
       const SizedBox(height: 5),
-      const Text('Read the station, identify the structure and reveal the expert explanation.', style: TextStyle(color: AtlasColors.secondaryText)),
+      const Text('Rotate, zoom and tap anatomical structures directly on the 3D model. Complete five identification stations per round.', style: TextStyle(color: AtlasColors.secondaryText,height:1.45)),
       const SizedBox(height: 12),
-      LinearProgressIndicator(value: (index + 1) / _spotters.length, minHeight: 6, borderRadius: BorderRadius.circular(8)),
-      const SizedBox(height: 10),
-      Text('STATION '+(index+1).toString()+' OF '+_spotters.length.toString()+'  •  '+s.system.toUpperCase(), style: const TextStyle(color: AtlasColors.royalBlue, fontWeight: FontWeight.w900, fontSize: 10)),
-      Card(child: Padding(padding: const EdgeInsets.all(17), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Container(height: 130, width: double.infinity, decoration: BoxDecoration(gradient: const LinearGradient(colors: [AtlasColors.navy, AtlasColors.royalBlue]), borderRadius: BorderRadius.circular(16)), child: const Center(child: Column(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.view_in_ar_rounded, color: Colors.white, size: 43), SizedBox(height: 6), Text('ATLAS SPOTTER SERIES', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, letterSpacing: 1))]))),
-        const SizedBox(height: 15),
-        Text(s.title, style: const TextStyle(color: AtlasColors.navy, fontSize: 20, fontWeight: FontWeight.w900)),
-        const SizedBox(height: 9),
-        Text(s.stem, style: const TextStyle(color: AtlasColors.charcoal, height: 1.55)),
-        const SizedBox(height: 12),
-        TextField(controller: input, enabled: !reveal, decoration: const InputDecoration(labelText: 'Your identification', hintText: 'Enter the structure or diagnosis')),
-        const SizedBox(height: 10),
-        if (!reveal) SizedBox(width: double.infinity, child: FilledButton(onPressed: () {
-          final a = input.text.trim().toLowerCase();
-          final key = s.answer.toLowerCase();
-          final hit = a.isNotEmpty && (a == key || key.split(' ').any((w) => w.length > 5 && a.contains(w)));
-          setState(() { reveal = true; tried++; if (hit) right++; });
-          _saveAttempt('spotter', s.title, hit ? 1 : 0, 1);
-        }, child: const Text('Reveal answer & rationale'))),
-        if (reveal) Container(width: double.infinity, padding: const EdgeInsets.all(14), decoration: BoxDecoration(color: AtlasColors.paleBlue, borderRadius: BorderRadius.circular(14)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('IDENTIFICATION', style: TextStyle(color: AtlasColors.royalBlue, fontSize: 10, fontWeight: FontWeight.w900)),
-          const SizedBox(height: 5), Text(s.answer, style: const TextStyle(color: AtlasColors.navy, fontSize: 18, fontWeight: FontWeight.w900)),
-          const SizedBox(height: 10), const Text('WHY IT FITS', style: TextStyle(color: AtlasColors.royalBlue, fontSize: 10, fontWeight: FontWeight.w900)),
-          const SizedBox(height: 4), Text(s.why, style: const TextStyle(color: AtlasColors.charcoal, height: 1.5)),
-          const SizedBox(height: 10), const Text('CLINICAL PEARL', style: TextStyle(color: AtlasColors.royalBlue, fontSize: 10, fontWeight: FontWeight.w900)),
-          const SizedBox(height: 4), Text(s.pearl, style: const TextStyle(color: AtlasColors.charcoal, height: 1.5))
+      Row(children: [
+        Expanded(child: DropdownButtonFormField<String>(value: system, isExpanded: true, decoration: const InputDecoration(labelText: 'Model system'), items: const [
+          DropdownMenuItem(value:'organs',child:Text('Organs and viscera')),
+          DropdownMenuItem(value:'muscles',child:Text('Muscles')),
+          DropdownMenuItem(value:'vessels',child:Text('Blood vessels')),
+          DropdownMenuItem(value:'nerves',child:Text('Nerves')),
+          DropdownMenuItem(value:'skeleton',child:Text('Detailed skeleton')),
+          DropdownMenuItem(value:'skin',child:Text('Skin')),
+          DropdownMenuItem(value:'joints',child:Text('Joints')),
+        ], onChanged: (v) { if(v!=null) setState(() { system=v; target=null; selectedKey=null; finished=false; step=0; correct=0; }); })),
+        if (system != 'skeleton') ...[
+          const SizedBox(width:8),
+          SizedBox(width:105, child: DropdownButtonFormField<String>(value:sex, decoration: const InputDecoration(labelText:'Model'), items: const [
+            DropdownMenuItem(value:'male',child:Text('Male')),
+            DropdownMenuItem(value:'female',child:Text('Female')),
+          ], onChanged:(v){ if(v!=null) setState(() { sex=v; target=null; selectedKey=null; finished=false; }); })),
+        ]
+      ]),
+      const SizedBox(height: 12),
+      Container(height: 390, clipBehavior: Clip.antiAlias, decoration: BoxDecoration(color: const Color(0xFF07182C),borderRadius: BorderRadius.circular(20),border: Border.all(color: const Color(0xFF183A5C))), child: Interactive3d(
+        key: ValueKey(modelUrl),
+        controller: controller,
+        modelUrl: modelUrl,
+        defaultZoom: 1.3,
+        backgroundColor: const Color(0xFF07182C),
+        selectionColor: const [0.20,0.66,1.0,1.0],
+        onSelectionChanged: onSelection,
+        loadingWidget: const Center(child: Column(mainAxisSize: MainAxisSize.min,children: [
+          CircularProgressIndicator(color: Color(0xFF9CC9ED)),
+          SizedBox(height:12),
+          Text('Loading interactive 3D model…',style:TextStyle(color:Colors.white70,fontSize:12))
         ])),
-        if (reveal) const SizedBox(height: 10),
-        if (reveal) SizedBox(width: double.infinity, child: FilledButton.icon(onPressed: () => setState(() { index = (index + 1) % _spotters.length; reveal = false; input.clear(); }), icon: const Icon(Icons.arrow_forward), label: const Text('Next station'))
+        errorBuilder: (context,error) => Center(child: Padding(padding: const EdgeInsets.all(20),child: Column(mainAxisSize:MainAxisSize.min,children: [
+          const Icon(Icons.cloud_off_rounded,color:Color(0xFF9CC9ED),size:36),
+          const SizedBox(height:8),
+          const Text('3D model could not be loaded',style:TextStyle(color:Colors.white,fontWeight:FontWeight.w800)),
+          const SizedBox(height:5),
+          Text(error.toString(),textAlign:TextAlign.center,style:const TextStyle(color:Colors.white70,fontSize:11))
+        ]))),
+      )),
+      const SizedBox(height: 12),
+      if (target == null && !finished) SizedBox(width:double.infinity,child:FilledButton.icon(onPressed:start,icon:const Icon(Icons.play_arrow_rounded),label:const Text('Start 5-station challenge'))),
+      if (target != null) Card(child:Padding(padding:const EdgeInsets.all(15),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+        Row(children:[
+          Expanded(child:Text('STATION '+(step+1).toString()+' OF '+total.toString(),style:const TextStyle(color:AtlasColors.royalBlue,fontSize:10,fontWeight:FontWeight.w900,letterSpacing:.8))),
+          Text(correct.toString()+'/'+total.toString(),style:const TextStyle(color:AtlasColors.navy,fontWeight:FontWeight.w900))
+        ]),
+        const SizedBox(height:7),
+        Text('Find: '+(target!['label']??'Target structure'),style:const TextStyle(color:AtlasColors.navy,fontSize:19,fontWeight:FontWeight.w900)),
+        const SizedBox(height:6),
+        Text('Tap the correct structure on the model. Your selection will be checked automatically.',style:const TextStyle(color:AtlasColors.secondaryText,height:1.4)),
+        if(selectedKey!=null) Padding(padding:const EdgeInsets.only(top:8),child:Text('Selected: '+selectedKey!,style:const TextStyle(color:AtlasColors.royalBlue,fontWeight:FontWeight.w800)))
       ]))),
-      const _Notice('Spotter stations in this release are text-based. Live 3D model rotation, layer isolation and image labelling require a separate model-renderer integration; this screen does not pretend those tools are active.')
+      if(finished) Card(child:Padding(padding:const EdgeInsets.all(18),child:Column(children:[
+        const Icon(Icons.emoji_events_rounded,color:AtlasColors.warning,size:38),
+        const SizedBox(height:7),
+        const Text('Challenge completed',style:TextStyle(color:AtlasColors.navy,fontWeight:FontWeight.w900,fontSize:19)),
+        Text(correct.toString()+' / '+total.toString()+' correct',style:const TextStyle(color:AtlasColors.royalBlue,fontSize:24,fontWeight:FontWeight.w900)),
+        const SizedBox(height:10),
+        SizedBox(width:double.infinity,child:FilledButton(onPressed:start,child:const Text('Start another round')))
+      ]))),
+      const SizedBox(height: 8),
+      const _Notice('3D models are streamed from the model providers when the spotter is opened. An internet connection is required for the initial model load.'),
     ]);
   }
 }
