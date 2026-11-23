@@ -235,7 +235,7 @@ class InboxService {
     } catch (_) {
       final contentType = response.headers['content-type'] ?? 'unknown';
       final bodyPreview = response.body
-          .replaceAll(RegExp(r'\\s+'), ' ')
+          .replaceAll(RegExp(r'\s+'), ' ')
           .trim();
       final safePreview = bodyPreview.length > 240
           ? bodyPreview.substring(0, 240)
