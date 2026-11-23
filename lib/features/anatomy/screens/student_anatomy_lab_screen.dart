@@ -1,8 +1,10 @@
+import 'dart:io';
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:interactive_3d/interactive_3d.dart';
+import 'package:path_provider/path_provider.dart';
 import '../../../app/atlas_academy_app.dart';
 import '../data/anatomy_catalog.dart';
 import '../data/detailed_skeleton_catalog.dart';
@@ -28,11 +30,98 @@ class _StudentAnatomyLabScreenState extends State<StudentAnatomyLabScreen> {
   String _activeSystem = 'skeleton';
   String? _selectedKey;
   bool _modelReady = false;
+  bool _modelDownloading = false;
+  double _downloadProgress = 0;
+  String? _localModelPath;
+  String? _modelError;
+  int _preparationToken = 0;
   int _loadAttempt = 0;
   Map<String, String>? _quizTarget;
   int _quizCorrect = 0;
   int _quizStep = 0;
   static const int _quizLength = 5;
+
+  String get _activeModelUrl => _activeSystem == 'skeleton'
+      ? _skeletonModelUrl
+      : (_sex == 'male' ? _maleModelUrl : _femaleModelUrl);
+
+  String get _activeModelFileName => _activeSystem == 'skeleton'
+      ? 'skeleton-120fc172.glb'
+      : (_sex == 'male' ? 'whole-body-male-0.1.0.glb' : 'whole-body-female-0.1.0.glb');
+
+  @override
+  void initState() {
+    super.initState();
+    _prepareActiveModel();
+  }
+
+  Future<void> _prepareActiveModel() async {
+    final token = ++_preparationToken;
+    if (mounted) setState(() {
+      _modelReady = false;
+      _modelDownloading = true;
+      _downloadProgress = 0;
+      _localModelPath = null;
+      _modelError = null;
+    });
+    HttpClient? client;
+    File? destination;
+    try {
+      final directory = await getApplicationSupportDirectory();
+      final modelDirectory = Directory('${directory.path}/anatomy_models');
+      if (!await modelDirectory.exists()) await modelDirectory.create(recursive: true);
+      destination = File('${modelDirectory.path}/$_activeModelFileName');
+      if (await destination.exists() && await destination.length() > 1024) {
+        if (!mounted || token != _preparationToken) return;
+        setState(() {
+          _localModelPath = destination!.path;
+          _modelDownloading = false;
+          _downloadProgress = 1;
+        });
+        return;
+      }
+      client = HttpClient()..connectionTimeout = const Duration(seconds: 25);
+      final request = await client.getUrl(Uri.parse(_activeModelUrl));
+      request.headers.set(HttpHeaders.userAgentHeader, 'AtlasAcademy-AnatomyLab/1.0');
+      final response = await request.close();
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw HttpException('Model server returned HTTP ${response.statusCode}.');
+      }
+      final total = response.contentLength;
+      var received = 0;
+      final sink = destination.openWrite();
+      try {
+        await for (final chunk in response) {
+          if (!mounted || token != _preparationToken) {
+            await sink.close();
+            return;
+          }
+          sink.add(chunk);
+          received += chunk.length;
+          if (total > 0) setState(() => _downloadProgress = received / total);
+        }
+        await sink.flush();
+      } finally {
+        await sink.close();
+      }
+      if (received <= 1024) throw const FormatException('Downloaded model is incomplete.');
+      if (!mounted || token != _preparationToken) return;
+      setState(() {
+        _localModelPath = destination!.path;
+        _modelDownloading = false;
+        _downloadProgress = 1;
+      });
+    } catch (error) {
+      if (destination != null && await destination.exists()) await destination.delete();
+      if (!mounted || token != _preparationToken) return;
+      setState(() {
+        _modelDownloading = false;
+        _modelError = error.toString();
+      });
+    } finally {
+      client?.close(force: true);
+    }
+  }
 
   Map<String, String>? _find(String key) {
     for (final item in detailedSkeletonCatalog) {
@@ -70,10 +159,11 @@ class _StudentAnatomyLabScreenState extends State<StudentAnatomyLabScreen> {
         _visibleSystems.add(system);
       }
       _activeSystem = system;
+      _modelReady = false;
       _selectedKey = null;
       _quizTarget = null;
     });
-    await _applyLayers();
+    await _prepareActiveModel();
   }
 
   void _onSelectionChanged(List<EntityData> parts) {
@@ -194,8 +284,9 @@ class _StudentAnatomyLabScreenState extends State<StudentAnatomyLabScreen> {
       _selectedKey = result['key'];
       _activeSystem = result['system'] ?? 'skeleton';
       _visibleSystems.add(_activeSystem);
+      _modelReady = false;
     });
-    await _applyLayers();
+    await _prepareActiveModel();
   }
 
   @override
@@ -338,9 +429,7 @@ class _StudentAnatomyLabScreenState extends State<StudentAnatomyLabScreen> {
       Positioned.fill(child: Interactive3d(
         key: ValueKey('$_activeSystem-$_sex-$_loadAttempt'),
         controller: _controller,
-        modelUrl: _activeSystem == 'skeleton'
-            ? _skeletonModelUrl
-            : (_sex == 'male' ? _maleModelUrl : _femaleModelUrl),
+        modelPath: _localModelPath,
         defaultZoom: 1.35,
         backgroundColor: const Color(0xFF07182C),
         selectionColor: const [0.20, 0.66, 1.0, 1.0],
@@ -377,6 +466,8 @@ class _StudentAnatomyLabScreenState extends State<StudentAnatomyLabScreen> {
           ]),
         )),
       )),
+      if (_modelDownloading || _modelError != null)
+        Positioned(left: 14, right: 62, bottom: 14, child: _modelStatus()),
       Positioned(top: 12, left: 12, child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
         decoration: BoxDecoration(color: Colors.black.withValues(alpha: .42),
@@ -397,6 +488,33 @@ class _StudentAnatomyLabScreenState extends State<StudentAnatomyLabScreen> {
         const SizedBox(height: 6),
         _viewerControl(Icons.center_focus_strong_rounded, () => _controller.resetCamera()),
       ])),
+    ]),
+  );
+
+  Widget _modelStatus() => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+    decoration: BoxDecoration(color: const Color(0xE61B3858),
+      borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.white24)),
+    child: Row(children: [
+      if (_modelDownloading) const SizedBox(width: 16, height: 16,
+        child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF9CC9ED)))
+      else const Icon(Icons.error_outline_rounded, color: Colors.orangeAccent, size: 18),
+      const SizedBox(width: 9),
+      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(_modelDownloading ? 'Preparing model for offline use' : 'Model download failed',
+          style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w800)),
+        if (_modelDownloading) ...[
+          const SizedBox(height: 5),
+          ClipRRect(borderRadius: BorderRadius.circular(8), child: LinearProgressIndicator(
+            value: _downloadProgress > 0 ? _downloadProgress : null,
+            minHeight: 4, backgroundColor: Colors.white24,
+            color: const Color(0xFF9CC9ED))),
+        ] else TextButton(onPressed: _prepareActiveModel,
+          child: const Text('Try again', style: TextStyle(color: Color(0xFFB8D9F5), fontSize: 10))),
+      ])),
+      if (_modelDownloading && _downloadProgress > 0)
+        Text('${(_downloadProgress * 100).round()}%',
+          style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w800)),
     ]),
   );
 
