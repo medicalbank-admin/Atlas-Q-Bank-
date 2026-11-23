@@ -19,7 +19,7 @@ class _AdminAnatomyManagementScreenState extends State<AdminAnatomyManagementScr
   Widget build(BuildContext context) {
     final combined = <Map<String, String>>[
       ...detailedSkeletonCatalog,
-      ...anatomyCatalog.where((item) => item['system'] != 'skeleton'),
+      ...anatomyCatalog,
     ];
     final items = combined.where((item) {
       final matches = query.isEmpty || item['label']!.toLowerCase().contains(query.toLowerCase());
