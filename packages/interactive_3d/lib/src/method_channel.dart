@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -108,6 +109,7 @@ class MethodChannelInteractive3d extends Interactive3dPlatform {
   Future<void> loadModel({
     required int textureId,
     String? modelPath,
+    String? modelFilePath,
     String? modelUrl,
     required Map<String, ByteData> resources,
     List<String>? preselectedEntities,
@@ -126,7 +128,10 @@ class MethodChannelInteractive3d extends Interactive3dPlatform {
     Uint8List modelBytes;
     String modelName;
 
-    if (modelPath != null) {
+    if (modelFilePath != null) {
+      modelBytes = await File(modelFilePath).readAsBytes();
+      modelName = modelFilePath.split('/').last;
+    } else if (modelPath != null) {
       final data = await rootBundle.load(modelPath);
       modelBytes = data.buffer.asUint8List();
       modelName = modelPath.split('/').last;
