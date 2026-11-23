@@ -19,6 +19,7 @@ dependencies:
   firebase_messaging: ^17.0.1
   cloud_functions: ^7.0.1
   firebase_ai: ^5.2.0
+  firebase_app_check: ^0.5.2
   http: ^1.5.0
   interactive_3d:
     path: packages/interactive_3d
