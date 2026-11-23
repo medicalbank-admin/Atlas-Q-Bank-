@@ -2,6 +2,13 @@ name: Deploy Atlas Academy Firestore Rules
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'firestore.rules'
+      - 'storage.rules'
+      - '.github/workflows/deploy-firestore-rules.yml'
 
 permissions:
   contents: read
@@ -35,7 +42,7 @@ jobs:
         run: npm install --global firebase-tools
 
       - name: Deploy Firestore security rules
-        run: firebase deploy --only firestore:rules --project the-atlas-academy-3fae0 --non-interactive
+        run: firebase deploy --only firestore:rules,storage --project the-atlas-academy-3fae0 --non-interactive
 
       - name: Remove temporary credentials
         if: always()
