@@ -127,7 +127,8 @@
     "uniprot": "P43220",
     "organism": "Human",
     "pubchem_cid": 56843331,
-    "scientific_note": "Semaglutide is a highly flexible 31-residue lipopeptide; any computed conformer is one illustrative conformation, not a unique solution structure."
+    "scientific_note": "Semaglutide is a highly flexible 31-residue lipopeptide; any computed conformer is one illustrative conformation, not a unique solution structure.",
+    "experimental_complex_only": true
   },
   {
     "drug": "Levothyroxine",
