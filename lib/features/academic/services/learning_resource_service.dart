@@ -52,7 +52,7 @@ class LearningResourceService {
     if (title.trim().isEmpty ||
         (resourceUrl.trim().isEmpty && textContent.trim().isEmpty)) {
       throw ArgumentError(
-        'Year, subject, topic, title and either a resource URL or text content are required.',
+        'A title and either a resource URL or text content are required.',
       );
     }
 
