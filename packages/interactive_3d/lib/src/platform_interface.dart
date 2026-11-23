@@ -35,6 +35,7 @@ abstract class Interactive3dPlatform extends PlatformInterface {
   Future<void> loadModel({
     required int textureId,
     String? modelPath,
+    String? modelFilePath,
     String? modelUrl,
     required Map<String, ByteData> resources,
     List<String>? preselectedEntities,
