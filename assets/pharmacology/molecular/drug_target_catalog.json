@@ -43,9 +43,10 @@
     "drug": "Metformin",
     "slug": "metformin",
     "pubchem_name": "Metformin",
-    "target": "Mitochondrial complex I / AMPK signalling (indirect, multi-step)",
-    "uniprot": null,
-    "organism": "Human"
+    "target": "AMP-activated protein kinase alpha-2 (AMPK; downstream signalling effector, not a direct binding target)",
+    "uniprot": "P54646",
+    "organism": "Human",
+    "scientific_note": "Metformin has complex mitochondrial and cellular effects. AMPK is shown as an important downstream signalling effector, not as a proven direct metformin-binding receptor."
   },
   {
     "drug": "Omeprazole",
