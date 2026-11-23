@@ -255,7 +255,7 @@ local protocols. Keep answers readable with headings and concise bullet points.
                 style: TextStyle(color: Colors.white, fontSize: 25, height: 1.16, fontWeight: FontWeight.w900)),
               const SizedBox(height: 10),
               const Text('Ask complex questions, unpack mechanisms and practise clinical reasoning with your medical study companion.',
-                style: TextStyle(color: Colors.white.withValues(alpha: .82), height: 1.5, fontSize: 12)),
+                style: TextStyle(color: Color(0xFFDAD6E8), height: 1.5, fontSize: 12)),
               const SizedBox(height: 17),
               const Wrap(spacing: 7, runSpacing: 7, children: [
                 _HeroTag('Concept breakdowns'),
@@ -269,7 +269,7 @@ local protocols. Keep answers readable with headings and concise bullet points.
             style: TextStyle(color: AtlasColors.royalBlue, fontSize: 10, letterSpacing: 1.1, fontWeight: FontWeight.w900)),
           const SizedBox(height: 11),
           _PromptTile(icon: Icons.biotech_rounded, title: 'Explain a difficult concept', subtitle: 'Build understanding step by step', prompt: 'Explain the cardiac action potential step by step, including the ionic currents and how it differs in pacemaker cells.', onTap: _send),
-          _PromptTile(icon: Icons.stethoscope_rounded, title: 'Work through a clinical case', subtitle: 'Reason from presentation to diagnosis', prompt: 'Give me a structured clinical reasoning tutorial using a short case of acute chest pain. Ask me one decision at a time.', onTap: _send),
+          _PromptTile(icon: Icons.medical_services_rounded, title: 'Work through a clinical case', subtitle: 'Reason from presentation to diagnosis', prompt: 'Give me a structured clinical reasoning tutorial using a short case of acute chest pain. Ask me one decision at a time.', onTap: _send),
           _PromptTile(icon: Icons.quiz_rounded, title: 'Discuss an MCQ', subtitle: 'Understand why each option is right or wrong', prompt: 'Create a challenging single-best-answer medical MCQ on renal physiology. Let me answer before revealing the explanation.', onTap: _send),
           _PromptTile(icon: Icons.menu_book_rounded, title: 'Make a revision summary', subtitle: 'Turn a topic into high-yield notes', prompt: 'Create a high-yield revision summary of the renin–angiotensin–aldosterone system, including a comparison table and exam pearls.', onTap: _send),
           const SizedBox(height: 12),
