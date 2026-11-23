@@ -18,7 +18,6 @@ import '../../subscriptions/screens/subscription_plans_screen.dart';
 import '../../advanced_learning/screens/advanced_student_tools_screen.dart';
 import '../../advanced_learning/screens/atlas_clinical_learning_screen.dart';
 import '../../advanced_learning/screens/atlas_premium_learning_screen.dart';
-import '../../advanced_learning/screens/atlas_ai_medical_tutor_screen.dart';
 import '../../advanced_learning/services/push_notification_service.dart';
 import 'student_notifications_screen.dart';
 import '../../inbox/screens/inbox_screens.dart';
