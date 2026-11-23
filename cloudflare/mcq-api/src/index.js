@@ -165,7 +165,7 @@ function encodeValue(value) {
 function encodeFields(fields) {
   const result = {};
   const timestampFields = new Set([
-    "startedAt", "expiresAt", "createdAt", "completedAt",
+    "startedAt", "expiresAt", "createdAt", "completedAt", "lastMessageAt",
     "submittedAt", "updatedAt", "reviewedAt",
   ]);
   for (const [key, value] of Object.entries(fields)) {
@@ -711,6 +711,91 @@ async function verifyInboxParticipant(env, claims, studentUid) {
   if (claims.admin !== true && claims.sub !== studentUid) throw new Error("You are not allowed to access this conversation.");
   return conversation;
 }
+async function sendInboxMessage(env, claims, body) {
+  const studentUid = String(body.studentUid || "");
+  const text = typeof body.body === "string" ? body.body.trim() : "";
+  const imagePath = typeof body.imagePath === "string" ? body.imagePath : "";
+  if (!studentUid || studentUid.length > 128 || text.length > 4000 ||
+      imagePath.length > 500 || (!text && !imagePath)) {
+    throw new Error("The message content is invalid.");
+  }
+  const isAdmin = claims.admin === true;
+  if (!isAdmin && claims.sub !== studentUid) {
+    throw new Error("You are not allowed to send messages in this conversation.");
+  }
+  const conversation = await getDocument(env, "inbox_conversations", studentUid);
+  if (!conversation || conversation.data.studentUid !== studentUid) {
+    throw new Error("This conversation could not be found.");
+  }
+  if (imagePath) {
+    const parts = imagePath.split("|");
+    if (parts.length !== 3) throw new Error("The image reference is invalid.");
+    const [publicId, format, version] = parts;
+    const folderPrefix = "atlas-inbox/" + studentUid + "/";
+    const barePrefix = "atlas-inbox_" + studentUid + "_";
+    const assetId = publicId.startsWith(folderPrefix)
+      ? publicId.slice(folderPrefix.length) : publicId;
+    if (!assetId.startsWith(barePrefix) ||
+        !/^[A-Za-z0-9-]{20,80}$/.test(assetId.slice(barePrefix.length)) ||
+        !/^[a-z0-9]{2,5}$/i.test(format) || !/^\d{1,16}$/.test(version)) {
+      throw new Error("The image reference is invalid.");
+    }
+  }
+  const now = new Date().toISOString();
+  const messageId = crypto.randomUUID();
+  const preview = text || "📷 Photo";
+  const oldAdminUnread = Number.isInteger(conversation.data.unreadForAdmin)
+    ? conversation.data.unreadForAdmin : 0;
+  const oldStudentUnread = Number.isInteger(conversation.data.unreadForStudent)
+    ? conversation.data.unreadForStudent : 0;
+  const message = {
+    senderUid: claims.sub,
+    senderRole: isAdmin ? "admin" : "student",
+    body: text,
+    imageUrl: null,
+    imagePath: imagePath || null,
+    createdAt: now,
+    deliveredAt: null,
+    readAt: null,
+  };
+  const update = {
+    lastMessage: preview,
+    lastMessageAt: now,
+    lastSenderUid: claims.sub,
+    lastMessageId: messageId,
+    unreadForAdmin: isAdmin ? 0 : oldAdminUnread + 1,
+    unreadForStudent: isAdmin ? oldStudentUnread + 1 : 0,
+    updatedAt: now,
+  };
+  if (isAdmin) {
+    update.adminUid = claims.sub;
+    update.adminName = "The Atlas Administrator";
+  }
+  const root = "projects/" + PROJECT_ID + "/databases/(default)/documents/";
+  const messageName = root + "inbox_conversations/" + studentUid +
+    "/messages/" + messageId;
+  await firestoreRequest(env, ":commit", {
+    method: "POST",
+    body: JSON.stringify({
+      writes: [
+        {
+          update: { name: messageName, fields: encodeFields(message) },
+          currentDocument: { exists: false },
+        },
+        {
+          update: {
+            name: conversation.name,
+            fields: encodeFields(update),
+          },
+          updateMask: { fieldPaths: Object.keys(update) },
+          currentDocument: { updateTime: conversation.updateTime },
+        },
+      ],
+    }),
+  });
+  return { success: true, messageId };
+}
+
 async function createInboxUploadSignature(env, claims, body) {
   const studentUid = String(body.studentUid || "");
   await verifyInboxParticipant(env, claims, studentUid);
@@ -743,9 +828,12 @@ async function createInboxImageUrl(env, claims, body) {
   const parts = imagePath.split("|");
   if (parts.length !== 3) throw new Error("The stored image reference is invalid.");
   const [publicId, format, versionText] = parts;
+  const folderPrefix = "atlas-inbox/" + studentUid + "/";
   const expectedPrefix = "atlas-inbox_" + studentUid + "_";
-  if (!publicId.startsWith(expectedPrefix) ||
-      !/^[A-Za-z0-9-]{20,80}$/.test(publicId.slice(expectedPrefix.length)) ||
+  const assetId = publicId.startsWith(folderPrefix)
+    ? publicId.slice(folderPrefix.length) : publicId;
+  if (!assetId.startsWith(expectedPrefix) ||
+      !/^[A-Za-z0-9-]{20,80}$/.test(assetId.slice(expectedPrefix.length)) ||
       !/^[a-z0-9]{2,5}$/i.test(format) || !/^\d{1,16}$/.test(versionText)) {
     throw new Error("The stored image reference is invalid.");
   }
@@ -798,7 +886,7 @@ export default {
     }
     const url = new URL(request.url);
     const allowedPaths = ["/start", "/submit", "/daily/start", "/daily/status", "/daily/submit",
-      "/inbox/upload-signature", "/inbox/image"];
+      "/inbox/upload-signature", "/inbox/image", "/inbox/send"];
     if (request.method !== "POST" || !allowedPaths.includes(url.pathname)) {
       return fail("Endpoint not found.", 404);
     }
@@ -823,7 +911,9 @@ export default {
                   ? await createInboxUploadSignature(env, claims, body)
                   : url.pathname === "/inbox/image-url"
                     ? await createInboxImageUrl(env, claims, body)
-                    : await proxyInboxImage(env, claims, body);
+                    : url.pathname === "/inbox/send"
+                      ? await sendInboxMessage(env, claims, body)
+                      : await proxyInboxImage(env, claims, body);
       return result instanceof Response ? result : response(result);
     } catch (error) {
       const message = error?.message || "The MCQ request could not be completed.";
