@@ -19,10 +19,15 @@ STRUCTURES = {
     "cox1_ibuprofen": ("1EQG", "IBP", "Cyclo-oxygenase-1 with ibuprofen"),
     "factorxa_apixaban": ("2P16", "GG2", "Factor Xa with apixaban"),
     "dhfr_methotrexate": ("1U72", "MTX", "Human dihydrofolate reductase with methotrexate"),
-    "adrb2_carazolol": ("2RH1", "CAU", "Beta-2 adrenergic receptor with carazolol"),
     "glp1r_semaglutide": ("7KI0", "", "Human GLP-1 receptor with experimentally bound semaglutide", "B"),
     "rrna_azithromycin": ("1M1K", "ZIT", "Haloarcula marismortui 50S 23S rRNA with azithromycin"),
     "rrna_gentamicin": ("2ET3", "LLL", "16S rRNA decoding A-site with gentamicin C1a"),
+    "nkcc1_furosemide": ("9C0E", "FUN", "Human NKCC1 transporter with furosemide"),
+    "adrb2_salbutamol": ("7DHI", "68H", "Human beta-2 adrenergic receptor with salbutamol", None, "R", "R"),
+    "sglt2_empagliflozin": ("7VSI", "7R3", "Human SGLT2-MAP17 transporter with empagliflozin"),
+    "gaba_a_diazepam": ("6X3X", "DZP", "Human GABAA receptor with diazepam and GABA", None, "A", "A", ["B", "C", "D", "E"]),
+    "muopioid_morphine": ("8EF6", "MOI", "Human mu-opioid receptor with morphine", None, "R", "R"),
+    "hsv_pol_acyclovir": ("8V1T", "AVP", "HSV-1 DNA polymerase with acyclovir triphosphate"),
 }
 
 ELEMENTS = {
@@ -136,7 +141,9 @@ def main():
     for key,structure in STRUCTURES.items():
         pdb_id,ligand_code,label = structure[:3]
         peptide_chain = structure[3] if len(structure) > 3 else None
-        ligand_chain = structure[4] if len(structure) > 4 else None
+        target_chain = structure[4] if len(structure) > 4 and structure[4] else "A"
+        ligand_chain = structure[5] if len(structure) > 5 and structure[5] else "A"
+        extra_target_chains = structure[6] if len(structure) > 6 else []
         url = "https://files.rcsb.org/download/%s.pdb" % pdb_id
         req = urllib.request.Request(url,headers={"User-Agent":"AtlasAcademy-educational-molecular-viewer/1.0"})
         with urllib.request.urlopen(req,timeout=60) as response:
@@ -150,14 +157,13 @@ def main():
             is_atom=line.startswith("ATOM  ")
             if is_atom:
                 if peptide_chain:
-                    if chain not in ("A", peptide_chain): continue
+                    if chain not in (target_chain, peptide_chain, *extra_target_chains): continue
                     is_ligand=(chain == peptide_chain)
                 else:
-                    if chain != "A": continue
+                    if chain not in (target_chain, *extra_target_chains): continue
                     is_ligand=False
             else:
-                expected_ligand_chain=ligand_chain or "A"
-                is_ligand=bool(ligand_code) and residue==ligand_code and chain==expected_ligand_chain
+                is_ligand=bool(ligand_code) and residue==ligand_code and chain==ligand_chain
                 if not is_ligand: continue
             if residue in WATER: continue
             element=line[76:78].strip().upper()
