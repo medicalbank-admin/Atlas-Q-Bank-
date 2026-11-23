@@ -590,6 +590,36 @@ service cloud.firestore {
     }
 
     // ==================================================
+    // 3D ANATOMY LAB
+    // Published learning notes require the anatomyLab entitlement.
+    // ==================================================
+    match /anatomy_content/{structureKey} {
+      allow read: if isAdmin() || (
+        resource.data.isPublished == true &&
+        hasFeatureAccess('anatomyLab')
+      );
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /anatomy_progress/{progressId} {
+      allow read: if isAdmin() || (
+        signedIn() &&
+        resource.data.userId == request.auth.uid &&
+        hasFeatureAccess('anatomyLab')
+      );
+      allow create: if signedIn() &&
+        hasFeatureAccess('anatomyLab') &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.structureKey is string;
+      allow update: if signedIn() &&
+        resource.data.userId == request.auth.uid &&
+        request.resource.data.userId == request.auth.uid &&
+        hasFeatureAccess('anatomyLab') &&
+        request.resource.data.structureKey == resource.data.structureKey;
+      allow delete: if isAdmin();
+    }
+
+    // ==================================================
     // DEFAULT DENY
     // ==================================================
 
