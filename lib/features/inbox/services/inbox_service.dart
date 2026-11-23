@@ -134,7 +134,7 @@ class InboxService {
     }
     final request = http.MultipartRequest(
       'POST',
-      Uri.parse('https://api.cloudinary.com/v1_1/$cloudName/image/authenticated/upload'),
+      Uri.parse('https://api.cloudinary.com/v1_1/$cloudName/image/authenticated'),
     );
     request.fields.addAll({
       'api_key': apiKey,
@@ -143,13 +143,11 @@ class InboxService {
       'folder': signature['folder'].toString(),
       'public_id': publicId,
       'overwrite': 'false',
-      'type': 'authenticated',
     });
     request.files.add(http.MultipartFile.fromBytes(
       'file',
       bytes,
       filename: fileName.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_'),
-      contentType: _mediaType(contentType),
     ));
     final streamed = await _client.send(request).timeout(const Duration(seconds: 90));
     final response = await http.Response.fromStream(streamed);
@@ -175,11 +173,6 @@ class InboxService {
     return '$uploadedId|$format|$version';
   }
 
-  http.MediaType _mediaType(String value) {
-    final parts = value.split('/');
-    if (parts.length != 2) return http.MediaType('image', 'jpeg');
-    return http.MediaType(parts[0], parts[1]);
-  }
 
   Future<String> loadImageUrl({
     required String studentUid,
