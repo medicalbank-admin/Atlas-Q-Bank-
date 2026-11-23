@@ -155,8 +155,60 @@ def main():
             failures.append({"drug":name,"error":str(e)})
             manifest[slug]={**item,"asset":None,"structure_status":"generation failed","error":str(e)}
             print("FAILED %s: %s"%(name,e))
+    # Add predicted, unbound target-protein structures from AlphaFold DB where a
+    # single protein target is scientifically appropriate and a UniProt accession exists.
+    target_cache={}
+    for item in catalog:
+        accession=item.get("uniprot")
+        if not accession:
+            continue
+        if accession not in target_cache:
+            try:
+                meta=json.loads(get("https://alphafold.ebi.ac.uk/api/prediction/"+accession))
+                if not meta:
+                    raise RuntimeError("No AlphaFold DB model returned")
+                pdb_url=meta[0].get("pdbUrl")
+                if not pdb_url:
+                    raise RuntimeError("AlphaFold response has no PDB URL")
+                pdb=get(pdb_url).decode("utf-8","replace")
+                protein_atoms=[]
+                for line in pdb.splitlines():
+                    if not line.startswith("ATOM  ") or len(line)<78:
+                        continue
+                    element=line[76:78].strip().upper()
+                    if element in ("H","D"):
+                        continue
+                    try:
+                        xyz=(float(line[30:38]),float(line[38:46]),float(line[46:54]))
+                    except ValueError:
+                        continue
+                    residue=line[17:20].strip()
+                    chain=line[21:22].strip() or "A"
+                    seq=line[22:26].strip()+line[26:27].strip()
+                    atom_name="%s_%s_%s_%s"%(residue,chain,seq,line[12:16].strip())
+                    protein_atoms.append({"xyz":xyz,"element":element,"name":atom_name})
+                if not protein_atoms:
+                    raise RuntimeError("AlphaFold PDB contained no heavy atoms")
+                target_path=os.path.join(ROOT,"targets",accession+".glb")
+                os.makedirs(os.path.dirname(target_path),exist_ok=True)
+                glb(target_path,protein_atoms,[],"AlphaFold target "+accession)
+                target_cache[accession]={"asset":target_path,"pdb_url":pdb_url,
+                    "atom_count":len(protein_atoms),"source":"AlphaFold DB predicted monomer"}
+                print("TARGET %s: %d heavy atoms -> %s"%(accession,len(protein_atoms),target_path))
+            except Exception as e:
+                target_cache[accession]={"asset":None,"error":str(e)}
+                print("TARGET MODEL UNAVAILABLE %s: %s"%(accession,e))
+        record=target_cache[accession]
+        item_slug=item["slug"]
+        if item_slug in manifest:
+            manifest[item_slug]["target_asset"]=record.get("asset")
+            manifest[item_slug]["target_structure_source"]=record.get("source")
+            manifest[item_slug]["target_atom_count"]=record.get("atom_count")
+            if record.get("error"):
+                manifest[item_slug]["target_structure_error"]=record["error"]
     with open(os.path.join(ROOT,"drug_manifest.json"),"w") as f: json.dump(manifest,f,indent=2)
     print("Generated %d/%d molecular conformers"%(len(catalog)-len(failures),len(catalog)))
+    print("Unique predicted protein target models: %d/%d"%(sum(1 for v in target_cache.values() if v.get("asset")),len(target_cache)))
     if failures:
         print("Molecular generation failures: "+json.dumps(failures))
         raise SystemExit(1)
