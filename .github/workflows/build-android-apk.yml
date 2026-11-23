@@ -40,6 +40,11 @@ jobs:
       - name: Generate experimental molecular structure assets
         run: python scripts/build_pharmacology_molecular_models.py
 
+      - name: Generate 3D conformers for all 41 pharmacology drugs
+        run: |
+          python -m pip install --quiet rdkit
+          python scripts/build_pharmacology_drug_conformers.py
+
       - name: Install Flutter dependencies
         run: flutter pub get
 
