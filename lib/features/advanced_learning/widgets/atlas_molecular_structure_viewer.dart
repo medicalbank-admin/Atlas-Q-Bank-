@@ -1,3 +1,7 @@
+import 'dart:async';
+import 'dart:convert';
+
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:interactive_3d/interactive_3d.dart';
 
@@ -31,6 +35,66 @@ class _AtlasMolecularStructureViewerState
   final Interactive3dController _controller = Interactive3dController();
   String? _selectedAtom;
   bool _loaded = false;
+  bool _animateInteractions = true;
+  int _pulsePhase = 0;
+  String _interactionLabel = 'Experimental ligand pose';
+  List<String> _ligandAtoms = const [];
+  List<String> _bindingAtoms = const [];
+  Timer? _interactionTimer;
+
+  Future<void> _loadInteractionMetadata() async {
+    try {
+      final raw = await rootBundle.loadString(
+        'assets/pharmacology/molecular/manifest.json');
+      final manifest = jsonDecode(raw) as Map<String, dynamic>;
+      final record = manifest[widget.structureKey] as Map<String, dynamic>;
+      _ligandAtoms = List<String>.from(record['ligand_atom_names'] as List);
+      _bindingAtoms = List<String>.from(record['binding_site_atom_names'] as List);
+      _startInteractionAnimation();
+    } catch (error) {
+      debugPrint('Molecular interaction metadata unavailable: $error');
+    }
+  }
+
+  void _startInteractionAnimation() {
+    _interactionTimer?.cancel();
+    if (!_animateInteractions || !_loaded) return;
+    _interactionTimer = Timer.periodic(const Duration(milliseconds: 1350),
+      (_) async {
+        if (!mounted || _ligandAtoms.isEmpty) return;
+        final phase = _pulsePhase++ % 3;
+        final names = phase == 0
+            ? _ligandAtoms
+            : phase == 1
+                ? _bindingAtoms
+                : [..._ligandAtoms, ..._bindingAtoms];
+        final glow = phase == 0
+            ? <double>[0.04, 0.58, 0.78]
+            : phase == 1
+                ? <double>[0.12, 0.34, 0.62]
+                : <double>[0.08, 0.48, 0.66];
+        try {
+          await _controller.resetAllMaterialOverrides();
+          await _controller.setEntityMaterials(names.map((name) =>
+            MaterialOverride(name: name, emissive: glow, roughness: 0.3)).toList());
+        } catch (error) {
+          debugPrint('Molecular interaction highlight failed: $error');
+        }
+        if (mounted) setState(() {
+          _interactionLabel = phase == 0
+              ? 'Drug ligand: co-crystallised pose'
+              : phase == 1
+                  ? 'Receptor: atoms within 4.2 Å of ligand'
+                  : 'Ligand–binding-site contact network';
+        });
+      });
+  }
+
+  @override
+  void dispose() {
+    _interactionTimer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +130,10 @@ class _AtlasMolecularStructureViewerState
             defaultZoom: 1.0,
             selectionColor: const [0.25, 0.95, 0.98, 1.0],
             onModelLoaded: () {
-              if (mounted) setState(() => _loaded = true);
+              if (mounted) {
+                setState(() => _loaded = true);
+                _loadInteractionMetadata();
+              }
             },
             onModelLoadError: (error, stack) {
               debugPrint('Molecular structure load failed: $error');
@@ -98,6 +165,34 @@ class _AtlasMolecularStructureViewerState
             Text('PDB ${widget.pdbId} • X-ray structure • ${widget.resolution}',
               style: const TextStyle(color: Color(0xFF8EADC4), fontSize: 10)),
             const SizedBox(height: 8),
+            Row(children: [
+              const Icon(Icons.animation_rounded,
+                color: Color(0xFF73DDE1), size: 15),
+              const SizedBox(width: 6),
+              Expanded(child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 350),
+                child: Text(_interactionLabel, key: ValueKey(_interactionLabel),
+                  style: const TextStyle(color: Color(0xFF73DDE1),
+                    fontSize: 9, fontWeight: FontWeight.w800)),
+              )),
+              IconButton(
+                tooltip: _animateInteractions ? 'Pause interaction animation' : 'Play interaction animation',
+                visualDensity: VisualDensity.compact,
+                onPressed: () => setState(() {
+                  _animateInteractions = !_animateInteractions;
+                  if (_animateInteractions) {
+                    _startInteractionAnimation();
+                  } else {
+                    _interactionTimer?.cancel();
+                    _controller.resetAllMaterialOverrides();
+                    _interactionLabel = 'Animation paused';
+                  }
+                }),
+                icon: Icon(_animateInteractions ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                  color: const Color(0xFFB8D8E9), size: 18),
+              ),
+            ]),
+            const SizedBox(height: 5),
             const Wrap(spacing: 12, runSpacing: 5, children: [
               _AtomLegend(color: Color(0xFF73DDE1), label: 'Co-crystallised ligand carbon'),
               _AtomLegend(color: Color(0xFFB5C0CD), label: 'Protein carbon'),
