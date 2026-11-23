@@ -559,58 +559,6 @@ class _MembershipDetails extends StatelessWidget {
   );
 }
 
-class _ProgressOverview extends StatelessWidget {
-  final String uid;
-  const _ProgressOverview({required this.uid});
-  @override
-  Widget build(BuildContext context) =>
-    StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: FirebaseFirestore.instance.collection('mcq_attempts')
-        .where('userId', isEqualTo: uid).snapshots(),
-      builder: (context, snapshot) {
-        final docs = snapshot.data?.docs ?? [];
-        var correct = 0, total = 0;
-        for (final doc in docs) {
-          final data = doc.data();
-          correct += (data['correctAnswers'] as num?)?.toInt() ?? 0;
-          total += (data['totalQuestions'] as num?)?.toInt() ?? 0;
-        }
-        final percent = total > 0 ? (correct * 100 / total).round().clamp(0, 100) : 0;
-        return Container(
-          padding: const EdgeInsets.fromLTRB(20, 17, 20, 16),
-          decoration: BoxDecoration(
-            color: Colors.white, borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: const Color(0xFFE2EBF7)),
-            boxShadow: [BoxShadow(color: AtlasColors.navy.withValues(alpha: .07),
-              blurRadius: 19, offset: const Offset(0, 6))],
-          ),
-          child: Column(children: [
-            Row(children: [
-              const Expanded(child: Text('Overall Progress', style: TextStyle(
-                color: Color(0xFF152C50), fontSize: 16, fontWeight: FontWeight.w900))),
-              Text('$percent%', style: const TextStyle(color: Color(0xFF123B68),
-                fontSize: 25, fontWeight: FontWeight.w900)),
-            ]),
-            const SizedBox(height: 10),
-            ClipRRect(borderRadius: BorderRadius.circular(20),
-              child: LinearProgressIndicator(value: percent / 100, minHeight: 11,
-                backgroundColor: const Color(0xFFE4ECFA),
-                color: const Color(0xFF2379E8))),
-            const SizedBox(height: 10),
-            Row(children: [
-              Text(total.toString(), style: const TextStyle(color: Color(0xFF1768D1),
-                fontWeight: FontWeight.w900, fontSize: 13)),
-              const Text(' MCQs Attempted', style: TextStyle(
-                color: Color(0xFF152C50), fontSize: 13, fontWeight: FontWeight.w600)),
-              const Spacer(),
-              const Icon(Icons.bar_chart_rounded, color: Color(0xFF2379E8), size: 26),
-            ]),
-          ]),
-        );
-      },
-    );
-}
-
 class _ClinicalExamTile extends StatelessWidget {
   final String title, action;
   final IconData icon;
