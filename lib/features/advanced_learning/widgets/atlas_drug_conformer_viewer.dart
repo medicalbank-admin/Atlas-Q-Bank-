@@ -30,7 +30,7 @@ class _AtlasDrugConformerViewerState extends State<AtlasDrugConformerViewer> {
         _target = item['target'] as String? ?? 'Target not annotated';
         _organism = item['organism'] as String? ?? '';
         _method = item['coordinate_method'] as String? ?? 'Computed conformer';
-        _atomCount = '\${item['atom_count'] ?? '—'} atoms • \${item['bond_count'] ?? '—'} bonds';
+        _atomCount = '${item['atom_count'] ?? '—'} atoms • ${item['bond_count'] ?? '—'} bonds';
         _targetAsset = item['target_asset'] as String?;
         _targetSource = item['target_structure_source'] as String? ?? '';
       });
@@ -41,7 +41,7 @@ class _AtlasDrugConformerViewerState extends State<AtlasDrugConformerViewer> {
   }
   @override
   Widget build(BuildContext context) {
-    final asset = 'assets/pharmacology/molecular/drugs/\${widget.slug}.glb';
+    final asset = 'assets/pharmacology/molecular/drugs/${widget.slug}.glb';
     return Container(
       decoration: BoxDecoration(color: const Color(0xFF071A2D),
         borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFF244968))),
