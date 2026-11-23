@@ -15,9 +15,9 @@ class LearningResourceService {
 
   /// Watches resources belonging to a specific topic.
   static Stream<List<LearningResourceModel>> watchResources({
-    required String yearId,
-    required String subjectId,
-    required String topicId,
+    String yearId = '',
+    String subjectId = '',
+    String topicId = '',
   }) {
     return _resources
         .where('yearId', isEqualTo: yearId)
@@ -39,8 +39,9 @@ class LearningResourceService {
     required String topicId,
     required String title,
     required LearningResourceType type,
-    required String resourceUrl,
+    String resourceUrl = '',
     String description = '',
+    String textContent = '',
     String textContent = '',
     String? thumbnailUrl,
     int displayOrder = 0,
@@ -71,9 +72,10 @@ class LearningResourceService {
       description: description.trim(),
       type: type,
       resourceUrl: resourceUrl.trim(),
+      textContent: textContent,
       thumbnailUrl: thumbnailUrl,
       displayOrder: displayOrder,
-      isPublished: false,
+      isPublished: true,
       isFree: isFree,
       durationMinutes: durationMinutes,
       createdAt: now,
@@ -93,7 +95,9 @@ class LearningResourceService {
 
     if (resource.id.trim().isEmpty ||
         resource.title.trim().isEmpty ||
-        resource.resourceUrl.trim().isEmpty) {
+        (resource.type == LearningResourceType.text
+            ? resource.textContent.trim().isEmpty
+            : resource.resourceUrl.trim().isEmpty)) {
       throw ArgumentError(
         'A valid resource ID, title and URL are required.',
       );
