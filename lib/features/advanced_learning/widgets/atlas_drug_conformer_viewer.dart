@@ -18,6 +18,7 @@ class _AtlasDrugConformerViewerState extends State<AtlasDrugConformerViewer> {
   String? _selectedAtom;
   String? _targetAsset;
   String _targetSource = '';
+  String _scientificNote = '';
   @override
   void initState() { super.initState(); _loadMetadata(); }
   Future<void> _loadMetadata() async {
@@ -33,6 +34,7 @@ class _AtlasDrugConformerViewerState extends State<AtlasDrugConformerViewer> {
         _atomCount = '${item['atom_count'] ?? '—'} atoms • ${item['bond_count'] ?? '—'} bonds';
         _targetAsset = item['target_asset'] as String?;
         _targetSource = item['target_structure_source'] as String? ?? '';
+        _scientificNote = item['scientific_note'] as String? ?? '';
       });
     } catch (error) {
       debugPrint('Drug conformer metadata unavailable: $error');
@@ -101,6 +103,7 @@ class _AtlasDrugConformerViewerState extends State<AtlasDrugConformerViewer> {
           const SizedBox(height: 3),
           Text(_target, style: const TextStyle(color: Color(0xFFE4F1F8),fontSize: 11,fontWeight: FontWeight.w700)),
           if (_organism.isNotEmpty) Text('Reference organism: $_organism',style: const TextStyle(color: Color(0xFF8EADC4),fontSize: 9)),
+          if (_scientificNote.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 5), child: Text(_scientificNote, style: const TextStyle(color: Color(0xFFB8D8E9),fontSize: 9,height: 1.4))),
           if (_selectedAtom != null) ...[const SizedBox(height: 7),Text('Selected: $_selectedAtom',style: const TextStyle(color: Color(0xFF73DDE1),fontSize: 10,fontWeight: FontWeight.w800))],
           const SizedBox(height: 8),
           Row(children: [
