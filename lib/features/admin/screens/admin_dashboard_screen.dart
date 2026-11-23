@@ -17,6 +17,7 @@ import 'admin_payment_settings_screen.dart';
 import 'admin_notifications_screen.dart';
 import 'admin_analytics_screen.dart';
 import 'admin_advanced_learning_screens.dart';
+import '../../inbox/screens/inbox_screens.dart';
 import '../../anatomy/screens/admin_anatomy_management_screen.dart';
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
@@ -419,6 +420,13 @@ class AdminDashboardScreen extends StatelessWidget {
   }
   Widget _buildManagementGrid(BuildContext context) {
     final items = [
+      _AdminItem(
+        icon: Icons.mark_chat_unread_rounded,
+        title: 'Student Inbox',
+        subtitle: 'Private chats, image messages and read receipts',
+        color: AtlasColors.royalBlue,
+        page: const AdminInboxScreen(),
+      ),
       _AdminItem(
         icon: Icons.people_alt_rounded,
         title: 'Student Management',
