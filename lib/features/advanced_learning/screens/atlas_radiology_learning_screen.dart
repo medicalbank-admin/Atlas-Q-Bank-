@@ -57,6 +57,10 @@ const Map<String,String> _radiologyAttributions={
  '27':'James Heilman, MD — Wikimedia Commons, CC BY-SA 3.0.',
  '55':'Sigrist et al. — Wikimedia Commons, CC BY 4.0.',
 };
+class _Case {
+ final String id,mod,title,find,diag;
+ const _Case(this.id,this.mod,this.title,this.find,this.diag);
+}
 class _Panel extends StatelessWidget{final String title,body;const _Panel({required this.title,required this.body});@override Widget build(BuildContext context)=>Container(width:double.infinity,padding:const EdgeInsets.all(14),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(15),border:Border.all(color:const Color(0xFFE0EAF1))),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(title,style:const TextStyle(color:AtlasColors.navy,fontSize:10,letterSpacing:.8,fontWeight:FontWeight.w900)),const SizedBox(height:8),Text(body,style:const TextStyle(color:AtlasColors.charcoal,fontSize:13,height:1.55))]));}
 const List<_Case> _cases=[
   _Case('01','X-ray','Lobar pneumonia','Air-space opacity with air bronchograms confined to one lobe','Lobar consolidation'),
