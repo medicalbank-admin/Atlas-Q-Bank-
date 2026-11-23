@@ -103,11 +103,11 @@ def make_glb(atoms, out_path, title):
                 "baseColorFactor":color,"metallicFactor":0.12 if ligand_flag else 0.02,
                 "roughnessFactor":0.28 if ligand_flag else 0.48}})
             meshes.append({"name":"Atom "+label,"primitives":[{"attributes":{"POSITION":0},"indices":1,"material":len(materials)-1}]})
-    for xyz, element, atom_name, residue, chain, is_ligand in atoms:
+    for xyz, element, atom_name, residue, chain, res_seq, is_ligand in atoms:
         el = element if element in ELEMENTS else "C"
         _, radius = ELEMENTS[el]
         nodes.append({
-            "name":("%s_%s_%s_%s" % ("LIG" if is_ligand else "PRO", residue, chain, atom_name))[:60],
+            "name":("%s_%s_%s_%s" % ("LIG" if is_ligand else "PRO", residue, chain, res_seq, atom_name))[:60],
             "mesh":material_index[(el, is_ligand)],
             "translation":[(xyz[i]-center[i])*scale for i in range(3)],
             "scale":[radius*scale*1.35]*3,
@@ -149,15 +149,26 @@ def main():
             if element in ("H","D"): continue
             try: xyz=(float(line[30:38]),float(line[38:46]),float(line[46:54]))
             except ValueError: continue
-            atoms.append((xyz,element,line[12:16].strip(),residue,chain,is_ligand))
-        if not any(a[5] for a in atoms):
+            res_seq=line[22:26].strip()+line[26:27].strip()
+            atoms.append((xyz,element,line[12:16].strip(),residue,chain,res_seq,is_ligand))
+        if not any(a[6] for a in atoms):
             raise RuntimeError("Expected co-crystallised ligand %s not found in %s" % (ligand_code,pdb_id))
         path=os.path.join(ROOT,key+".glb")
         make_glb(atoms,path,label)
+        ligand_atoms = [a for a in atoms if a[6]]
+        ligand_names = ["LIG_%s_%s_%s_%s" % (a[3],a[4],a[5],a[2]) for a in ligand_atoms]
+        binding_names = []
+        for atom in atoms:
+            if atom[6]: continue
+            near = any(sum((atom[0][i]-ligand[0][i])**2 for i in range(3)) <= 4.2**2 for ligand in ligand_atoms)
+            if near:
+                binding_names.append("PRO_%s_%s_%s_%s" % (atom[3],atom[4],atom[5],atom[2]))
         manifest[key]={"pdb_id":pdb_id,"ligand":ligand_code,"label":label,
-                       "atom_count":len(atoms),"ligand_atom_count":sum(1 for a in atoms if a[5]),
+                       "atom_count":len(atoms),"ligand_atom_count":len(ligand_atoms),
+                       "ligand_atom_names":ligand_names,
+                       "binding_site_atom_names":sorted(set(binding_names)),
                        "source":url,"asset":path}
-        print("%s: %s atoms (%s ligand atoms) -> %s" % (key,len(atoms),manifest[key]["ligand_atom_count"],path))
+        print("%s: %s atoms (%s ligand; %s binding-site atoms) -> %s" % (key,len(atoms),len(ligand_atoms),len(set(binding_names)),path))
     with open(os.path.join(ROOT,"manifest.json"),"w") as f: json.dump(manifest,f,indent=2)
 
 if __name__=="__main__":
