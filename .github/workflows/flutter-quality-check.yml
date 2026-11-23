@@ -27,6 +27,9 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Generate experimental molecular structure assets
+        run: python scripts/build_pharmacology_molecular_models.py
+
       - name: Install dependencies
         run: flutter pub get
 
