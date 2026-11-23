@@ -5,9 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:interactive_3d/interactive_3d.dart';
 import '../../../app/atlas_academy_app.dart';
 import '../data/anatomy_catalog.dart';
+import '../data/detailed_skeleton_catalog.dart';
 
 const _maleModelUrl = 'https://cdn.jsdelivr.net/npm/open-anatomy-3d@0.1.0/models/anatomy-male.glb';
 const _femaleModelUrl = 'https://cdn.jsdelivr.net/npm/open-anatomy-3d@0.1.0/models/anatomy-female.glb';
+const _skeletonModelUrl = 'https://raw.githubusercontent.com/organui/skeleton-3d/main/public/models/skeleton.glb';
 const _systems = <String, String>{
   'skeleton': 'Skeletal', 'organs': 'Organs', 'muscles': 'Muscles',
   'vessels': 'Vessels', 'nerves': 'Nerves', 'skin': 'Skin', 'joints': 'Joints',
@@ -33,19 +35,23 @@ class _StudentAnatomyLabScreenState extends State<StudentAnatomyLabScreen> {
   static const int _quizLength = 5;
 
   Map<String, String>? _find(String key) {
+    for (final item in detailedSkeletonCatalog) {
+      if (item['key'] == key) return item;
+    }
     for (final item in anatomyCatalog) {
       if (item['key'] == key) return item;
     }
     return null;
   }
 
-  List<String> _names(String system) => anatomyCatalog
-      .where((item) => item['system'] == system)
+  List<String> _names(String system) => (system == 'skeleton'
+      ? detailedSkeletonCatalog
+      : anatomyCatalog.where((item) => item['system'] == system))
       .map((item) => item['key']!)
       .toList(growable: false);
 
   Future<void> _applyLayers() async {
-    if (!_modelReady) return;
+    if (!_modelReady || _activeSystem == 'skeleton') return;
     for (final system in _systems.keys) {
       final names = _names(system);
       if (names.isEmpty) continue;
@@ -116,11 +122,14 @@ class _StudentAnatomyLabScreenState extends State<StudentAnatomyLabScreen> {
   }
 
   Map<String, String>? _nextTarget() {
-    final list = anatomyCatalog.where((item) =>
+    final source = _activeSystem == 'skeleton'
+        ? detailedSkeletonCatalog
+        : anatomyCatalog;
+    final list = source.where((item) =>
       item['system'] == _activeSystem && item['system'] != 'joints' &&
       item['key'] != _selectedKey).toList();
     final pool = list.isEmpty
-      ? anatomyCatalog.where((item) => item['system'] == 'skeleton').toList()
+      ? detailedSkeletonCatalog
       : list;
     return pool[Random().nextInt(pool.length)];
   }
@@ -224,10 +233,10 @@ class _StudentAnatomyLabScreenState extends State<StudentAnatomyLabScreen> {
   );
 
   Widget _bodySelector() => Row(children: [
-    const Text('Reference model', style: TextStyle(
+    Text(_activeSystem == 'skeleton' ? 'Detailed skeletal atlas' : 'Whole-body model', style: const TextStyle(
       color: AtlasColors.navy, fontWeight: FontWeight.w800, fontSize: 12)),
     const Spacer(),
-    SegmentedButton<String>(
+    if (_activeSystem != 'skeleton') SegmentedButton<String>(
       segments: const [
         ButtonSegment(value: 'male', label: Text('Male')),
         ButtonSegment(value: 'female', label: Text('Female')),
@@ -300,9 +309,11 @@ class _StudentAnatomyLabScreenState extends State<StudentAnatomyLabScreen> {
         blurRadius: 18, offset: Offset(0, 7))]),
     child: Stack(children: [
       Positioned.fill(child: Interactive3d(
-        key: ValueKey('$_sex-$_loadAttempt'),
+        key: ValueKey('$_activeSystem-$_sex-$_loadAttempt'),
         controller: _controller,
-        modelUrl: _sex == 'male' ? _maleModelUrl : _femaleModelUrl,
+        modelUrl: _activeSystem == 'skeleton'
+            ? _skeletonModelUrl
+            : (_sex == 'male' ? _maleModelUrl : _femaleModelUrl),
         defaultZoom: 1.35,
         backgroundColor: const Color(0xFF07182C),
         selectionColor: const [0.20, 0.66, 1.0, 1.0],
@@ -446,7 +457,7 @@ class _StudentAnatomyLabScreenState extends State<StudentAnatomyLabScreen> {
     const SizedBox(height: 9),
     Row(children: [
       Expanded(child: _tool(Icons.search_rounded, 'Structure index',
-        'Browse all 147 entries', _openSearch)),
+        'Browse 242 bones and 147 body structures', _openSearch)),
       const SizedBox(width: 10),
       Expanded(child: _tool(Icons.quiz_rounded, 'Spotter practice',
         'Identify five structures', _startSpotter)),
@@ -486,7 +497,11 @@ class _AnatomySearchSheetState extends State<_AnatomySearchSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final results = anatomyCatalog.where((item) {
+    final combined = <Map<String, String>>[
+      ...detailedSkeletonCatalog,
+      ...anatomyCatalog.where((item) => item['system'] != 'skeleton'),
+    ];
+    final results = combined.where((item) {
       final matches = query.isEmpty ||
         item['label']!.toLowerCase().contains(query.toLowerCase()) ||
         item['key']!.toLowerCase().contains(query.toLowerCase());
