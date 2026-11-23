@@ -34,14 +34,13 @@ class LearningResourceService {
 
   /// Creates a learning resource.
   static Future<String> createResource({
-    required String yearId,
-    required String subjectId,
-    required String topicId,
+    String yearId = '',
+    String subjectId = '',
+    String topicId = '',
     required String title,
     required LearningResourceType type,
     String resourceUrl = '',
     String description = '',
-    String textContent = '',
     String textContent = '',
     String? thumbnailUrl,
     int displayOrder = 0,
@@ -50,10 +49,7 @@ class LearningResourceService {
   }) async {
     await _requireAdmin();
 
-    if (yearId.trim().isEmpty ||
-        subjectId.trim().isEmpty ||
-        topicId.trim().isEmpty ||
-        title.trim().isEmpty ||
+    if (title.trim().isEmpty ||
         (resourceUrl.trim().isEmpty && textContent.trim().isEmpty)) {
       throw ArgumentError(
         'Year, subject, topic, title and either a resource URL or text content are required.',
