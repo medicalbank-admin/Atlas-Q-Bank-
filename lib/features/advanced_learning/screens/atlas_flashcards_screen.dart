@@ -532,8 +532,20 @@ class _AtlasFlashcardsScreenState extends State<AtlasFlashcardsScreen> {
                           ),
                         ]),
                         const Spacer(),
-                        Text(revealed ? 'ANSWER' : 'QUESTION',
-                          style: const TextStyle(color: Color(0xFF8293A7), fontSize: 9, letterSpacing: 1.3, fontWeight: FontWeight.w900)),
+                        Row(children: [
+                          Text(revealed ? 'ANSWER' : 'QUESTION',
+                            style: const TextStyle(color: Color(0xFF8293A7), fontSize: 9, letterSpacing: 1.3, fontWeight: FontWeight.w900)),
+                          const Spacer(),
+                          if (mastered.contains(id)) Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                            decoration: BoxDecoration(color: const Color(0xFFDDF3E9), borderRadius: BorderRadius.circular(20)),
+                            child: const Row(mainAxisSize: MainAxisSize.min, children: [
+                              Icon(Icons.verified_rounded, color: Color(0xFF16856C), size: 13),
+                              SizedBox(width: 4),
+                              Text('MASTERED', style: TextStyle(color: Color(0xFF16856C), fontSize: 8, fontWeight: FontWeight.w900, letterSpacing: .6)),
+                            ]),
+                          ),
+                        ]),
                         const SizedBox(height: 14),
                         Text(revealed ? card.answer : card.question,
                           style: TextStyle(color: const Color(0xFF193653), fontSize: revealed ? 18 : 21,
