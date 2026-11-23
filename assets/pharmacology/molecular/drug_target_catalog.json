@@ -21,7 +21,8 @@
     "pubchem_name": "Lisinopril",
     "target": "Angiotensin-converting enzyme (ACE)",
     "uniprot": "P12821",
-    "organism": "Human"
+    "organism": "Human",
+    "experimental_complex_only": true
   },
   {
     "drug": "Furosemide",
@@ -87,7 +88,8 @@
     "pubchem_name": "Atorvastatin",
     "target": "HMG-CoA reductase (HMGCR)",
     "uniprot": "P04035",
-    "organism": "Human"
+    "organism": "Human",
+    "experimental_complex_only": true
   },
   {
     "drug": "Aspirin",
@@ -103,7 +105,8 @@
     "pubchem_name": "Apixaban",
     "target": "Coagulation factor Xa (F10)",
     "uniprot": "P00742",
-    "organism": "Human"
+    "organism": "Human",
+    "experimental_complex_only": true
   },
   {
     "drug": "Amiodarone",
@@ -240,7 +243,8 @@
     "pubchem_name": "Ibuprofen",
     "target": "Cyclo-oxygenase-1 (PTGS1)",
     "uniprot": "P23219",
-    "organism": "Human"
+    "organism": "Human",
+    "experimental_complex_only": true
   },
   {
     "drug": "Morphine",
@@ -297,7 +301,8 @@
     "pubchem_name": "Methotrexate",
     "target": "Dihydrofolate reductase (DHFR)",
     "uniprot": "P00374",
-    "organism": "Human"
+    "organism": "Human",
+    "experimental_complex_only": true
   },
   {
     "drug": "Nitroglycerin",
