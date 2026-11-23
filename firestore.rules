@@ -698,7 +698,13 @@ service cloud.firestore {
       allow read: if isAdmin() || (signedIn() && request.auth.uid == studentUid);
 
       allow create: if signedIn() &&
-        (isAdmin() || request.resource.data.studentUid == request.auth.uid) &&
+        (isAdmin() || (
+          request.resource.data.studentUid == request.auth.uid &&
+          request.resource.data.studentName ==
+            get(/databases/$(database)/documents/users/$(request.auth.uid)).data.fullName &&
+          request.resource.data.studentEmail ==
+            get(/databases/$(database)/documents/users/$(request.auth.uid)).data.email
+        )) &&
         request.resource.data.keys().hasAll([
           'studentUid', 'studentName', 'studentEmail', 'studentPhone',
           'studentUniversity', 'studentCountry', 'studentProfileImageUrl',
