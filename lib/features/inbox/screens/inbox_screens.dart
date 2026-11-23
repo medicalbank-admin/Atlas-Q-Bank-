@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -605,13 +606,29 @@ class _MessageBubble extends StatelessWidget {
   }
 }
 
-class _SecureInboxImage extends StatelessWidget {
+class _SecureInboxImage extends StatefulWidget {
   const _SecureInboxImage({required this.path});
   final String path;
-
+  @override
+  State<_SecureInboxImage> createState() => _SecureInboxImageState();
+}
+class _SecureInboxImageState extends State<_SecureInboxImage> {
+  late Future<Uint8List?> _imageFuture;
+  @override
+  void initState() {
+    super.initState();
+    _imageFuture = FirebaseStorage.instance.ref(widget.path).getData(8 * 1024 * 1024);
+  }
+  @override
+  void didUpdateWidget(covariant _SecureInboxImage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.path != widget.path) {
+      _imageFuture = FirebaseStorage.instance.ref(widget.path).getData(8 * 1024 * 1024);
+    }
+  }
   @override
   Widget build(BuildContext context) => FutureBuilder<Uint8List?>(
-    future: FirebaseStorage.instance.ref(path).getData(8 * 1024 * 1024),
+    future: _imageFuture,
     builder: (context, snapshot) {
       if (snapshot.hasError) return Container(width: 230, height: 100, color: const Color(0xFFE8EFF6), child: const Center(child: Icon(Icons.image_not_supported_outlined, color: Color(0xFF8195AA))));
       if (!snapshot.hasData) return Container(width: 230, height: 150, color: const Color(0xFFE8EFF6), child: const Center(child: CircularProgressIndicator(strokeWidth: 2)));
