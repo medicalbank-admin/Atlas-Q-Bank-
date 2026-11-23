@@ -29,6 +29,9 @@ class Interactive3d extends StatefulWidget {
   /// Path to the 3D model (.glb/.gltf) in the asset bundle.
   final String? modelPath;
 
+  /// Absolute local file path for a downloaded/cached model.
+  final String? modelFilePath;
+
   /// URL to download the 3D model (.glb/.gltf) from the network.
   final String? modelUrl;
 
@@ -125,6 +128,7 @@ class Interactive3d extends StatefulWidget {
   const Interactive3d({
     super.key,
     this.modelPath,
+    this.modelFilePath,
     this.modelUrl,
     this.iblPath,
     this.iblUrl,
@@ -339,7 +343,10 @@ class Interactive3dState extends State<Interactive3d> {
       Uint8List modelBytes;
       String modelName;
 
-      if (widget.modelPath != null) {
+      if (widget.modelFilePath != null) {
+        modelBytes = await File(widget.modelFilePath!).readAsBytes();
+        modelName = widget.modelFilePath!.split('/').last;
+      } else if (widget.modelPath != null) {
         final data = await rootBundle.load(widget.modelPath!);
         modelBytes = data.buffer.asUint8List();
         modelName = widget.modelPath!.split('/').last;
@@ -485,6 +492,7 @@ class Interactive3dState extends State<Interactive3d> {
     await _platform!.loadModel(
       textureId: _textureId!,
       modelPath: widget.modelPath,
+      modelFilePath: widget.modelFilePath,
       modelUrl: widget.modelUrl,
       resources: resources,
       preselectedEntities: widget.preselectedEntities,
