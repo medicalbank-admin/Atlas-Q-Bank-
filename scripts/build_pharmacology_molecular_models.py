@@ -21,7 +21,7 @@ STRUCTURES = {
     "dhfr_methotrexate": ("1U72", "MTX", "Human dihydrofolate reductase with methotrexate"),
     "adrb2_carazolol": ("2RH1", "CAU", "Beta-2 adrenergic receptor with carazolol"),
     "glp1r_semaglutide": ("7KI0", "", "Human GLP-1 receptor with experimentally bound semaglutide", "B"),
-    "rrna_azithromycin": ("1M1K", "ZIT", "Haloarcula marismortui 50S 23S rRNA with azithromycin", None, "K"),
+    "rrna_azithromycin": ("1M1K", "ZIT", "Haloarcula marismortui 50S 23S rRNA with azithromycin"),
     "rrna_gentamicin": ("2ET3", "LLL", "16S rRNA decoding A-site with gentamicin C1a"),
 }
 
