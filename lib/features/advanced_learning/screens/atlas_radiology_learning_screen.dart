@@ -84,12 +84,20 @@ class _RadiologyCaseScreenState extends State<_RadiologyCaseScreen>{
  Widget _imageUnavailable()=>Container(height:180,width:double.infinity,alignment:Alignment.center,padding:const EdgeInsets.all(18),decoration:BoxDecoration(color:const Color(0xFF203848),borderRadius:BorderRadius.circular(10)),child:const Column(mainAxisAlignment:MainAxisAlignment.center,children:[Icon(Icons.image_not_supported_outlined,color:Color(0xFF8DD1D4),size:34),SizedBox(height:9),Text('Verified clinical image is being curated for this diagnosis.',textAlign:TextAlign.center,style:TextStyle(color:Colors.white70,fontSize:11,height:1.5))]));
 }
 const Map<String,String> _verifiedRadiologyImages={
+ '01':'https://commons.wikimedia.org/wiki/Special:FilePath/X-ray_of_lobar_pneumonia.jpg?width=1400',
+ '02':'https://commons.wikimedia.org/wiki/Special:FilePath/Pleural_effusion.jpg?width=1400',
+ '03':'https://commons.wikimedia.org/wiki/Special:FilePath/Pneumothorax_CXR.jpg?width=1400',
+ '04':'https://commons.wikimedia.org/wiki/Special:FilePath/Chest_radiograph_with_signs_of_congestive_heart_failure_-_annotated.jpg?width=1400',
  '05':'https://openi.nlm.nih.gov/imgs/512/PMC3808860_kcj-43-632-g001.png',
  '27':'https://commons.wikimedia.org/wiki/Special:FilePath/Intracranial_bleed_with_significant_midline_shift.png?width=1400',
  '55':'https://commons.wikimedia.org/wiki/Special:FilePath/SWE_of_breast_cancer.jpg?width=1400',
 };
 const Map<String,String> _radiologyAttributions={
- '05':'Open-i / NLM. Chest X-ray showing cardiomegaly without pulmonary oedema; case report: dilated cardiomyopathy. Open-access literature image.',
+ '01':'Mikael Häggström, MD — Wikimedia Commons, CC0. Chest radiograph of right middle-lobe pneumonia.',
+ '02':'InvictaHOG — Wikimedia Commons. Pleural effusion chest radiograph; public-domain edits.',
+ '03':'Clinical Cases — Wikimedia Commons, CC BY-SA 2.5. Left pneumothorax chest radiograph.',
+ '04':'Wikimedia Commons. Chest radiograph demonstrating cardiomegaly, vascular congestion and Kerley B lines.',
+ '05':'Open-i / NLM. Chest X-ray showing cardiomegaly without pulmonary oedema; open-access literature image.',
  '27':'James Heilman, MD — Wikimedia Commons, CC BY-SA 3.0.',
  '55':'Sigrist et al. — Wikimedia Commons, CC BY 4.0.',
 };
