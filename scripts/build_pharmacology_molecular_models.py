@@ -91,18 +91,24 @@ def make_glb(atoms, out_path, title):
     accessors.append({"bufferView":idx_view,"componentType":5123,"count":len(inds),"type":"SCALAR"})
     materials, meshes, nodes = [], [], []
     element_keys = list(ELEMENTS)
-    for e in element_keys:
-        color, _ = ELEMENTS[e]
-        materials.append({"name":"Element "+e,"pbrMetallicRoughness":{
-            "baseColorFactor":color,"metallicFactor":0.05,"roughnessFactor":0.42}})
-        meshes.append({"name":"Atom "+e,"primitives":[{"attributes":{"POSITION":0},"indices":1,"material":len(materials)-1}]})
-    material_index = {e:i for i,e in enumerate(element_keys)}
+    material_index = {}
+    for ligand_flag in (False, True):
+        for e in element_keys:
+            color, _ = ELEMENTS[e]
+            if ligand_flag and e == "C":
+                color = [0.08, 0.78, 0.82, 1.0]
+            label = ("Ligand " if ligand_flag else "Protein ") + e
+            material_index[(e, ligand_flag)] = len(materials)
+            materials.append({"name":label,"pbrMetallicRoughness":{
+                "baseColorFactor":color,"metallicFactor":0.12 if ligand_flag else 0.02,
+                "roughnessFactor":0.28 if ligand_flag else 0.48}})
+            meshes.append({"name":"Atom "+label,"primitives":[{"attributes":{"POSITION":0},"indices":1,"material":len(materials)-1}]})
     for xyz, element, atom_name, residue, chain, is_ligand in atoms:
         el = element if element in ELEMENTS else "C"
         _, radius = ELEMENTS[el]
         nodes.append({
             "name":("%s_%s_%s_%s" % ("LIG" if is_ligand else "PRO", residue, chain, atom_name))[:60],
-            "mesh":material_index[el],
+            "mesh":material_index[(el, is_ligand)],
             "translation":[(xyz[i]-center[i])*scale for i in range(3)],
             "scale":[radius*scale*1.35]*3,
         })
