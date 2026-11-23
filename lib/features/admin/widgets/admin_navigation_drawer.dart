@@ -17,6 +17,7 @@ class AdminNavigationDrawer extends StatelessWidget {
   static const List<AdminNavigationItem> items = [
     AdminNavigationItem(title: 'Dashboard', icon: Icons.dashboard_rounded, route: 'dashboard'),
     AdminNavigationItem(title: 'Students', icon: Icons.people_alt_rounded, route: 'students'),
+    AdminNavigationItem(title: 'Student Inbox', icon: Icons.mark_chat_unread_rounded, route: 'inbox'),
     AdminNavigationItem(title: 'Academic Management', icon: Icons.school_rounded, route: 'academic'),
     AdminNavigationItem(title: 'Subscription Requests', icon: Icons.receipt_long_rounded, route: 'subscription_requests'),
     AdminNavigationItem(title: 'Learning Content', icon: Icons.library_books_rounded, route: 'content'),
