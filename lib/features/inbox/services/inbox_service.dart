@@ -355,17 +355,22 @@ class InboxService {
         'deliveredAt': null,
         'readAt': null,
       });
-      transaction.update(conversation, {
+      final conversationUpdate = <String, dynamic>{
         'lastMessage': preview,
         'lastMessageAt': now,
         'lastSenderUid': uid,
         'lastMessageId': message.id,
         'unreadForAdmin': fromAdmin ? 0 : FieldValue.increment(1),
         'unreadForStudent': fromAdmin ? FieldValue.increment(1) : 0,
-        'adminUid': fromAdmin ? uid : current.data()?['adminUid'],
-        'adminName': 'The Atlas Administrator',
         'updatedAt': now,
-      });
+      };
+      // Student writes must not touch administrator-owned metadata. Firestore
+      // security rules intentionally restrict student updates to message fields.
+      if (fromAdmin) {
+        conversationUpdate['adminUid'] = uid;
+        conversationUpdate['adminName'] = 'The Atlas Administrator';
+      }
+      transaction.update(conversation, conversationUpdate);
     });
   }
 
