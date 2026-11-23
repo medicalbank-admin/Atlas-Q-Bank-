@@ -242,6 +242,41 @@ def main():
             manifest[item_slug]["target_atom_count"]=record.get("atom_count")
             if record.get("error"):
                 manifest[item_slug]["target_structure_error"]=record["error"]
+    # Metronidazole damages microbial DNA through reactive reduction products;
+    # there is no single protein receptor. Show a clearly labelled reference
+    # B-DNA duplex rather than inventing a protein target or drug-bound pose.
+    try:
+        dna_pdb=get("https://files.rcsb.org/download/1BNA.pdb").decode("utf-8","replace")
+        dna_atoms=[]
+        for line in dna_pdb.splitlines():
+            if not line.startswith("ATOM  ") or len(line)<78:
+                continue
+            chain=line[21:22].strip() or "A"
+            if chain not in ("A","B"):
+                continue
+            element=line[76:78].strip().upper()
+            if element in ("H","D"):
+                continue
+            try:
+                xyz=(float(line[30:38]),float(line[38:46]),float(line[46:54]))
+            except ValueError:
+                continue
+            residue=line[17:20].strip()
+            seq=line[22:26].strip()+line[26:27].strip()
+            atom_name="%s_%s_%s_%s"%(residue,chain,seq,line[12:16].strip())
+            dna_atoms.append({"xyz":xyz,"element":element,"name":atom_name})
+        if not dna_atoms:
+            raise RuntimeError("Reference DNA PDB contained no atoms")
+        dna_path=os.path.join(ROOT,"targets","1BNA_reference_dna.glb")
+        os.makedirs(os.path.dirname(dna_path),exist_ok=True)
+        glb(dna_path,dna_atoms,[],"Reference B-DNA duplex (not drug-bound)")
+        if "metronidazole" in manifest:
+            manifest["metronidazole"]["target_asset"]=dna_path
+            manifest["metronidazole"]["target_structure_source"]="RCSB PDB 1BNA reference B-DNA duplex; not a drug-bound complex"
+            manifest["metronidazole"]["target_atom_count"]=len(dna_atoms)
+        print("TARGET DNA reference: %d heavy atoms -> %s"%(len(dna_atoms),dna_path))
+    except Exception as error:
+        print("Reference DNA model unavailable: %s"%error)
     with open(os.path.join(ROOT,"drug_manifest.json"),"w") as f: json.dump(manifest,f,indent=2)
     ready=sum(1 for v in manifest.values() if v.get("asset") or v.get("experimental_complex_only"))
     conformers=sum(1 for v in manifest.values() if v.get("asset"))
