@@ -911,7 +911,7 @@ Widget? _molecularStructureFor(_Drug drug) {
       return const AtlasMolecularStructureViewer(
         structureKey: 'dhfr_methotrexate',
         structureTitle: 'Dihydrofolate reductase + methotrexate',
-        pdbId: '4DFR', ligandName: 'Methotrexate', resolution: '1.90 Å',
+        pdbId: '4DFR', ligandName: 'Methotrexate', resolution: '1.70 Å',
         note: 'Experimental protein–inhibitor structure from the Protein Data Bank. Inspect the atom-level model by rotating and selecting atoms.',
       );
     default:
