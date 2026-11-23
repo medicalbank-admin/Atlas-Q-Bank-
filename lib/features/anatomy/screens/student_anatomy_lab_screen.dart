@@ -123,6 +123,31 @@ class _StudentAnatomyLabScreenState extends State<StudentAnatomyLabScreen> {
     } catch (_) {}
   }
 
+  Future<void> _markReviewed(String key) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+    try {
+      await FirebaseFirestore.instance.collection('anatomy_progress')
+          .doc('${uid}_$key').set({
+        'userId': uid,
+        'structureKey': key,
+        'reviewed': true,
+        'reviewedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Structure marked as reviewed.')),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Unable to save review progress.')),
+        );
+      }
+    }
+  }
+
   Map<String, String>? _nextTarget() {
     final source = _activeSystem == 'skeleton'
         ? detailedSkeletonCatalog
@@ -421,7 +446,7 @@ class _StudentAnatomyLabScreenState extends State<StudentAnatomyLabScreen> {
             if (published && (data['innervation'] ?? '').toString().isNotEmpty)
               _detail('INNERVATION', data['innervation'].toString()),
             Align(alignment: Alignment.centerRight, child: TextButton.icon(
-              onPressed: () => _recordView(item['key']!),
+              onPressed: () => _markReviewed(item['key']!),
               icon: const Icon(Icons.bookmark_added_outlined, size: 17),
               label: const Text('Mark reviewed'))),
           ]),
