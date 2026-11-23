@@ -207,33 +207,7 @@ class _DashboardAnnouncementWelcomeState
                     ],
                   ),
                 ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: LinearProgressIndicator(
-                          value: (_index + 1) / _reminders.length,
-                          minHeight: 4,
-                          backgroundColor: const Color(0xFFBDD4ED),
-                          valueColor: const AlwaysStoppedAnimation<Color>(
-                            Color(0xFF2563A6),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '${(_index + 1).toString().padLeft(2, '0')} / 40',
-                      style: const TextStyle(
-                        color: Color(0xFF5D7897),
-                        fontSize: 9,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ],
-                ),
+
               ],
             ),
           ),
