@@ -61,6 +61,15 @@ class _StudentAnatomyLabScreenState extends State<StudentAnatomyLabScreen> {
     _prepareActiveModel();
   }
 
+  Future<void> _retryModelLoad() async {
+    final path = _localModelPath;
+    if (path != null) {
+      final cached = File(path);
+      if (await cached.exists()) await cached.delete();
+    }
+    await _prepareActiveModel();
+  }
+
   Future<void> _prepareActiveModel() async {
     final token = ++_preparationToken;
     if (mounted) setState(() {
@@ -523,10 +532,8 @@ class _StudentAnatomyLabScreenState extends State<StudentAnatomyLabScreen> {
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.white70, fontSize: 11)),
             const SizedBox(height: 12),
-            FilledButton.tonal(onPressed: () => setState(() {
-              _modelReady = false;
-              _loadAttempt++;
-            }), child: const Text('Retry')),
+            FilledButton.tonal(onPressed: _retryModelLoad,
+              child: const Text('Download again')),
           ]),
         )),
       )) else Positioned.fill(child: Center(child: Text(
