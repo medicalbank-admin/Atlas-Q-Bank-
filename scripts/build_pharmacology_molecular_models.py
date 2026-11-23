@@ -18,7 +18,7 @@ STRUCTURES = {
     "hmgcr_atorvastatin": ("1HWK", "117", "HMG-CoA reductase with atorvastatin"),
     "cox1_ibuprofen": ("1EQG", "IBP", "Cyclo-oxygenase-1 with ibuprofen"),
     "factorxa_apixaban": ("2P16", "GG2", "Factor Xa with apixaban"),
-    "dhfr_methotrexate": ("4DFR", "MTX", "Dihydrofolate reductase with methotrexate"),
+    "dhfr_methotrexate": ("1U72", "MTX", "Human dihydrofolate reductase with methotrexate"),
     "adrb2_carazolol": ("2RH1", "CAU", "Beta-2 adrenergic receptor with carazolol"),
     "glp1r_semaglutide": ("7KI0", "", "Human GLP-1 receptor with experimentally bound semaglutide", "B"),
 }
