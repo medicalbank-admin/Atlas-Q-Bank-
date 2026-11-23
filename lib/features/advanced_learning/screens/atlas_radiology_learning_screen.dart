@@ -14,83 +14,12 @@ class _AtlasRadiologyLearningScreenState extends State<AtlasRadiologyLearningScr
  List<_Case> get visible=>_cases.where((c)=>(filter=='All'||filter==c.mod)&&(query.isEmpty||('${c.title} ${c.find} ${c.diag}').toLowerCase().contains(query.toLowerCase()))).toList();
  Future<void> _mark(_Case c)async{done.add(c.id);final p=await SharedPreferences.getInstance();await p.setStringList('atlas_radiology_done_v1',done.toList());if(mounted)setState((){});}
  @override Widget build(BuildContext context)=>Scaffold(backgroundColor:AtlasColors.ivory,appBar:AppBar(title:const Text('Radiology Learning Lab'),actions:[Center(child:Padding(padding:const EdgeInsets.only(right:16),child:Text('${done.length}/80',style:const TextStyle(color:AtlasColors.royalBlue,fontWeight:FontWeight.w900))))]),body:loading?const Center(child:CircularProgressIndicator()):Column(children:[
- Container(margin:const EdgeInsets.fromLTRB(16,8,16,12),padding:const EdgeInsets.all(17),decoration:BoxDecoration(gradient:const LinearGradient(colors:[Color(0xFF174B68),Color(0xFF287F99),Color(0xFF53B2B5)]),borderRadius:BorderRadius.circular(21)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[const Row(children:[Icon(Icons.image_search_rounded,color:Colors.white,size:30),SizedBox(width:10),Expanded(child:Text('SEE THE FINDING.\nBUILD THE DIFFERENTIAL.',style:TextStyle(color:Colors.white,fontSize:14,fontWeight:FontWeight.w900,height:1.5)))]),const SizedBox(height:13),ClipRRect(borderRadius:BorderRadius.circular(8),child:LinearProgressIndicator(value:done.length/80,minHeight:7,backgroundColor:Colors.white24,valueColor:const AlwaysStoppedAnimation<Color>(Colors.white))),const SizedBox(height:6),Text('${done.length} cases reviewed • ${80-done.length} to explore',style:const TextStyle(color:Colors.white,fontSize:10,fontWeight:FontWeight.w700))])),
- Padding(padding:const EdgeInsets.fromLTRB(16,0,16,9),child:TextField(onChanged:(v)=>setState(()=>query=v),decoration:InputDecoration(hintText:'Search modality, finding or diagnosis',prefixIcon:const Icon(Icons.search_rounded),filled:true,fillColor:Colors.white,border:OutlineInputBorder(borderRadius:BorderRadius.circular(14),borderSide:BorderSide.none)))),
- SizedBox(height:40,child:ListView(scrollDirection:Axis.horizontal,padding:const EdgeInsets.symmetric(horizontal:16),children:filters.map((f)=>Padding(padding:const EdgeInsets.only(right:7),child:ChoiceChip(label:Text(f),selected:filter==f,onSelected:(_)=>setState(()=>filter=f),selectedColor:AtlasColors.navy,labelStyle:TextStyle(color:filter==f?Colors.white:AtlasColors.charcoal,fontSize:10,fontWeight:FontWeight.w700)))).toList())),
- const SizedBox(height:5),Expanded(child:visible.isEmpty?const Center(child:Text('No imaging cases match your search.')):ListView.builder(padding:const EdgeInsets.fromLTRB(16,4,16,22),itemCount:visible.length,itemBuilder:(ctx,i){final c=visible[i];final checked=done.contains(c.id);return Card(elevation:0,color:Colors.white,margin:const EdgeInsets.only(bottom:9),shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(15),side:const BorderSide(color:Color(0xFFE0EAF1))),child:ListTile(contentPadding:const EdgeInsets.symmetric(horizontal:13,vertical:5),leading:Container(width:44,height:44,decoration:BoxDecoration(color:const Color(0xFFE6F3F5),borderRadius:BorderRadius.circular(12)),child:Icon(c.mod=='X-ray'?Icons.photo_camera_back_rounded:c.mod=='CT'?Icons.view_in_ar_rounded:c.mod=='MRI'?Icons.blur_on_rounded:Icons.waves_rounded,color:const Color(0xFF236C83))),title:Text(c.title,style:const TextStyle(color:AtlasColors.navy,fontSize:12,fontWeight:FontWeight.w900)),subtitle:Text('CASE ${c.id} • ${c.mod}',style:const TextStyle(color:AtlasColors.secondaryText,fontSize:10)),trailing:Icon(checked?Icons.check_circle_rounded:Icons.arrow_forward_ios_rounded,color:checked?AtlasColors.success:AtlasColors.secondaryText,size:18),onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>_Detail(c:c,onComplete:()=>_mark(c))))));})),
- ]));
-}
-class _Case{final String id,mod,title,find,diag;const _Case(this.id,this.mod,this.title,this.find,this.diag);}
-class _Detail extends StatefulWidget{final _Case c;final Future<void> Function() onComplete;const _Detail({required this.c,required this.onComplete});@override State<_Detail> createState()=>_DetailState();}
-class _DetailState extends State<_Detail>{bool reveal=false,saving=false;@override Widget build(BuildContext context){final c=widget.c;return Scaffold(backgroundColor:AtlasColors.ivory,appBar:AppBar(title:Text('Imaging Case ${c.id}')),body:ListView(padding:const EdgeInsets.all(16),children:[
- Container(padding:const EdgeInsets.all(18),decoration:BoxDecoration(gradient:const LinearGradient(colors:[Color(0xFF174B68),Color(0xFF287F99)]),borderRadius:BorderRadius.circular(19)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(c.mod.toUpperCase(),style:const TextStyle(color:Colors.white70,fontSize:10,letterSpacing:1.2,fontWeight:FontWeight.w900)),const SizedBox(height:7),Text(c.title,style:const TextStyle(color:Colors.white,fontWeight:FontWeight.w900,fontSize:18)),const SizedBox(height:7),const Text('SYSTEMATIC IMAGE REVIEW',style:TextStyle(color:Colors.white70,fontWeight:FontWeight.w800,fontSize:9,letterSpacing:1))])),
- const SizedBox(height:12),Container(padding:const EdgeInsets.all(16),decoration:BoxDecoration(color:const Color(0xFF172A3A),borderRadius:BorderRadius.circular(18)),child:Column(children:[Row(children:[Icon(Icons.image_search_rounded,color:Color(0xFF8DD1D4)),SizedBox(width:8),Text(c.id=='01'?'REAL CLINICAL CHEST RADIOGRAPH':'SCHEMATIC TEACHING VISUAL',style:TextStyle(color:Colors.white,fontSize:10,fontWeight:FontWeight.w900))]),const SizedBox(height:14),if(c.id=='01') ClipRRect(borderRadius:BorderRadius.circular(10),child:Image.network('https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/X-ray_of_lobar_pneumonia.jpg/1280px-X-ray_of_lobar_pneumonia.jpg',height:220,width:double.infinity,fit:BoxFit.contain,errorBuilder:(_,__,___)=>SizedBox(height:150,width:double.infinity,child:CustomPaint(painter:_ScanPainter(c.mod,c.id))))) else SizedBox(height:150,width:double.infinity,child:CustomPaint(painter:_ScanPainter(c.mod,c.id))),const SizedBox(height:10),Text(c.id=='01'?'Real chest radiograph: lobar pneumonia. Source: Wikimedia Commons.':'Illustrative schematic only — not an actual patient scan or diagnostic radiograph.',textAlign:TextAlign.center,style:TextStyle(color:Color(0xFFB8C8D3),fontSize:9))])),
+ Container(margin:const EdgeInsets.fromLTRB(16,8,16,12),padding:const EdgeInsets.all(17),decoration:BoxDecoration(gradient:const LinearGradient(colors:[Color(0xFF174B68),Color(0xFF287F99),Color(0xFF53B2B5)]),borderRadius:BorderRadius.circular(21)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[const Row(children:[Icon(Icons.image_search_rounded,color:Color(0xFF8DD1D4)),SizedBox(width:8),Text((c.id=='27'||c.id=='55')?'REAL CLINICAL CASE IMAGE':'REAL CASE IMAGE NOT YET PUBLISHED',style:TextStyle(color:Colors.white,fontSize:10,fontWeight:FontWeight.w900))]),const SizedBox(height:14),if(c.id=='27'||c.id=='55') ClipRRect(borderRadius:BorderRadius.circular(10),child:Image.network(c.id=='27'?'https://commons.wikimedia.org/wiki/Special:FilePath/Intracranial_bleed_with_significant_midline_shift.png?width=1400':'https://commons.wikimedia.org/wiki/Special:FilePath/SWE_of_breast_cancer.jpg?width=1400',height:240,width:double.infinity,fit:BoxFit.contain,errorBuilder:(_,__,___)=>Container(height:120,alignment:Alignment.center,color:const Color(0xFF203848),child:const Text('Clinical image could not be loaded. Check internet connection.',textAlign:TextAlign.center,style:TextStyle(color:Colors.white70,fontSize:11))))) else Container(height:120,alignment:Alignment.center,padding:const EdgeInsets.all(12),decoration:BoxDecoration(color:const Color(0xFF203848),borderRadius:BorderRadius.circular(10)),child:const Text('A verified real scan for this diagnosis is still being curated. No schematic illustration is shown.',textAlign:TextAlign.center,style:TextStyle(color:Colors.white70,fontSize:11,height:1.5))),const SizedBox(height:10),Text(c.id=='27'?'Real CT brain image showing intracranial haemorrhage and significant midline shift. James Heilman, MD — CC BY-SA 3.0.':c.id=='55'?'Real breast ultrasound and shear-wave elastography case showing biopsy-confirmed ductal adenocarcinoma. Sigrist et al. — CC BY 4.0.':'Only verified clinical images will be displayed; schematic illustrations have been removed.',textAlign:TextAlign.center,style:TextStyle(color:Color(0xFFB8C8D3),fontSize:9))])),
  const SizedBox(height:12),_Panel(title:'YOUR TASK',body:'Identify the modality and anatomical region. Describe the dominant abnormality, its location and distribution, then build a focused differential before revealing the teaching answer.'),
  const SizedBox(height:10),if(!reveal)FilledButton.icon(style:FilledButton.styleFrom(backgroundColor:const Color(0xFF236C83),padding:const EdgeInsets.symmetric(vertical:14)),onPressed:()=>setState(()=>reveal=true),icon:const Icon(Icons.visibility_rounded),label:const Text('Reveal findings & interpretation'))else ...[_Panel(title:'KEY IMAGING FINDINGS',body:c.find),const SizedBox(height:9),_Panel(title:'MOST LIKELY INTERPRETATION',body:c.diag),const SizedBox(height:12),FilledButton(style:FilledButton.styleFrom(backgroundColor:const Color(0xFF087D78),padding:const EdgeInsets.symmetric(vertical:14)),onPressed:saving?null:()async{setState(()=>saving=true);await widget.onComplete();if(mounted)Navigator.pop(context);},child:Text(saving?'Saving...':'Mark case reviewed'))],
  const SizedBox(height:14),const Text('Educational content only. Review original imaging and formal reports for clinical decisions.',textAlign:TextAlign.center,style:TextStyle(color:AtlasColors.secondaryText,fontSize:10,height:1.5))
  ]));}}
 class _Panel extends StatelessWidget{final String title,body;const _Panel({required this.title,required this.body});@override Widget build(BuildContext context)=>Container(width:double.infinity,padding:const EdgeInsets.all(14),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(15),border:Border.all(color:const Color(0xFFE0EAF1))),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(title,style:const TextStyle(color:AtlasColors.navy,fontSize:10,letterSpacing:.8,fontWeight:FontWeight.w900)),const SizedBox(height:8),Text(body,style:const TextStyle(color:AtlasColors.charcoal,fontSize:13,height:1.55))]));}
-class _ScanPainter extends CustomPainter {
-  final String mod;
-  final String id;
-  const _ScanPainter(this.mod, this.id);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    canvas.drawRect(Offset.zero & size, Paint()..color = const Color(0xFF0C1B27));
-    final outline = Paint()
-      ..color = const Color(0xFF9DB6C5)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
-    final shade = Paint()
-      ..color = const Color(0xFF6E8796).withValues(alpha: 0.32);
-    final cx = size.width / 2;
-    final cy = size.height / 2;
-
-    if (mod == 'X-ray' || mod == 'CT') {
-      canvas.drawOval(Rect.fromCenter(center: Offset(cx, cy), width: size.width * 0.64, height: size.height * 0.92), outline);
-      canvas.drawLine(Offset(cx, cy - size.height * 0.42), Offset(cx, cy + size.height * 0.42), outline);
-      for (var i = 0; i < 6; i++) {
-        final yy = cy - size.height * 0.30 + i * size.height * 0.12;
-        canvas.drawArc(Rect.fromCenter(center: Offset(cx - size.width * 0.13, yy), width: size.width * 0.34, height: size.height * 0.13), 3.14, 3.14, false, outline);
-        canvas.drawArc(Rect.fromCenter(center: Offset(cx + size.width * 0.13, yy), width: size.width * 0.34, height: size.height * 0.13), 0, 3.14, false, outline);
-      }
-      canvas.drawOval(Rect.fromCenter(center: Offset(cx - size.width * 0.15, cy), width: size.width * 0.20, height: size.height * 0.62), shade);
-      canvas.drawOval(Rect.fromCenter(center: Offset(cx + size.width * 0.15, cy), width: size.width * 0.20, height: size.height * 0.62), shade);
-    } else if (mod == 'Ultrasound') {
-      final sector = Path()
-        ..moveTo(cx, cy - size.height * 0.45)
-        ..lineTo(cx - size.width * 0.42, cy + size.height * 0.42)
-        ..lineTo(cx + size.width * 0.42, cy + size.height * 0.42)
-        ..close();
-      canvas.drawPath(sector, shade);
-      for (var i = 0; i < 12; i++) {
-        final yy = cy - size.height * 0.28 + i * size.height * 0.06;
-        canvas.drawLine(Offset(cx - size.width * 0.28, yy), Offset(cx + size.width * 0.28, yy), Paint()..color = Colors.white24..strokeWidth = 1);
-      }
-      canvas.drawOval(Rect.fromCenter(center: Offset(cx, cy), width: size.width * 0.24, height: size.height * 0.20), outline);
-    } else {
-      canvas.drawOval(Rect.fromCenter(center: Offset(cx, cy), width: size.width * 0.68, height: size.height * 0.92), shade);
-      for (var i = 0; i < 4; i++) {
-        canvas.drawOval(Rect.fromCenter(center: Offset(cx, cy), width: size.width * (0.22 + i * 0.12), height: size.height * (0.28 + i * 0.18)), outline);
-      }
-    }
-
-    final marker = Paint()
-      ..color = const Color(0xFF65D5C9)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
-    final seed = int.parse(id);
-    final px = size.width * (0.58 + (seed % 5) * 0.035);
-    final py = size.height * (0.34 + (seed % 4) * 0.07);
-    canvas.drawCircle(Offset(px, py), 7, marker);
-    canvas.drawLine(Offset(px - 12, py), Offset(px + 12, py), marker);
-    canvas.drawLine(Offset(px, py - 12), Offset(px, py + 12), marker);
-  }
-
-  @override
-  bool shouldRepaint(covariant _ScanPainter old) => old.mod != mod || old.id != id;
-}
 const List<_Case> _cases=[
   _Case('01','X-ray','Lobar pneumonia','Air-space opacity with air bronchograms confined to one lobe','Lobar consolidation'),
   _Case('02','X-ray','Pleural effusion','Meniscus-shaped basal opacity and blunted costophrenic angle','Pleural fluid'),
