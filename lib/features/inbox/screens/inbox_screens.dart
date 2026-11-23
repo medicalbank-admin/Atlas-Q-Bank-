@@ -597,7 +597,7 @@ class _MessageBubble extends StatelessWidget {
             Text(time, style: const TextStyle(color: Color(0xFF7C8FA3), fontSize: 9)),
             if (mine) ...[
               const SizedBox(width: 5),
-              Icon(read ? Icons.done_all_rounded : Icons.done_rounded, size: 15, color: read ? _inboxBlue : (delivered ? const Color(0xFF6387AC) : const Color(0xFF9AAABC))),
+              Icon((read || delivered) ? Icons.done_all_rounded : Icons.done_rounded, size: 15, color: read ? _inboxBlue : (delivered ? const Color(0xFF6387AC) : const Color(0xFF9AAABC))),
             ],
           ]),
         ]),
