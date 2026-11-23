@@ -86,8 +86,8 @@ class _AtlasMolecularStructureViewerState
           _interactionLabel = phase == 0
               ? 'Drug ligand: co-crystallised pose'
               : phase == 1
-                  ? 'Receptor: atoms within 4.2 Å of ligand'
-                  : 'Ligand–binding-site contact network';
+                  ? 'Target atoms within 4.2 Å of ligand'
+                  : 'Ligand–target contact network';
         });
       });
   }
@@ -197,7 +197,7 @@ class _AtlasMolecularStructureViewerState
             const SizedBox(height: 5),
             const Wrap(spacing: 12, runSpacing: 5, children: [
               _AtomLegend(color: Color(0xFF73DDE1), label: 'Co-crystallised ligand carbon'),
-              _AtomLegend(color: Color(0xFFB5C0CD), label: 'Protein carbon'),
+              _AtomLegend(color: Color(0xFFB5C0CD), label: 'Target macromolecule carbon'),
               _AtomLegend(color: Color(0xFF4779E8), label: 'Nitrogen'),
               _AtomLegend(color: Color(0xFFE34B46), label: 'Oxygen'),
             ]),
