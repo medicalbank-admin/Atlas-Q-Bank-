@@ -147,7 +147,7 @@ class _StudentAnatomyLabScreenState extends State<StudentAnatomyLabScreen> {
     return null;
   }
 
-  List<String> _names(String system) => (system == 'skeleton'
+  List<String> _names(String system) => (system == 'skeleton' && _activeSystem == 'skeleton'
       ? detailedSkeletonCatalog
       : anatomyCatalog.where((item) => item['system'] == system))
       .map((item) => item['key']!)
@@ -677,7 +677,7 @@ class _StudentAnatomyLabScreenState extends State<StudentAnatomyLabScreen> {
     const SizedBox(height: 9),
     Row(children: [
       Expanded(child: _tool(Icons.search_rounded, 'Structure index',
-        'Browse 242 skeletal parts + 147 body structures', _openSearch)),
+        'Browse 389 skeletal and body structures', _openSearch)),
       const SizedBox(width: 10),
       Expanded(child: _tool(Icons.quiz_rounded, 'Spotter practice',
         'Identify five structures', _startSpotter)),
@@ -719,7 +719,7 @@ class _AnatomySearchSheetState extends State<_AnatomySearchSheet> {
   Widget build(BuildContext context) {
     final combined = <Map<String, String>>[
       ...detailedSkeletonCatalog,
-      ...anatomyCatalog.where((item) => item['system'] != 'skeleton'),
+      ...anatomyCatalog,
     ];
     final results = combined.where((item) {
       final matches = query.isEmpty ||
