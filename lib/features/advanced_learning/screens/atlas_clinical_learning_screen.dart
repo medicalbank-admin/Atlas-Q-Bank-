@@ -248,6 +248,12 @@ class _CasePanel extends StatelessWidget {
 class _Q {
   final String system, stem, a, b, c, d, explanation; final int answer;
   const _Q(this.system, this.stem, this.a, this.b, this.c, this.d, this.answer, this.explanation);
+  _Q shuffledOptions(Random random) {
+    final options = [a, b, c, d];
+    final correctText = options[answer];
+    options.shuffle(random);
+    return _Q(system, stem, options[0], options[1], options[2], options[3], options.indexOf(correctText), explanation);
+  }
 }
 const _bank = <_Q>[
 _Q('Cardiology','Inferior STEMI with hypotension, raised JVP and clear lungs after nitrate suggests which complication?','Acute mitral regurgitation','Right ventricular infarction','Ventricular septal rupture','Papillary muscle rupture',1,'Right ventricular infarction is preload dependent; nitrates can reduce venous return and cause hypotension.'),
@@ -367,7 +373,8 @@ class _QuizScreenState extends State<_QuizScreen> {
   List<String> get systems => ['All systems', ..._bank.map((q) => q.system).toSet().toList()..sort()];
   List<_Q> get pool => _bank.where((q) => system == 'All systems' || q.system == system).toList();
   void begin() {
-    questions = [...pool]..shuffle(Random());
+    final random = Random();
+    questions = pool.map((q) => q.shuffledOptions(random)).toList()..shuffle(random);
     questions = questions.take(min(amount, questions.length)).toList();
     selected.clear(); done = false; seconds = questions.length * 75; timer?.cancel();
     timer = Timer.periodic(const Duration(seconds: 1), (t) {
