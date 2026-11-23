@@ -51,7 +51,7 @@ class AtlasPremiumLearningHomeSection extends StatelessWidget {
       title: 'Radiology Lab',
       subtitle: 'Learn through diagnostic images',
       count: '80+ IMAGE CASES',
-      icon: Icons radiology_rounded,
+      icon: Icons.image_search_rounded,
       colors: [Color(0xFF236C83), Color(0xFF48A2B5)],
       description: 'Image-led diagnostic learning using labelled findings, structured reporting, differential diagnoses and case explanations.',
       topics: ['Chest and musculoskeletal X-rays', 'CT and MRI cases', 'Ultrasound and abdominal imaging', 'Normal anatomy and pathology'],
