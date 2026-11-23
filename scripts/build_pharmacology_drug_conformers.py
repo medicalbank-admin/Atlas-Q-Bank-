@@ -196,7 +196,7 @@ def main():
     target_cache={}
     for item in catalog:
         accession=item.get("uniprot")
-        if not accession:
+        if not accession or item.get("experimental_complex_only"):
             continue
         if accession not in target_cache:
             try:
