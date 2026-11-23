@@ -70,6 +70,8 @@ class _StudentAnatomyLabScreenState extends State<StudentAnatomyLabScreen> {
         _visibleSystems.add(system);
       }
       _activeSystem = system;
+      _selectedKey = null;
+      _quizTarget = null;
     });
     await _applyLayers();
   }
