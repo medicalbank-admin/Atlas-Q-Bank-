@@ -225,7 +225,7 @@ class AtlasFlashcardsScreen extends StatefulWidget {
 class _AtlasFlashcardsScreenState extends State<AtlasFlashcardsScreen> {
   String subject = 'All';
   int index = 0;
-  bool revealed = false, bookmarksOnly = false;
+  bool revealed = false, bookmarksOnly = false, reversed = false;
   final Set<int> bookmarks = {};
   final Set<int> mastered = {};
   final Set<int> review = {};
@@ -237,7 +237,7 @@ class _AtlasFlashcardsScreenState extends State<AtlasFlashcardsScreen> {
       if (bookmarksOnly && !bookmarks.contains(i)) continue;
       ids.add(i);
     }
-    return ids;
+    return reversed ? ids.reversed.toList() : ids;
   }
 
   List<String> get subjects => ['All', ...{for (final c in atlasFlashcards) c.subject}];
@@ -265,7 +265,7 @@ class _AtlasFlashcardsScreenState extends State<AtlasFlashcardsScreen> {
           ),
           IconButton(
             tooltip: 'Shuffle cards',
-            onPressed: () => setState(() { ids.shuffle(); index = 0; revealed = false; }),
+            onPressed: () => setState(() { reversed = !reversed; index = 0; revealed = false; }),
             icon: const Icon(Icons.shuffle_rounded),
           ),
         ],
