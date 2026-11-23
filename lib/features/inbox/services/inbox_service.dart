@@ -91,6 +91,7 @@ class InboxService {
       'lastMessage': '',
       'lastMessageAt': FieldValue.serverTimestamp(),
       'lastSenderUid': '',
+      'lastMessageId': '',
       'unreadForStudent': 0,
       'unreadForAdmin': 0,
       'createdAt': FieldValue.serverTimestamp(),
