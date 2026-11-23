@@ -143,127 +143,106 @@ class AdminDashboardScreen extends StatelessWidget {
     );
   }
   Widget _buildHeader(BuildContext context) {
-    return Row(
-      children: [
-        const AtlasLogo(size: 78),
-        /*
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [AtlasColors.navy, AtlasColors.royalBlue],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 430;
+        return Row(
+          children: [
+            AtlasLogo(size: compact ? 36 : 56),
+            const Spacer(),
+            InkWell(
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => const ProfileScreen(isAdmin: true),
+              )),
+              borderRadius: BorderRadius.circular(30),
+              child: StreamBuilder(
+                stream: FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(FirebaseAuth.instance.currentUser?.uid)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  final photo = (snapshot.data?.data()?['profileImageUrl'] ??
+                      FirebaseAuth.instance.currentUser?.photoURL ?? '').toString();
+                  final name = (snapshot.data?.data()?['fullName'] ??
+                      FirebaseAuth.instance.currentUser?.displayName ?? '').toString();
+                  return CircleAvatar(
+                    radius: compact ? 18 : 22,
+                    backgroundColor: AtlasColors.paleBlue,
+                    backgroundImage: photo.isNotEmpty ? NetworkImage(photo) : null,
+                    child: photo.isEmpty
+                        ? Text(name.isNotEmpty ? name[0].toUpperCase() : 'A',
+                            style: const TextStyle(
+                                color: AtlasColors.navy, fontWeight: FontWeight.w900))
+                        : null,
+                  );
+                },
+              ),
             ),
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: AtlasColors.navy.withValues(alpha: 0.15),
-                blurRadius: 12,
-                offset: const Offset(0, 5),
-              ),
-            ],
-          ),
-          child: const Icon(
-            Icons.school_rounded,
-            color: AtlasColors.champagne,
-            size: 27,
-          ),
-        ),
-        */
-        const SizedBox(width: 12),
-        const Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'The Atlas\nAcademy',
-                style: TextStyle(
-                  color: AtlasColors.navy,
-                  fontFamily: 'Georgia',
-                  fontSize: 24,
-                  height: 1.0,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              SizedBox(height: 4),
-              Text(
-                'ADMIN WORKSPACE',
-                style: TextStyle(
-                  color: AtlasColors.secondaryText,
-                  fontSize: 9,
-                  letterSpacing: 1.2,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
-        ),
-        InkWell(
-          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ProfileScreen(isAdmin: true))),
-          borderRadius: BorderRadius.circular(30),
-          child: StreamBuilder(
-            stream: FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser?.uid).snapshots(),
-            builder: (context, snapshot) {
-              final photo = (snapshot.data?.data()?['profileImageUrl'] ?? FirebaseAuth.instance.currentUser?.photoURL ?? '').toString();
-              final name = (snapshot.data?.data()?['fullName'] ?? FirebaseAuth.instance.currentUser?.displayName ?? '').toString();
-              return CircleAvatar(
-                radius: 22,
-                backgroundColor: AtlasColors.paleBlue,
-                backgroundImage: photo.isNotEmpty ? NetworkImage(photo) : null,
-                child: photo.isEmpty ? Text(name.isNotEmpty ? name[0].toUpperCase() : 'A', style: const TextStyle(color: AtlasColors.navy, fontWeight: FontWeight.w900)) : null,
-              );
-            },
-          ),
-        ),
-        const SizedBox(width: 8),
-        StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-          stream: FirebaseFirestore.instance.collection('inbox_conversations')
-              .where('unreadForAdmin', isGreaterThan: 0).snapshots(),
-          builder: (context, snapshot) {
-            final count = snapshot.data?.docs.fold<int>(0, (total, doc) =>
-                total + ((doc.data()['unreadForAdmin'] as num?)?.toInt() ?? 0)) ?? 0;
-            return Stack(clipBehavior: Clip.none, children: [
-              IconButton(
-                tooltip: 'Student Inbox',
-                onPressed: () => Navigator.of(context).push(MaterialPageRoute(
-                  builder: (_) => const AdminInboxScreen(),
+            SizedBox(width: compact ? 2 : 8),
+            StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+              stream: FirebaseFirestore.instance.collection('inbox_conversations')
+                  .where('unreadForAdmin', isGreaterThan: 0).snapshots(),
+              builder: (context, snapshot) {
+                final count = snapshot.data?.docs.fold<int>(0, (total, doc) =>
+                    total + ((doc.data()['unreadForAdmin'] as num?)?.toInt() ?? 0)) ?? 0;
+                return Stack(clipBehavior: Clip.none, children: [
+                  IconButton(
+                    constraints: compact
+                        ? const BoxConstraints.tightFor(width: 38, height: 42)
+                        : null,
+                    padding: compact ? EdgeInsets.zero : null,
+                    tooltip: 'Student Inbox',
+                    onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                      builder: (_) => const AdminInboxScreen(),
+                    )),
+                    icon: const Icon(Icons.forum_rounded,
+                        color: AtlasColors.royalBlue, size: 24),
+                  ),
+                  if (count > 0)
+                    Positioned(right: 0, top: 0, child: Container(
+                      constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      alignment: Alignment.center,
+                      decoration: const BoxDecoration(
+                          color: AtlasColors.error, shape: BoxShape.circle),
+                      child: Text(count > 99 ? '99+' : '$count',
+                          style: const TextStyle(color: Colors.white,
+                              fontSize: 9, fontWeight: FontWeight.w900)),
+                    )),
+                ]);
+              },
+            ),
+            PopupMenuButton<String>(
+              padding: compact ? EdgeInsets.zero : const EdgeInsets.all(8),
+              constraints: compact
+                  ? const BoxConstraints.tightFor(width: 38, height: 42)
+                  : null,
+              tooltip: 'Notifications and account',
+              icon: const Icon(Icons.notifications_none_rounded, size: 24),
+              color: Colors.white,
+              onSelected: (value) {
+                if (value == 'notifications') {
+                  Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => const AdminNotificationsScreen(),
+                  ));
+                } else if (value == 'signout') {
+                  _confirmSignOut(context);
+                }
+              },
+              itemBuilder: (context) => const [
+                PopupMenuItem(value: 'notifications', child: ListTile(
+                  dense: true, leading: Icon(Icons.notifications_none_rounded),
+                  title: Text('Notifications'),
                 )),
-                icon: const Icon(Icons.forum_rounded, color: AtlasColors.royalBlue, size: 25),
-              ),
-              if (count > 0)
-                Positioned(right: 0, top: 0, child: Container(
-                  constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  alignment: Alignment.center,
-                  decoration: const BoxDecoration(color: AtlasColors.error, shape: BoxShape.circle),
-                  child: Text(count > 99 ? '99+' : '$count',
-                    style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w900)),
+                PopupMenuItem(value: 'signout', child: ListTile(
+                  dense: true, leading: Icon(Icons.logout_rounded),
+                  title: Text('Sign Out'),
                 )),
-            ]);
-          },
-        ),
-        PopupMenuButton<String>(
-          tooltip: 'Notifications and account',
-          icon: const Icon(Icons.notifications_none_rounded, size: 25),
-          color: Colors.white,
-          onSelected: (value) {
-            if (value == 'notifications') {
-              Navigator.of(context).push(MaterialPageRoute(
-                builder: (_) => const AdminNotificationsScreen(),
-              ));
-            } else if (value == 'signout') {
-              _confirmSignOut(context);
-            }
-          },
-          itemBuilder: (context) => const [
-            PopupMenuItem(value: 'notifications', child: ListTile(
-              dense: true, leading: Icon(Icons.notifications_none_rounded),
-              title: Text('Notifications'),
-            )),
-            PopupMenuItem(value: 'signout', child: ListTile(
-              dense: true, leading: Icon(Icons.logout_rounded),
-              title: Text('Sign Out'),
-            )),
+              ],
+            ),
           ],
-        ),
-      ],
+        );
+      },
     );
   }
   Widget _buildWelcomeBanner(String email) {
