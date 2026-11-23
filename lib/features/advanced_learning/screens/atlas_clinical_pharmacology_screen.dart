@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/atlas_academy_app.dart';
+import '../widgets/atlas_molecular_mechanism_diagram.dart';
 
 class AtlasClinicalPharmacologyScreen extends StatefulWidget {
   const AtlasClinicalPharmacologyScreen({super.key});
@@ -946,14 +947,21 @@ class _DrugDetailScreen extends StatelessWidget {
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(drug.moa, style: const TextStyle(color: AtlasColors.charcoal,
             fontSize: 13, height: 1.65)),
-          const SizedBox(height: 16),
-          const Text('MOLECULAR-TO-CLINICAL PATHWAY',
+          const SizedBox(height: 14),
+          AtlasMolecularMechanismDiagram(
+            drugName: drug.name,
+            className: drug.className,
+            steps: drug.steps,
+          ),
+          const SizedBox(height: 14),
+          const Text('DETAILED MECHANISM SEQUENCE',
             style: TextStyle(color: AtlasColors.royalBlue, fontSize: 9,
               letterSpacing: .8, fontWeight: FontWeight.w900)),
-          const SizedBox(height: 11),
+          const SizedBox(height: 10),
           ...drug.steps.asMap().entries.map((entry) => _MechanismStep(
             number: entry.key + 1, text: entry.value,
             isLast: entry.key == drug.steps.length - 1)),
+        ])),
         ])),
       _SectionCard(title: 'INDICATIONS & CLINICAL USES',
         icon: Icons.medical_services_outlined, text: drug.indications),
