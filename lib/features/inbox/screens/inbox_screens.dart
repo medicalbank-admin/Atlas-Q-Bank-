@@ -2,7 +2,6 @@ import 'dart:typed_data';
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -457,7 +456,7 @@ class _InboxChatScreenState extends State<InboxChatScreen> {
               itemBuilder: (context, index) {
                 final data = docs[index].data();
                 final mine = data['senderUid'] == FirebaseAuth.instance.currentUser?.uid;
-                return _MessageBubble(data: data, mine: mine);
+                return _MessageBubble(data: data, mine: mine, messageId: docs[index].id, studentUid: widget.studentUid, service: _service);
               },
             );
           },
@@ -561,9 +560,18 @@ class _InboxChatScreenState extends State<InboxChatScreen> {
 }
 
 class _MessageBubble extends StatelessWidget {
-  const _MessageBubble({required this.data, required this.mine});
+  const _MessageBubble({
+    required this.data,
+    required this.mine,
+    required this.messageId,
+    required this.studentUid,
+    required this.service,
+  });
   final Map<String, dynamic> data;
   final bool mine;
+  final String messageId;
+  final String studentUid;
+  final InboxService service;
 
   @override
   Widget build(BuildContext context) {
@@ -589,7 +597,7 @@ class _MessageBubble extends StatelessWidget {
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           if (imagePath.isNotEmpty) ...[
-            ClipRRect(borderRadius: BorderRadius.circular(12), child: _SecureInboxImage(path: imagePath)),
+            ClipRRect(borderRadius: BorderRadius.circular(12), child: _SecureInboxImage(path: imagePath, messageId: messageId, studentUid: studentUid, service: service)),
             if (body.isNotEmpty) const SizedBox(height: 8),
           ],
           if (body.isNotEmpty) Text(body, style: const TextStyle(color: _inboxNavy, fontSize: 13, height: 1.45)),
@@ -608,32 +616,81 @@ class _MessageBubble extends StatelessWidget {
 }
 
 class _SecureInboxImage extends StatefulWidget {
-  const _SecureInboxImage({required this.path});
+  const _SecureInboxImage({
+    required this.path,
+    required this.messageId,
+    required this.studentUid,
+    required this.service,
+  });
   final String path;
+  final String messageId;
+  final String studentUid;
+  final InboxService service;
+
   @override
   State<_SecureInboxImage> createState() => _SecureInboxImageState();
 }
+
 class _SecureInboxImageState extends State<_SecureInboxImage> {
-  late Future<Uint8List?> _imageFuture;
+  late Future<String> _urlFuture;
+
   @override
   void initState() {
     super.initState();
-    _imageFuture = FirebaseStorage.instance.ref(widget.path).getData(8 * 1024 * 1024);
+    _urlFuture = _loadUrl();
   }
+
+  Future<String> _loadUrl() => widget.service.loadImageUrl(
+    studentUid: widget.studentUid,
+    messageId: widget.messageId,
+    imagePath: widget.path,
+  );
+
   @override
   void didUpdateWidget(covariant _SecureInboxImage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.path != widget.path) {
-      _imageFuture = FirebaseStorage.instance.ref(widget.path).getData(8 * 1024 * 1024);
+    if (oldWidget.path != widget.path ||
+        oldWidget.messageId != widget.messageId ||
+        oldWidget.studentUid != widget.studentUid) {
+      _urlFuture = _loadUrl();
     }
   }
+
   @override
-  Widget build(BuildContext context) => FutureBuilder<Uint8List?>(
-    future: _imageFuture,
+  Widget build(BuildContext context) => FutureBuilder<String>(
+    future: _urlFuture,
     builder: (context, snapshot) {
-      if (snapshot.hasError) return Container(width: 230, height: 100, color: const Color(0xFFE8EFF6), child: const Center(child: Icon(Icons.image_not_supported_outlined, color: Color(0xFF8195AA))));
-      if (!snapshot.hasData) return Container(width: 230, height: 150, color: const Color(0xFFE8EFF6), child: const Center(child: CircularProgressIndicator(strokeWidth: 2)));
-      return Image.memory(snapshot.data!, width: 230, fit: BoxFit.cover);
+      if (snapshot.hasError) {
+        return Container(
+          width: 230,
+          height: 100,
+          color: const Color(0xFFE8EFF6),
+          child: const Center(
+            child: Icon(Icons.image_not_supported_outlined, color: Color(0xFF8195AA)),
+          ),
+        );
+      }
+      if (!snapshot.hasData) {
+        return Container(
+          width: 230,
+          height: 150,
+          color: const Color(0xFFE8EFF6),
+          child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+        );
+      }
+      return Image.network(
+        snapshot.data!,
+        width: 230,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stack) => Container(
+          width: 230,
+          height: 100,
+          color: const Color(0xFFE8EFF6),
+          child: const Center(
+            child: Icon(Icons.broken_image_outlined, color: Color(0xFF8195AA)),
+          ),
+        ),
+      );
     },
   );
 }
