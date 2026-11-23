@@ -718,10 +718,10 @@ async function createInboxUploadSignature(env, claims, body) {
   const timestamp = Math.floor(Date.now() / 1000);
   const folder = "atlas-inbox/" + studentUid;
   const publicId = folder + "/" + crypto.randomUUID();
-  const params = { folder, overwrite: "false", public_id: publicId, timestamp: String(timestamp), type: "authenticated" };
+  const params = { folder, overwrite: "false", public_id: publicId, timestamp: String(timestamp) };
   const payload = Object.keys(params).sort().map((key) => key + "=" + params[key]).join("&") + apiSecret;
   return { success: true, cloudName, apiKey, timestamp, folder, publicId,
-    overwrite: "false", type: "authenticated", signature: await cloudinarySha1Hex(payload) };
+    overwrite: "false", signature: await cloudinarySha1Hex(payload) };
 }
 async function createInboxImageUrl(env, claims, body) {
   const studentUid = String(body.studentUid || "");
