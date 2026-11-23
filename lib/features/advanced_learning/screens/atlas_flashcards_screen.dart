@@ -364,6 +364,48 @@ class _AtlasFlashcardsScreenState extends State<AtlasFlashcardsScreen> {
     setState(() { index = (index + amount).clamp(0, visible.length - 1); revealed = false; });
   }
 
+  Future<void> _markMastered(int id) async {
+    final wasMastered = mastered.contains(id);
+    setState(() { mastered.add(id); review.remove(id); });
+    await _saveProgress();
+    if (!mounted || wasMastered) return;
+    await showGeneralDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Mastered flashcard',
+      barrierColor: const Color(0xCC071B35),
+      transitionDuration: const Duration(milliseconds: 450),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return Center(child: Material(color: Colors.transparent, child: TweenAnimationBuilder<double>(
+          tween: Tween(begin: .35, end: 1),
+          duration: const Duration(milliseconds: 750),
+          curve: Curves.elasticOut,
+          builder: (context, scale, child) => Transform.scale(scale: scale, child: child),
+          child: Stack(clipBehavior: Clip.none, alignment: Alignment.center, children: [
+            Container(width: 292, padding: const EdgeInsets.fromLTRB(24, 30, 24, 24),
+              decoration: BoxDecoration(gradient: const LinearGradient(begin: Alignment.topLeft,end: Alignment.bottomRight,colors:[Color(0xFF123F70),Color(0xFF176B80),Color(0xFF16856C)]),borderRadius: BorderRadius.circular(28),boxShadow: const [BoxShadow(color: Color(0x66000000),blurRadius:30,offset:Offset(0,15))]),
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                const Icon(Icons.workspace_premium_rounded,color:Color(0xFFFFD76A),size:62),
+                const SizedBox(height:12),
+                const Text('CARD MASTERED!',style:TextStyle(color:Colors.white,fontSize:21,fontWeight:FontWeight.w900,letterSpacing:1)),
+                const SizedBox(height:8),
+                const Text('Excellent recall. You have added another concept to your mastered collection.',textAlign:TextAlign.center,style:TextStyle(color:Colors.white70,fontSize:12,height:1.5)),
+                const SizedBox(height:18),
+                FilledButton.icon(style:FilledButton.styleFrom(backgroundColor:const Color(0xFFFFD76A),foregroundColor:const Color(0xFF183B5C)),onPressed:()=>Navigator.of(context).pop(),icon:const Icon(Icons.check_rounded),label:const Text('Continue learning')),
+              ]),
+            ),
+            const Positioned(left:12,top:-18,child:Icon(Icons.star_rounded,color:Color(0xFFFFD76A),size:34)),
+            const Positioned(right:10,top:12,child:Icon(Icons.auto_awesome,color:Color(0xFF9FE4D6),size:27)),
+            const Positioned(left:-15,bottom:38,child:Icon(Icons.star_rounded,color:Color(0xFFFFE9A6),size:25)),
+            const Positioned(right:-13,bottom:54,child:Icon(Icons.star_rounded,color:Color(0xFFFFD76A),size:31)),
+            const Positioned(left:56,top:35,child:Icon(Icons.auto_awesome,color:Colors.white,size:16)),
+            const Positioned(right:54,top:45,child:Icon(Icons.auto_awesome,color:Color(0xFFFFE9A6),size:19)),
+          ]),
+        )));
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final ids = visible;
@@ -520,8 +562,8 @@ class _AtlasFlashcardsScreenState extends State<AtlasFlashcardsScreen> {
                 )),
                 const SizedBox(width: 9),
                 Expanded(child: FilledButton.icon(
-                  onPressed: () { setState(() { mastered.add(id); review.remove(id); }); _saveProgress(); },
-                  icon: const Icon(Icons.check_circle_outline_rounded, size: 17), label: const Text('I know this'),
+                  onPressed: () => _markMastered(id),
+                  icon: const Icon(Icons.check_circle_outline_rounded, size: 17), label: Text(mastered.contains(id) ? 'Mastered' : 'I know this'),
                   style: FilledButton.styleFrom(backgroundColor: const Color(0xFF16856C), foregroundColor: Colors.white),
                 )),
               ]),
