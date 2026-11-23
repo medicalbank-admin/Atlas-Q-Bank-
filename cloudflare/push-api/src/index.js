@@ -58,9 +58,66 @@ async function processExpiryReminders(env){const rows=await listCollection(env,"
 async function processExamAlerts(env){let exams=[];try{exams=await listCollection(env,"exams",1000);}catch(_){return;}const now=Date.now();for(const row of exams){const e=row.data;if(e.isPublished!==true)continue;const published=e.publishedAt||e.updatedAt||e.createdAt;const publishedMs=Date.parse(published||"");if(Number.isFinite(publishedMs)&&now-publishedMs<10*60*1000){const id="exam_published_"+row.id;let exists=true;try{await firestore(env,"/push_notifications/"+encodeURIComponent(id));}catch(_){exists=false;}if(!exists){const title=String(e.title||e.name||"New mock examination");const body="A new mock examination is now available. Open Examinations to view the details.";const result=await sendCampaign(env,{notificationId:id,title:title,body:body,destination:"examinations",audience:"all"});if(result.devices>0)await createLog(env,id,{title:title,body:body,status:"sent",audience:"all",sentCount:result.sent,failedCount:result.failed,deviceCount:result.devices,createdAt:new Date().toISOString(),automaticType:"exam_published"});}}
 const deadline=e.deadlineAt||e.endAt||e.closesAt||e.scheduledEndAt;if(deadline){const ms=Date.parse(deadline);const hours=(ms-now)/3600000;if(hours>0&&hours<=24){const id="exam_deadline_"+row.id;let exists=true;try{await firestore(env,"/push_notifications/"+encodeURIComponent(id));}catch(_){exists=false;}if(!exists){const title="Mock exam deadline approaching";const body=String(e.title||e.name||"Your mock exam")+" closes within 24 hours. Complete it before the deadline.";const result=await sendCampaign(env,{notificationId:id,title:title,body:body,destination:"examinations",audience:"all"});if(result.devices>0)await createLog(env,id,{title:title,body:body,status:"sent",audience:"all",sentCount:result.sent,failedCount:result.failed,deviceCount:result.devices,createdAt:new Date().toISOString(),automaticType:"exam_deadline"});}}}}}
 async function processScheduled(env){const rows=await listCollection(env,"push_notifications",500);const now=Date.now();for(const row of rows){const b=row.data;if(b.status!=="scheduled"||!b.scheduledAt||Date.parse(b.scheduledAt)>now)continue;try{await patchDoc(env,"/push_notifications/"+row.id,{status:"sending"});b.notificationId=row.id;const r=await sendCampaign(env,b);await patchDoc(env,"/push_notifications/"+row.id,{status:"sent",sentCount:r.sent,failedCount:r.failed,deviceCount:r.devices,sentAt:new Date().toISOString()});}catch(e){try{await patchDoc(env,"/push_notifications/"+row.id,{status:"failed",error:String(e.message||e)});}catch(_){}}}await processExpiryReminders(env);await processExamAlerts(env);}
+
+async function deviceEndpoint(request, env, claims, action) {
+  const body = await request.json();
+  const uid = claims.sub;
+  if (claims.admin === true) return json({ success: true, exempt: true, admin: true });
+  const deviceId = String(body.deviceId || "");
+  if (!/^[A-Za-z0-9_-]{24,100}$/.test(deviceId)) return json({ success:false, message:"Invalid device identity." },400);
+  const path = "/device_sessions/" + encodeURIComponent(uid);
+  if (action === "validate") {
+    let current = null;
+    try { current = decode((await firestore(env, path)).fields || {}); } catch (_) {}
+    if (!current || current.deviceId !== deviceId) {
+      return json({ success:false, code:"device_replaced", message:"This account is active on another device. Please sign in again on your registered device." },409);
+    }
+    await patchDoc(env, path, { lastSeenAt:new Date().toISOString() });
+    return json({ success:true, admin:false });
+  }
+  const ip = request.headers.get("CF-Connecting-IP") || "";
+  const cf = request.cf || {};
+  const country = String(cf.country || "");
+  const asn = Number(cf.asn || 0);
+  const organization = String(cf.asOrganization || "");
+  const proxyPattern = /(vpn|proxy|hosting|cloud|data ?center|datacenter|digitalocean|amazon|aws|google cloud|microsoft azure|ovh|hetzner|vultr|linode|oracle cloud)/i;
+  const proxyFlag = proxyPattern.test(organization);
+  let previous = null;
+  try { previous = decode((await firestore(env, path)).fields || {}); } catch (_) {}
+  const replaced = !!(previous && previous.deviceId && previous.deviceId !== deviceId);
+  const suspicious = proxyFlag || !!(previous && previous.country && country && previous.country !== country);
+  const now = new Date().toISOString();
+  await patchDoc(env, path, {
+    userId:uid, deviceId, platform:String(body.platform || "mobile"),
+    deviceLabel:String(body.deviceLabel || "Registered device").slice(0,100),
+    lastIp:ip, country, asn, networkOrganization:organization,
+    proxySuspected:proxyFlag, securityReviewRequired:suspicious || replaced,
+    lastSeenAt:now, boundAt:replaced ? now : (previous && previous.boundAt || now),
+    previousDeviceId:replaced ? previous.deviceId : (previous && previous.previousDeviceId || "")
+  });
+  if (suspicious || replaced) {
+    const id = "device_" + uid + "_" + Date.now();
+    const fields = {
+      userId:uid, deviceId, previousDeviceId:replaced ? previous.deviceId : "",
+      event:proxyFlag ? "possible_vpn_or_proxy" : (replaced ? "device_changed" : "unusual_country"),
+      reviewStatus:"pending", ipAddress:ip, country, asn,
+      networkOrganization:organization, createdAt:now,
+      details:proxyFlag ? "Network organization resembles a hosting, VPN or proxy provider; this is a heuristic signal." :
+        (replaced ? "The account was registered from a different app installation." : "The sign-in country differs from the previous device.")
+    };
+    const encoded = {};
+    for (const key in fields) encoded[key] = enc(fields[key]);
+    await firestore(env, "/device_security_events?documentId=" + encodeURIComponent(id), {
+      method:"POST", body:JSON.stringify({fields:encoded})
+    });
+  }
+  return json({ success:true, admin:false, replaced, reviewRequired:suspicious || replaced,
+    message:replaced ? "This device is now the only registered device for this account." : "Device registered." });
+}
+
 export default {
- async fetch(request,env){if(request.method==="OPTIONS")return new Response(null,{headers:CORS});const url=new URL(request.url);if(url.pathname==="/health")return json({success:true,service:"atlas-academy-push-api"});if(request.method!=="POST"||!["/send","/event"].includes(url.pathname))return json({success:false,message:"Not found."},404);
- try{const auth=request.headers.get("Authorization")||"";if(!auth.startsWith("Bearer "))return json({success:false,message:"Sign-in required."},401);const claims=await verify(auth.slice(7),url.pathname==="/send");const b=await request.json();
+ async fetch(request,env){if(request.method==="OPTIONS")return new Response(null,{headers:CORS});const url=new URL(request.url);if(url.pathname==="/health")return json({success:true,service:"atlas-academy-push-api"});if(request.method!=="POST"||!["/send","/event","/device/register","/device/validate"].includes(url.pathname))return json({success:false,message:"Not found."},404);
+ try{const auth=request.headers.get("Authorization")||"";if(!auth.startsWith("Bearer "))return json({success:false,message:"Sign-in required."},401);const claims=await verify(auth.slice(7),url.pathname==="/send");if(url.pathname==="/device/register"||url.pathname==="/device/validate")return await deviceEndpoint(request,env,claims,url.pathname.endsWith("validate")?"validate":"register");const b=await request.json();
  if(url.pathname==="/event"){if(b.type!=="forum_reply"||typeof b.postId!=="string")return json({success:false,message:"Unsupported notification event."},400);const post=decode((await firestore(env,"/forum_posts/"+encodeURIComponent(b.postId))).fields||{});const recipient=String(post.userId||"");if(!recipient||recipient===claims.sub)return json({success:true,sent:0,failed:0,devices:0});const payload={notificationId:"forum_reply_"+b.postId+"_"+Date.now(),title:"New discussion reply",body:"Someone has replied to your discussion: "+String(post.title||"Student discussion"),destination:"forum_thread:"+b.postId,audience:"selected",userIds:[recipient]};const eventResult=await sendCampaign(env,payload);if(eventResult.devices>0)await createLog(env,payload.notificationId,{title:payload.title,body:payload.body,audience:'selected',status:'sent',sentCount:eventResult.sent,failedCount:eventResult.failed,deviceCount:eventResult.devices,createdAt:new Date().toISOString(),automaticType:'forum_reply'});return json({success:true,...eventResult});}
  b.title=String(b.title||"").trim();b.body=String(b.body||"").trim();if(!b.title||!b.body||b.title.length>120||b.body.length>2000)return json({success:false,message:"A title and message are required."},400);if(b.audience==="selected"&&!Array.isArray(b.userIds))return json({success:false,message:"Selected student IDs are required."},400);const sendResult=await sendCampaign(env,b);if(b.notificationId){try{await patchDoc(env,'/push_notifications/'+encodeURIComponent(b.notificationId),{status:'sent',sentCount:sendResult.sent,failedCount:sendResult.failed,deviceCount:sendResult.devices,sentAt:new Date().toISOString()});}catch(_){try{await createLog(env,b.notificationId,{title:b.title,body:b.body,audience:b.audience||'all',status:'sent',sentCount:sendResult.sent,failedCount:sendResult.failed,deviceCount:sendResult.devices,createdAt:new Date().toISOString(),automaticType:'event'});}catch(__){}}}return json({success:true,...sendResult});}catch(e){return json({success:false,message:e.message||"Push delivery failed."},400);}},
  async scheduled(event,env,ctx){ctx.waitUntil(processScheduled(env));}
