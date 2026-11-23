@@ -686,6 +686,110 @@ service cloud.firestore {
     }
 
     // ==================================================
+    // PRIVATE STUDENT ↔ ADMINISTRATOR INBOX
+    // Conversation document ID is the student UID.
+    // ==================================================
+    match /inbox_conversations/{studentUid} {
+      function isConversationStudent() {
+        return signedIn() && request.auth.uid == studentUid &&
+          resource.data.studentUid == request.auth.uid;
+      }
+
+      allow read: if isAdmin() || isConversationStudent();
+
+      allow create: if signedIn() &&
+        request.resource.data.studentUid == request.auth.uid &&
+        request.resource.data.keys().hasAll([
+          'studentUid', 'studentName', 'studentEmail', 'studentPhone',
+          'studentUniversity', 'studentCountry', 'studentProfileImageUrl',
+          'adminUid', 'adminName', 'lastMessage', 'lastMessageAt',
+          'lastSenderUid', 'unreadForStudent', 'unreadForAdmin',
+          'createdAt', 'updatedAt'
+        ]) &&
+        request.resource.data.studentName is string &&
+        request.resource.data.studentName.size() <= 120 &&
+        request.resource.data.studentEmail is string &&
+        request.resource.data.studentEmail.size() <= 254 &&
+        request.resource.data.studentPhone is string &&
+        request.resource.data.studentPhone.size() <= 30 &&
+        request.resource.data.studentUniversity is string &&
+        request.resource.data.studentUniversity.size() <= 200 &&
+        request.resource.data.studentCountry is string &&
+        request.resource.data.studentCountry.size() <= 100 &&
+        request.resource.data.studentProfileImageUrl is string &&
+        request.resource.data.studentProfileImageUrl.size() <= 2048 &&
+        request.resource.data.adminName == 'The Atlas Administrator' &&
+        request.resource.data.adminUid == null &&
+        request.resource.data.lastMessage == '' &&
+        request.resource.data.lastSenderUid == '' &&
+        request.resource.data.unreadForStudent == 0 &&
+        request.resource.data.unreadForAdmin == 0;
+
+      allow update: if isAdmin() ||
+        (isConversationStudent() &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'lastMessage', 'lastMessageAt', 'lastSenderUid',
+            'unreadForAdmin', 'unreadForStudent', 'updatedAt'
+          ]) &&
+          request.resource.data.lastMessage is string &&
+          request.resource.data.lastMessage.size() <= 4000 &&
+          request.resource.data.lastSenderUid == request.auth.uid &&
+          request.resource.data.unreadForStudent == 0 &&
+          request.resource.data.unreadForAdmin is int &&
+          request.resource.data.unreadForAdmin >= 0);
+
+      allow delete: if false;
+
+      match /messages/{messageId} {
+        function parentStudentUid() {
+          return get(/databases/$(database)/documents/inbox_conversations/$(studentUid)).data.studentUid;
+        }
+
+        allow read: if isAdmin() ||
+          (signedIn() && parentStudentUid() == request.auth.uid);
+
+        allow create: if signedIn() &&
+          (isAdmin() || parentStudentUid() == request.auth.uid) &&
+          request.resource.data.keys().hasAll([
+            'senderUid', 'senderRole', 'body', 'imageUrl',
+            'imagePath', 'createdAt', 'deliveredAt', 'readAt'
+          ]) &&
+          request.resource.data.keys().hasOnly([
+            'senderUid', 'senderRole', 'body', 'imageUrl',
+            'imagePath', 'createdAt', 'deliveredAt', 'readAt'
+          ]) &&
+          request.resource.data.senderUid == request.auth.uid &&
+          request.resource.data.senderRole == (isAdmin() ? 'admin' : 'student') &&
+          request.resource.data.body is string &&
+          request.resource.data.body.size() <= 4000 &&
+          (request.resource.data.body.size() > 0 ||
+            (request.resource.data.imageUrl is string &&
+             request.resource.data.imageUrl.size() > 0)) &&
+          (request.resource.data.imageUrl == null ||
+            (request.resource.data.imageUrl is string &&
+             request.resource.data.imageUrl.size() <= 2048)) &&
+          (request.resource.data.imagePath == null ||
+            (request.resource.data.imagePath is string &&
+             request.resource.data.imagePath.size() <= 500)) &&
+          request.resource.data.createdAt is timestamp &&
+          request.resource.data.deliveredAt == null &&
+          request.resource.data.readAt == null;
+
+        allow update: if isAdmin() ||
+          (signedIn() &&
+            parentStudentUid() == request.auth.uid &&
+            resource.data.senderUid != request.auth.uid &&
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+              'deliveredAt', 'readAt'
+            ]) &&
+            request.resource.data.deliveredAt is timestamp &&
+            request.resource.data.readAt is timestamp);
+
+        allow delete: if false;
+      }
+    }
+
+    // ==================================================
     // DEFAULT DENY
     // ==================================================
 
