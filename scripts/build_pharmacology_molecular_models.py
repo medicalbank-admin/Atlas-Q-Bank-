@@ -21,6 +21,8 @@ STRUCTURES = {
     "dhfr_methotrexate": ("1U72", "MTX", "Human dihydrofolate reductase with methotrexate"),
     "adrb2_carazolol": ("2RH1", "CAU", "Beta-2 adrenergic receptor with carazolol"),
     "glp1r_semaglutide": ("7KI0", "", "Human GLP-1 receptor with experimentally bound semaglutide", "B"),
+    "rrna_azithromycin": ("1M1K", "ZIT", "Haloarcula marismortui 50S 23S rRNA with azithromycin", None, "K"),
+    "rrna_gentamicin": ("2ET3", "LLL", "16S rRNA decoding A-site with gentamicin C1a"),
 }
 
 ELEMENTS = {
@@ -134,6 +136,7 @@ def main():
     for key,structure in STRUCTURES.items():
         pdb_id,ligand_code,label = structure[:3]
         peptide_chain = structure[3] if len(structure) > 3 else None
+        ligand_chain = structure[4] if len(structure) > 4 else None
         url = "https://files.rcsb.org/download/%s.pdb" % pdb_id
         req = urllib.request.Request(url,headers={"User-Agent":"AtlasAcademy-educational-molecular-viewer/1.0"})
         with urllib.request.urlopen(req,timeout=60) as response:
@@ -153,7 +156,8 @@ def main():
                     if chain != "A": continue
                     is_ligand=False
             else:
-                is_ligand=bool(ligand_code) and residue==ligand_code and chain=="A"
+                expected_ligand_chain=ligand_chain or "A"
+                is_ligand=bool(ligand_code) and residue==ligand_code and chain==expected_ligand_chain
                 if not is_ligand: continue
             if residue in WATER: continue
             element=line[76:78].strip().upper()
