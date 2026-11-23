@@ -8,205 +8,205 @@ class AtlasFlashcard {
 /// Offline-ready authored medical recall collection. 50 core facts in four recall formats.
 const String _rows = r'''
 Anatomy|Recall: Phrenic nerve roots?|C3–C5; C3, 4 and 5 keep the diaphragm alive.
-Anatomy|What is the key fact about phrenic nerve roots?|C3–C5; C3, 4 and 5 keep the diaphragm alive.
-Anatomy|Clinical revision point — Phrenic nerve roots|C3–C5; C3, 4 and 5 keep the diaphragm alive.
-Anatomy|Complete this high-yield recall prompt: Phrenic nerve roots|C3–C5; C3, 4 and 5 keep the diaphragm alive.
 Anatomy|Recall: Adult femoral-head blood supply?|Retinacular branches of the medial circumflex femoral artery.
-Anatomy|What is the key fact about adult femoral-head blood supply?|Retinacular branches of the medial circumflex femoral artery.
-Anatomy|Clinical revision point — Adult femoral-head blood supply|Retinacular branches of the medial circumflex femoral artery.
-Anatomy|Complete this high-yield recall prompt: Adult femoral-head blood supply|Retinacular branches of the medial circumflex femoral artery.
 Anatomy|Recall: Nerve at risk in midshaft humeral fracture?|Radial nerve in the spiral groove.
-Anatomy|What is the key fact about nerve at risk in midshaft humeral fracture?|Radial nerve in the spiral groove.
-Anatomy|Clinical revision point — Nerve at risk in midshaft humeral fracture|Radial nerve in the spiral groove.
-Anatomy|Complete this high-yield recall prompt: Nerve at risk in midshaft humeral fracture|Radial nerve in the spiral groove.
 Anatomy|Recall: Carpal tunnel contents?|Median nerve and nine flexor tendons: four FDS, four FDP and one FPL.
-Anatomy|What is the key fact about carpal tunnel contents?|Median nerve and nine flexor tendons: four FDS, four FDP and one FPL.
-Anatomy|Clinical revision point — Carpal tunnel contents|Median nerve and nine flexor tendons: four FDS, four FDP and one FPL.
-Anatomy|Complete this high-yield recall prompt: Carpal tunnel contents|Median nerve and nine flexor tendons: four FDS, four FDP and one FPL.
 Anatomy|Recall: Muscle initiating shoulder abduction?|Supraspinatus initiates the first 15 degrees; deltoid continues.
-Anatomy|What is the key fact about muscle initiating shoulder abduction?|Supraspinatus initiates the first 15 degrees; deltoid continues.
-Anatomy|Clinical revision point — Muscle initiating shoulder abduction|Supraspinatus initiates the first 15 degrees; deltoid continues.
-Anatomy|Complete this high-yield recall prompt: Muscle initiating shoulder abduction|Supraspinatus initiates the first 15 degrees; deltoid continues.
 Anatomy|Recall: Cranial nerve to lateral rectus?|Abducens nerve, CN VI.
-Anatomy|What is the key fact about cranial nerve to lateral rectus?|Abducens nerve, CN VI.
-Anatomy|Clinical revision point — Cranial nerve to lateral rectus|Abducens nerve, CN VI.
-Anatomy|Complete this high-yield recall prompt: Cranial nerve to lateral rectus|Abducens nerve, CN VI.
 Anatomy|Recall: Optic canal contents?|Optic nerve (CN II) and ophthalmic artery.
-Anatomy|What is the key fact about optic canal contents?|Optic nerve (CN II) and ophthalmic artery.
-Anatomy|Clinical revision point — Optic canal contents|Optic nerve (CN II) and ophthalmic artery.
-Anatomy|Complete this high-yield recall prompt: Optic canal contents|Optic nerve (CN II) and ophthalmic artery.
 Anatomy|Recall: Femoral triangle boundaries?|Inguinal ligament superiorly, sartorius laterally and adductor longus medially.
-Anatomy|What is the key fact about femoral triangle boundaries?|Inguinal ligament superiorly, sartorius laterally and adductor longus medially.
-Anatomy|Clinical revision point — Femoral triangle boundaries|Inguinal ligament superiorly, sartorius laterally and adductor longus medially.
-Anatomy|Complete this high-yield recall prompt: Femoral triangle boundaries|Inguinal ligament superiorly, sartorius laterally and adductor longus medially.
 Anatomy|Recall: Jugular foramen nerves?|Cranial nerves IX, X and XI.
-Anatomy|What is the key fact about jugular foramen nerves?|Cranial nerves IX, X and XI.
-Anatomy|Clinical revision point — Jugular foramen nerves|Cranial nerves IX, X and XI.
-Anatomy|Complete this high-yield recall prompt: Jugular foramen nerves|Cranial nerves IX, X and XI.
 Anatomy|Recall: Most common ectopic pregnancy site?|Ampulla of the uterine tube.
-Anatomy|What is the key fact about most common ectopic pregnancy site?|Ampulla of the uterine tube.
-Anatomy|Clinical revision point — Most common ectopic pregnancy site|Ampulla of the uterine tube.
-Anatomy|Complete this high-yield recall prompt: Most common ectopic pregnancy site|Ampulla of the uterine tube.
 Physiology|Recall: Resting neuronal membrane potential?|Approximately −70 mV, largely due to potassium permeability and ion gradients.
-Physiology|What is the key fact about resting neuronal membrane potential?|Approximately −70 mV, largely due to potassium permeability and ion gradients.
-Physiology|Clinical revision point — Resting neuronal membrane potential|Approximately −70 mV, largely due to potassium permeability and ion gradients.
-Physiology|Complete this high-yield recall prompt: Resting neuronal membrane potential|Approximately −70 mV, largely due to potassium permeability and ion gradients.
 Physiology|Recall: Ventricular action-potential plateau?|L-type calcium influx balanced by potassium efflux.
-Physiology|What is the key fact about ventricular action-potential plateau?|L-type calcium influx balanced by potassium efflux.
-Physiology|Clinical revision point — Ventricular action-potential plateau|L-type calcium influx balanced by potassium efflux.
-Physiology|Complete this high-yield recall prompt: Ventricular action-potential plateau|L-type calcium influx balanced by potassium efflux.
 Physiology|Recall: Cardiac output formula?|Heart rate multiplied by stroke volume.
-Physiology|What is the key fact about cardiac output formula?|Heart rate multiplied by stroke volume.
-Physiology|Clinical revision point — Cardiac output formula|Heart rate multiplied by stroke volume.
-Physiology|Complete this high-yield recall prompt: Cardiac output formula|Heart rate multiplied by stroke volume.
 Physiology|Recall: Frank–Starling mechanism?|Greater end-diastolic filling stretches myocardium and increases contraction force within physiological limits.
-Physiology|What is the key fact about frank–starling mechanism?|Greater end-diastolic filling stretches myocardium and increases contraction force within physiological limits.
-Physiology|Clinical revision point — Frank–Starling mechanism|Greater end-diastolic filling stretches myocardium and increases contraction force within physiological limits.
-Physiology|Complete this high-yield recall prompt: Frank–Starling mechanism|Greater end-diastolic filling stretches myocardium and increases contraction force within physiological limits.
 Physiology|Recall: Central chemoreceptor stimulus?|CSF hydrogen ion concentration generated as CO₂ crosses the blood–brain barrier.
-Physiology|What is the key fact about central chemoreceptor stimulus?|CSF hydrogen ion concentration generated as CO₂ crosses the blood–brain barrier.
-Physiology|Clinical revision point — Central chemoreceptor stimulus|CSF hydrogen ion concentration generated as CO₂ crosses the blood–brain barrier.
-Physiology|Complete this high-yield recall prompt: Central chemoreceptor stimulus|CSF hydrogen ion concentration generated as CO₂ crosses the blood–brain barrier.
 Physiology|Recall: Bohr effect?|Increased CO₂ and H⁺ reduce haemoglobin oxygen affinity, promoting tissue oxygen unloading.
-Physiology|What is the key fact about bohr effect?|Increased CO₂ and H⁺ reduce haemoglobin oxygen affinity, promoting tissue oxygen unloading.
-Physiology|Clinical revision point — Bohr effect|Increased CO₂ and H⁺ reduce haemoglobin oxygen affinity, promoting tissue oxygen unloading.
-Physiology|Complete this high-yield recall prompt: Bohr effect|Increased CO₂ and H⁺ reduce haemoglobin oxygen affinity, promoting tissue oxygen unloading.
 Physiology|Recall: Hormone increasing collecting-duct water permeability?|ADH (vasopressin), via V2 receptors and aquaporin-2 insertion.
-Physiology|What is the key fact about hormone increasing collecting-duct water permeability?|ADH (vasopressin), via V2 receptors and aquaporin-2 insertion.
-Physiology|Clinical revision point — Hormone increasing collecting-duct water permeability|ADH (vasopressin), via V2 receptors and aquaporin-2 insertion.
-Physiology|Complete this high-yield recall prompt: Hormone increasing collecting-duct water permeability|ADH (vasopressin), via V2 receptors and aquaporin-2 insertion.
 Physiology|Recall: Renal action of aldosterone?|Increases sodium reabsorption and potassium and hydrogen secretion.
-Physiology|What is the key fact about renal action of aldosterone?|Increases sodium reabsorption and potassium and hydrogen secretion.
-Physiology|Clinical revision point — Renal action of aldosterone|Increases sodium reabsorption and potassium and hydrogen secretion.
-Physiology|Complete this high-yield recall prompt: Renal action of aldosterone|Increases sodium reabsorption and potassium and hydrogen secretion.
 Physiology|Recall: Pulmonary surfactant function?|Reduces alveolar surface tension and prevents alveolar collapse.
-Physiology|What is the key fact about pulmonary surfactant function?|Reduces alveolar surface tension and prevents alveolar collapse.
-Physiology|Clinical revision point — Pulmonary surfactant function|Reduces alveolar surface tension and prevents alveolar collapse.
-Physiology|Complete this high-yield recall prompt: Pulmonary surfactant function|Reduces alveolar surface tension and prevents alveolar collapse.
 Physiology|Recall: Mean arterial pressure approximation?|Cardiac output multiplied by systemic vascular resistance.
-Physiology|What is the key fact about mean arterial pressure approximation?|Cardiac output multiplied by systemic vascular resistance.
-Physiology|Clinical revision point — Mean arterial pressure approximation|Cardiac output multiplied by systemic vascular resistance.
-Physiology|Complete this high-yield recall prompt: Mean arterial pressure approximation|Cardiac output multiplied by systemic vascular resistance.
 Biochemistry|Recall: Rate-limiting enzyme of glycolysis?|Phosphofructokinase-1 (PFK-1).
-Biochemistry|What is the key fact about rate-limiting enzyme of glycolysis?|Phosphofructokinase-1 (PFK-1).
-Biochemistry|Clinical revision point — Rate-limiting enzyme of glycolysis|Phosphofructokinase-1 (PFK-1).
-Biochemistry|Complete this high-yield recall prompt: Rate-limiting enzyme of glycolysis|Phosphofructokinase-1 (PFK-1).
 Biochemistry|Recall: Rate-limiting enzyme of cholesterol synthesis?|HMG-CoA reductase.
-Biochemistry|What is the key fact about rate-limiting enzyme of cholesterol synthesis?|HMG-CoA reductase.
-Biochemistry|Clinical revision point — Rate-limiting enzyme of cholesterol synthesis|HMG-CoA reductase.
-Biochemistry|Complete this high-yield recall prompt: Rate-limiting enzyme of cholesterol synthesis|HMG-CoA reductase.
 Biochemistry|Recall: Vitamin needed for clotting factor gamma-carboxylation?|Vitamin K for factors II, VII, IX and X and proteins C and S.
-Biochemistry|What is the key fact about vitamin needed for clotting factor gamma-carboxylation?|Vitamin K for factors II, VII, IX and X and proteins C and S.
-Biochemistry|Clinical revision point — Vitamin needed for clotting factor gamma-carboxylation|Vitamin K for factors II, VII, IX and X and proteins C and S.
-Biochemistry|Complete this high-yield recall prompt: Vitamin needed for clotting factor gamma-carboxylation|Vitamin K for factors II, VII, IX and X and proteins C and S.
 Biochemistry|Recall: Purpose of the urea cycle?|Converts toxic ammonia to urea for excretion.
-Biochemistry|What is the key fact about purpose of the urea cycle?|Converts toxic ammonia to urea for excretion.
-Biochemistry|Clinical revision point — Purpose of the urea cycle|Converts toxic ammonia to urea for excretion.
-Biochemistry|Complete this high-yield recall prompt: Purpose of the urea cycle|Converts toxic ammonia to urea for excretion.
 Biochemistry|Recall: Enzyme deficient in classic phenylketonuria?|Phenylalanine hydroxylase, most commonly.
-Biochemistry|What is the key fact about enzyme deficient in classic phenylketonuria?|Phenylalanine hydroxylase, most commonly.
-Biochemistry|Clinical revision point — Enzyme deficient in classic phenylketonuria|Phenylalanine hydroxylase, most commonly.
-Biochemistry|Complete this high-yield recall prompt: Enzyme deficient in classic phenylketonuria|Phenylalanine hydroxylase, most commonly.
 Biochemistry|Recall: What HbA1c estimates?|Average glycaemic exposure over roughly the preceding 2–3 months.
-Biochemistry|What is the key fact about what hba1c estimates?|Average glycaemic exposure over roughly the preceding 2–3 months.
-Biochemistry|Clinical revision point — What HbA1c estimates|Average glycaemic exposure over roughly the preceding 2–3 months.
-Biochemistry|Complete this high-yield recall prompt: What HbA1c estimates|Average glycaemic exposure over roughly the preceding 2–3 months.
 Biochemistry|Recall: Apolipoprotein activating lipoprotein lipase?|Apolipoprotein C-II.
-Biochemistry|What is the key fact about apolipoprotein activating lipoprotein lipase?|Apolipoprotein C-II.
-Biochemistry|Clinical revision point — Apolipoprotein activating lipoprotein lipase|Apolipoprotein C-II.
-Biochemistry|Complete this high-yield recall prompt: Apolipoprotein activating lipoprotein lipase|Apolipoprotein C-II.
 Biochemistry|Recall: Rate-limiting enzyme of heme synthesis?|ALA synthase.
-Biochemistry|What is the key fact about rate-limiting enzyme of heme synthesis?|ALA synthase.
-Biochemistry|Clinical revision point — Rate-limiting enzyme of heme synthesis|ALA synthase.
-Biochemistry|Complete this high-yield recall prompt: Rate-limiting enzyme of heme synthesis|ALA synthase.
 Biochemistry|Recall: Cofactors required by pyruvate dehydrogenase?|TPP, lipoic acid, CoA, FAD and NAD⁺.
-Biochemistry|What is the key fact about cofactors required by pyruvate dehydrogenase?|TPP, lipoic acid, CoA, FAD and NAD⁺.
-Biochemistry|Clinical revision point — Cofactors required by pyruvate dehydrogenase|TPP, lipoic acid, CoA, FAD and NAD⁺.
-Biochemistry|Complete this high-yield recall prompt: Cofactors required by pyruvate dehydrogenase|TPP, lipoic acid, CoA, FAD and NAD⁺.
 Biochemistry|Recall: Main source of NADPH in red cells?|Pentose phosphate pathway via glucose-6-phosphate dehydrogenase.
-Biochemistry|What is the key fact about main source of nadph in red cells?|Pentose phosphate pathway via glucose-6-phosphate dehydrogenase.
-Biochemistry|Clinical revision point — Main source of NADPH in red cells|Pentose phosphate pathway via glucose-6-phosphate dehydrogenase.
-Biochemistry|Complete this high-yield recall prompt: Main source of NADPH in red cells|Pentose phosphate pathway via glucose-6-phosphate dehydrogenase.
 Pathology|Recall: Necrosis typical of myocardial infarction?|Coagulative necrosis.
-Pathology|What is the key fact about necrosis typical of myocardial infarction?|Coagulative necrosis.
-Pathology|Clinical revision point — Necrosis typical of myocardial infarction|Coagulative necrosis.
-Pathology|Complete this high-yield recall prompt: Necrosis typical of myocardial infarction|Coagulative necrosis.
 Pathology|Recall: Necrosis typical of cerebral infarction?|Liquefactive necrosis.
-Pathology|What is the key fact about necrosis typical of cerebral infarction?|Liquefactive necrosis.
-Pathology|Clinical revision point — Necrosis typical of cerebral infarction|Liquefactive necrosis.
-Pathology|Complete this high-yield recall prompt: Necrosis typical of cerebral infarction|Liquefactive necrosis.
 Pathology|Recall: Classic association of caseous necrosis?|Tuberculosis; it has a granular, cheese-like appearance.
-Pathology|What is the key fact about classic association of caseous necrosis?|Tuberculosis; it has a granular, cheese-like appearance.
-Pathology|Clinical revision point — Classic association of caseous necrosis|Tuberculosis; it has a granular, cheese-like appearance.
-Pathology|Complete this high-yield recall prompt: Classic association of caseous necrosis|Tuberculosis; it has a granular, cheese-like appearance.
 Pathology|Recall: Characteristic cell in Hodgkin lymphoma?|Reed–Sternberg cell, classically CD15 and CD30 positive.
-Pathology|What is the key fact about characteristic cell in hodgkin lymphoma?|Reed–Sternberg cell, classically CD15 and CD30 positive.
-Pathology|Clinical revision point — Characteristic cell in Hodgkin lymphoma|Reed–Sternberg cell, classically CD15 and CD30 positive.
-Pathology|Complete this high-yield recall prompt: Characteristic cell in Hodgkin lymphoma|Reed–Sternberg cell, classically CD15 and CD30 positive.
 Pathology|Recall: Definition of metaplasia?|Reversible replacement of one mature cell type by another better suited to a stress.
-Pathology|What is the key fact about definition of metaplasia?|Reversible replacement of one mature cell type by another better suited to a stress.
-Pathology|Clinical revision point — Definition of metaplasia|Reversible replacement of one mature cell type by another better suited to a stress.
-Pathology|Complete this high-yield recall prompt: Definition of metaplasia|Reversible replacement of one mature cell type by another better suited to a stress.
 Pathology|Recall: Definition of dysplasia?|Disordered epithelial maturation with cytological atypia; it may be premalignant.
-Pathology|What is the key fact about definition of dysplasia?|Disordered epithelial maturation with cytological atypia; it may be premalignant.
-Pathology|Clinical revision point — Definition of dysplasia|Disordered epithelial maturation with cytological atypia; it may be premalignant.
-Pathology|Complete this high-yield recall prompt: Definition of dysplasia|Disordered epithelial maturation with cytological atypia; it may be premalignant.
 Pathology|Recall: Tumour suppressor associated with Li–Fraumeni syndrome?|TP53.
-Pathology|What is the key fact about tumour suppressor associated with li–fraumeni syndrome?|TP53.
-Pathology|Clinical revision point — Tumour suppressor associated with Li–Fraumeni syndrome|TP53.
-Pathology|Complete this high-yield recall prompt: Tumour suppressor associated with Li–Fraumeni syndrome|TP53.
 Pathology|Recall: Genetic hallmark of chronic myeloid leukaemia?|BCR::ABL1 fusion from t(9;22), the Philadelphia chromosome.
-Pathology|What is the key fact about genetic hallmark of chronic myeloid leukaemia?|BCR::ABL1 fusion from t(9;22), the Philadelphia chromosome.
-Pathology|Clinical revision point — Genetic hallmark of chronic myeloid leukaemia|BCR::ABL1 fusion from t(9;22), the Philadelphia chromosome.
-Pathology|Complete this high-yield recall prompt: Genetic hallmark of chronic myeloid leukaemia|BCR::ABL1 fusion from t(9;22), the Philadelphia chromosome.
 Pathology|Recall: Key pathological feature of emphysema?|Permanent airspace enlargement distal to terminal bronchioles with alveolar wall destruction.
-Pathology|What is the key fact about key pathological feature of emphysema?|Permanent airspace enlargement distal to terminal bronchioles with alveolar wall destruction.
-Pathology|Clinical revision point — Key pathological feature of emphysema|Permanent airspace enlargement distal to terminal bronchioles with alveolar wall destruction.
-Pathology|Complete this high-yield recall prompt: Key pathological feature of emphysema|Permanent airspace enlargement distal to terminal bronchioles with alveolar wall destruction.
 Pathology|Recall: Most common nephrotic syndrome in children?|Minimal change disease.
-Pathology|What is the key fact about most common nephrotic syndrome in children?|Minimal change disease.
-Pathology|Clinical revision point — Most common nephrotic syndrome in children|Minimal change disease.
-Pathology|Complete this high-yield recall prompt: Most common nephrotic syndrome in children|Minimal change disease.
 Pharmacology|Recall: Mechanism of ACE inhibitors?|Inhibit angiotensin-converting enzyme, reducing angiotensin II and aldosterone and increasing bradykinin.
-Pharmacology|What is the key fact about mechanism of ace inhibitors?|Inhibit angiotensin-converting enzyme, reducing angiotensin II and aldosterone and increasing bradykinin.
-Pharmacology|Clinical revision point — Mechanism of ACE inhibitors|Inhibit angiotensin-converting enzyme, reducing angiotensin II and aldosterone and increasing bradykinin.
-Pharmacology|Complete this high-yield recall prompt: Mechanism of ACE inhibitors|Inhibit angiotensin-converting enzyme, reducing angiotensin II and aldosterone and increasing bradykinin.
 Pharmacology|Recall: Important ACE inhibitor adverse effects?|Cough, hyperkalaemia, hypotension and angioedema; avoid in pregnancy.
-Pharmacology|What is the key fact about important ace inhibitor adverse effects?|Cough, hyperkalaemia, hypotension and angioedema; avoid in pregnancy.
-Pharmacology|Clinical revision point — Important ACE inhibitor adverse effects|Cough, hyperkalaemia, hypotension and angioedema; avoid in pregnancy.
-Pharmacology|Complete this high-yield recall prompt: Important ACE inhibitor adverse effects|Cough, hyperkalaemia, hypotension and angioedema; avoid in pregnancy.
 Pharmacology|Recall: Mechanism of warfarin?|Inhibits vitamin K epoxide reductase, reducing functional vitamin K-dependent clotting factors.
-Pharmacology|What is the key fact about mechanism of warfarin?|Inhibits vitamin K epoxide reductase, reducing functional vitamin K-dependent clotting factors.
-Pharmacology|Clinical revision point — Mechanism of warfarin|Inhibits vitamin K epoxide reductase, reducing functional vitamin K-dependent clotting factors.
-Pharmacology|Complete this high-yield recall prompt: Mechanism of warfarin|Inhibits vitamin K epoxide reductase, reducing functional vitamin K-dependent clotting factors.
 Pharmacology|Recall: Reversal agent for unfractionated heparin?|Protamine sulfate.
-Pharmacology|What is the key fact about reversal agent for unfractionated heparin?|Protamine sulfate.
-Pharmacology|Clinical revision point — Reversal agent for unfractionated heparin|Protamine sulfate.
-Pharmacology|Complete this high-yield recall prompt: Reversal agent for unfractionated heparin|Protamine sulfate.
 Pharmacology|Recall: Mechanism of aspirin antiplatelet action?|Irreversibly acetylates platelet COX-1, reducing thromboxane A₂.
-Pharmacology|What is the key fact about mechanism of aspirin antiplatelet action?|Irreversibly acetylates platelet COX-1, reducing thromboxane A₂.
-Pharmacology|Clinical revision point — Mechanism of aspirin antiplatelet action|Irreversibly acetylates platelet COX-1, reducing thromboxane A₂.
-Pharmacology|Complete this high-yield recall prompt: Mechanism of aspirin antiplatelet action|Irreversibly acetylates platelet COX-1, reducing thromboxane A₂.
 Pharmacology|Recall: How statins reduce LDL?|Inhibit HMG-CoA reductase and increase hepatic LDL receptor-mediated clearance.
-Pharmacology|What is the key fact about how statins reduce ldl?|Inhibit HMG-CoA reductase and increase hepatic LDL receptor-mediated clearance.
-Pharmacology|Clinical revision point — How statins reduce LDL|Inhibit HMG-CoA reductase and increase hepatic LDL receptor-mediated clearance.
-Pharmacology|Complete this high-yield recall prompt: How statins reduce LDL|Inhibit HMG-CoA reductase and increase hepatic LDL receptor-mediated clearance.
 Pharmacology|Recall: How metformin lowers glucose?|Primarily reduces hepatic glucose production and improves insulin sensitivity.
-Pharmacology|What is the key fact about how metformin lowers glucose?|Primarily reduces hepatic glucose production and improves insulin sensitivity.
-Pharmacology|Clinical revision point — How metformin lowers glucose|Primarily reduces hepatic glucose production and improves insulin sensitivity.
-Pharmacology|Complete this high-yield recall prompt: How metformin lowers glucose|Primarily reduces hepatic glucose production and improves insulin sensitivity.
 Pharmacology|Recall: How sulfonylureas stimulate insulin release?|Close beta-cell ATP-sensitive potassium channels, causing depolarisation and calcium entry.
-Pharmacology|What is the key fact about how sulfonylureas stimulate insulin release?|Close beta-cell ATP-sensitive potassium channels, causing depolarisation and calcium entry.
-Pharmacology|Clinical revision point — How sulfonylureas stimulate insulin release|Close beta-cell ATP-sensitive potassium channels, causing depolarisation and calcium entry.
-Pharmacology|Complete this high-yield recall prompt: How sulfonylureas stimulate insulin release|Close beta-cell ATP-sensitive potassium channels, causing depolarisation and calcium entry.
 Pharmacology|Recall: Mechanism of SGLT2 inhibitors?|Block proximal tubular glucose reabsorption, increasing urinary glucose excretion.
-Pharmacology|What is the key fact about mechanism of sglt2 inhibitors?|Block proximal tubular glucose reabsorption, increasing urinary glucose excretion.
-Pharmacology|Clinical revision point — Mechanism of SGLT2 inhibitors|Block proximal tubular glucose reabsorption, increasing urinary glucose excretion.
-Pharmacology|Complete this high-yield recall prompt: Mechanism of SGLT2 inhibitors|Block proximal tubular glucose reabsorption, increasing urinary glucose excretion.
 Pharmacology|Recall: How salbutamol relieves bronchospasm?|Beta-2 receptor stimulation increases cAMP and relaxes bronchial smooth muscle.
-Pharmacology|What is the key fact about how salbutamol relieves bronchospasm?|Beta-2 receptor stimulation increases cAMP and relaxes bronchial smooth muscle.
-Pharmacology|Clinical revision point — How salbutamol relieves bronchospasm|Beta-2 receptor stimulation increases cAMP and relaxes bronchial smooth muscle.
-Pharmacology|Complete this high-yield recall prompt: How salbutamol relieves bronchospasm|Beta-2 receptor stimulation increases cAMP and relaxes bronchial smooth muscle.
+Anatomy|Foramen ovale transmits?|Mandibular nerve (V3), accessory meningeal artery, lesser petrosal nerve variably, and emissary vein.
+Anatomy|Foramen rotundum transmits?|Maxillary nerve (V2).
+Anatomy|Foramen spinosum transmits?|Middle meningeal artery and meningeal branch of V3.
+Anatomy|Floor of anatomical snuffbox?|Scaphoid and trapezium; radial artery crosses it.
+Anatomy|Nerve to thenar muscles for thumb opposition?|Recurrent branch of median nerve.
+Anatomy|Main nerve supply of little finger sensation?|Ulnar nerve.
+Anatomy|Most frequently torn rotator cuff tendon?|Supraspinatus tendon.
+Anatomy|Primary action of infraspinatus?|External rotation of the arm.
+Anatomy|Contents of portal triad?|Hepatic artery proper, portal vein, and bile duct.
+Anatomy|Main lymphatic drainage of testes?|Para-aortic (lumbar) lymph nodes.
+Anatomy|Embryological origin of adrenal medulla?|Neural crest cells.
+Anatomy|Muscles of first pharyngeal arch?|Muscles of mastication, mylohyoid, anterior digastric, tensor tympani and tensor veli palatini.
+Anatomy|Cranial nerve of second pharyngeal arch?|Facial nerve (CN VII).
+Anatomy|Arterial supply of hindgut?|Inferior mesenteric artery.
+Anatomy|Posterior boundary of epiploic foramen?|Inferior vena cava.
+Anatomy|Which nerve passes through the optic canal?|Optic nerve (CN II), with ophthalmic artery.
+Anatomy|Which artery supplies the medial compartment of thigh?|Obturator artery contributes; profunda femoris perforating branches are also important.
+Anatomy|Main nerve of anterior thigh compartment?|Femoral nerve.
+Anatomy|Main nerve of posterior thigh compartment?|Sciatic nerve, predominantly tibial division.
+Anatomy|What forms the roof of the carpal tunnel?|Flexor retinaculum.
+Physiology|What drives simple diffusion?|Concentration or electrochemical gradient.
+Physiology|Cause of first heart sound?|Closure and tensing of mitral and tricuspid valves.
+Physiology|Cause of second heart sound?|Closure of aortic and pulmonary valves.
+Physiology|Normal adult SA node rate?|Approximately 60–100 impulses per minute.
+Physiology|Nephron site of greatest sodium and water reabsorption?|Proximal convoluted tubule.
+Physiology|Where is the renal countercurrent multiplier?|Loop of Henle.
+Physiology|Transporter in thick ascending limb?|NKCC2; this segment is relatively impermeable to water.
+Physiology|Overall effect of PTH on calcium and phosphate?|Raises serum calcium and lowers serum phosphate.
+Physiology|Pancreatic cells that secrete glucagon?|Alpha cells.
+Physiology|Pancreatic cells that secrete insulin?|Beta cells.
+Physiology|Main stimulus for erythropoietin release?|Renal tissue hypoxia.
+Physiology|Which gastric cells produce intrinsic factor?|Parietal cells.
+Physiology|Where is intrinsic-factor-bound B12 absorbed?|Terminal ileum.
+Physiology|Hormone causing gallbladder contraction?|Cholecystokinin (CCK).
+Physiology|Main stimulus for secretin release?|Acidic chyme in duodenum.
+Physiology|Which lung volume is not measured by simple spirometry?|Residual volume.
+Physiology|Effect of increased temperature on oxygen dissociation curve?|Right shift, promoting oxygen unloading.
+Physiology|What determines glomerular filtration rate?|Net filtration pressure and filtration coefficient.
+Physiology|Which hormone increases renal calcium reabsorption?|Parathyroid hormone.
+Physiology|What is the main effect of ANP?|Promotes natriuresis and reduces blood volume and pressure.
+Biochemistry|Enzyme converting pyruvate to lactate?|Lactate dehydrogenase.
+Biochemistry|Committed step enzyme of purine synthesis?|Glutamine-PRPP amidotransferase.
+Biochemistry|Enzyme producing deoxyribonucleotides?|Ribonucleotide reductase.
+Biochemistry|End product of human purine degradation?|Uric acid.
+Biochemistry|Enzyme deficient in Lesch–Nyhan syndrome?|HGPRT.
+Biochemistry|Amino acid precursor of serotonin?|Tryptophan.
+Biochemistry|Amino acid precursor of catecholamines?|Tyrosine.
+Biochemistry|Vitamin deficiency causing methylmalonic acid elevation?|Vitamin B12 deficiency.
+Biochemistry|Vitamin deficiency causing homocysteine elevation without methylmalonic acid elevation?|Folate deficiency.
+Biochemistry|Main transport role of carnitine?|Moves long-chain fatty acyl groups into mitochondria for beta-oxidation.
+Biochemistry|Enzyme deficient in classic galactosaemia?|Galactose-1-phosphate uridyltransferase.
+Biochemistry|Enzyme deficient in hereditary fructose intolerance?|Aldolase B.
+Biochemistry|Biochemical defect in alkaptonuria?|Homogentisate oxidase deficiency.
+Biochemistry|Main collagen type in bone?|Type I collagen.
+Biochemistry|Main collagen type in cartilage?|Type II collagen.
+Biochemistry|Plasma iron transport protein?|Transferrin.
+Biochemistry|What does ferritin store?|Intracellular iron; serum ferritin broadly reflects iron stores but rises with inflammation.
+Biochemistry|Rate-limiting enzyme of gluconeogenesis?|Fructose-1,6-bisphosphatase.
+Biochemistry|Enzyme releasing free glucose from hepatic glucose-6-phosphate?|Glucose-6-phosphatase.
+Biochemistry|Which molecule carries activated sulfate for glycosaminoglycan synthesis?|PAPS (3'-phosphoadenosine-5'-phosphosulfate).
+Pathology|Defining feature of apoptosis?|Programmed cell death with cell shrinkage and apoptotic bodies, usually little inflammation.
+Pathology|Predominant cells in acute bacterial inflammation?|Neutrophils.
+Pathology|Predominant cells in chronic inflammation?|Macrophages, lymphocytes and plasma cells.
+Pathology|Microscopic hallmark of granuloma?|Epithelioid macrophage aggregates, sometimes with multinucleated giant cells.
+Pathology|Special stain for amyloid?|Congo red with apple-green birefringence under polarised light.
+Pathology|Main protein in Alzheimer plaques?|Amyloid-beta.
+Pathology|Protein in Alzheimer neurofibrillary tangles?|Hyperphosphorylated tau.
+Pathology|Classic translocation in follicular lymphoma?|t(14;18), causing BCL2 overexpression.
+Pathology|Early tumour suppressor alteration in colorectal adenoma-carcinoma sequence?|APC inactivation.
+Pathology|Classic nuclei in papillary thyroid carcinoma?|Orphan Annie eye nuclei, grooves and intranuclear inclusions.
+Pathology|Common marker associated with hepatocellular carcinoma?|Alpha-fetoprotein (AFP), not diagnostic alone.
+Pathology|Clinical pattern of nephritic syndrome?|Haematuria, reduced GFR, oliguria and hypertension.
+Pathology|Core features of nephrotic syndrome?|Heavy proteinuria, hypoalbuminaemia and oedema, often hyperlipidaemia.
+Pathology|Renal disease with linear IgG on immunofluorescence?|Anti-GBM disease.
+Pathology|Classic histology of membranous nephropathy?|Subepithelial immune deposits with capillary-wall thickening and spikes.
+Pathology|Common infectious association of peptic ulcer disease?|Helicobacter pylori.
+Pathology|Defining physiological feature of asthma?|Variable, usually reversible airflow obstruction and bronchial hyperresponsiveness.
+Pathology|Cells prominent in allergic asthma?|Eosinophils and Th2 lymphocytes.
+Pathology|Which hypersensitivity is IgE-mediated?|Type I.
+Pathology|Which hypersensitivity is immune-complex mediated?|Type III.
+Microbiology|Gram stain and key tests for Staphylococcus aureus?|Gram-positive cocci in clusters; catalase-positive and coagulase-positive.
+Microbiology|Key identification of Streptococcus pyogenes?|Group A beta-haemolytic streptococcus; PYR-positive.
+Microbiology|Cause of antibiotic-associated pseudomembranous colitis?|Clostridioides difficile.
+Microbiology|Major virulence factor of Streptococcus pneumoniae?|Polysaccharide capsule.
+Microbiology|Acid-fast bacterium causing tuberculosis?|Mycobacterium tuberculosis.
+Microbiology|Transmission route of hepatitis A?|Faecal–oral.
+Microbiology|Which hepatitis virus is partially double-stranded DNA?|Hepatitis B virus.
+Microbiology|Virus classically causing infectious mononucleosis?|Epstein–Barr virus.
+Microbiology|HIV entry receptor and co-receptor?|CD4 plus CCR5 or CXCR4.
+Microbiology|Yeast causing thrush and pseudohyphae?|Candida albicans.
+Microbiology|Encapsulated yeast associated with meningitis in immunocompromised people?|Cryptococcus neoformans.
+Microbiology|Mosquito genus transmitting malaria?|Female Anopheles.
+Microbiology|Which malaria parasites form dormant liver hypnozoites?|Plasmodium vivax and P. ovale.
+Microbiology|Infective stage of Entamoeba histolytica?|Mature quadrinucleate cyst.
+Microbiology|Organism causing pertussis?|Bordetella pertussis.
+Microbiology|Mechanism of diphtheria toxin?|ADP-ribosylates EF-2 and blocks protein synthesis.
+Microbiology|Mechanism of cholera toxin?|ADP-ribosylates Gs alpha, persistently activating adenylate cyclase and raising cAMP.
+Microbiology|Organism associated with rusty sputum and lancet diplococci?|Streptococcus pneumoniae.
+Microbiology|Which organism causes atypical pneumonia and lacks a cell wall?|Mycoplasma pneumoniae.
+Immunology|Which immunoglobulin crosses placenta?|IgG.
+Immunology|First immunoglobulin produced in primary response?|IgM.
+Immunology|Main immunoglobulin in mucosal secretions?|Secretory IgA.
+Immunology|Potent complement-derived neutrophil chemoattractant?|C5a.
+Immunology|Complement components forming membrane attack complex?|C5b–C9.
+Immunology|MHC class presenting endogenous peptides to CD8 cells?|MHC class I.
+Immunology|MHC class presenting exogenous peptides to CD4 cells?|MHC class II.
+Immunology|Transcription factor associated with regulatory T cells?|FOXP3.
+Immunology|Major cytokine stimulating hepatic acute-phase proteins?|IL-6.
+Immunology|Cells that secrete antibodies?|Plasma cells.
+Pharmacology|Mechanism of beta-lactam antibiotics?|Bind penicillin-binding proteins and inhibit peptidoglycan cross-linking.
+Pharmacology|Mechanism of macrolide antibiotics?|Bind 50S ribosomal subunit and inhibit protein synthesis.
+Pharmacology|Major toxicities of aminoglycosides?|Nephrotoxicity and ototoxicity.
+Pharmacology|Antibiotic class associated with tendon injury and QT prolongation?|Fluoroquinolones.
+Pharmacology|Mechanism of proton-pump inhibitors?|Irreversibly inhibit gastric H+/K+-ATPase.
+Pharmacology|Mechanism of loop diuretics?|Inhibit NKCC2 in thick ascending limb.
+Pharmacology|Mechanism of thiazide diuretics?|Inhibit Na+/Cl− cotransporter in distal convoluted tubule.
+Pharmacology|Mechanism of spironolactone?|Mineralocorticoid receptor antagonism.
+Pharmacology|Antidote for paracetamol overdose?|N-acetylcysteine replenishes glutathione.
+Pharmacology|Antidote for opioid-induced respiratory depression?|Naloxone; repeat doses may be needed.
+Pharmacology|Mechanism of local anaesthetics?|Block voltage-gated sodium channels.
+Pharmacology|How does levodopa help Parkinson disease?|Crosses blood–brain barrier and is converted to dopamine.
+Pharmacology|Mechanism of SSRIs?|Inhibit serotonin reuptake transporter.
+Pharmacology|Two xanthine oxidase inhibitors used for gout?|Allopurinol and febuxostat.
+Pharmacology|Mechanism of clopidogrel?|Irreversible blockade of platelet P2Y12 ADP receptors.
+Pharmacology|How is unfractionated heparin commonly monitored?|aPTT or calibrated anti-Xa assay.
+Pharmacology|How is warfarin monitored?|Prothrombin time expressed as INR.
+Pharmacology|Mechanism of methotrexate?|Inhibits dihydrofolate reductase; low-dose anti-inflammatory effects also involve adenosine signalling.
+Pharmacology|Which antidote reverses benzodiazepine effects?|Flumazenil in selected cases; use caution due to seizure risk.
+Pharmacology|Mechanism of ondansetron?|Selective 5-HT3 receptor antagonism.
+Clinical Medicine|First-line immediate drug for anaphylaxis?|Intramuscular adrenaline into anterolateral thigh, alongside emergency supportive care.
+Clinical Medicine|Classic triad of normal-pressure hydrocephalus?|Gait disturbance, cognitive impairment and urinary incontinence.
+Clinical Medicine|Leading causes of acute pancreatitis?|Gallstones and alcohol.
+Clinical Medicine|Core ECG feature of STEMI?|ST elevation in contiguous leads in the appropriate clinical context.
+Clinical Medicine|Typical pattern of stable angina?|Predictable exertional chest discomfort relieved by rest or nitroglycerin.
+Clinical Medicine|Defining biochemical pattern of diabetic ketoacidosis?|Ketonaemia with high-anion-gap metabolic acidosis, usually with hyperglycaemia.
+Clinical Medicine|Acid-base disturbance caused by prolonged vomiting?|Metabolic alkalosis.
+Clinical Medicine|Acid-base disturbance caused by severe diarrhoea?|Non-anion-gap metabolic acidosis.
+Clinical Medicine|Typical weakness pattern in myasthenia gravis?|Fluctuating fatigable skeletal muscle weakness, often ocular or bulbar.
+Clinical Medicine|Common autoantibody in Graves disease?|TSH-receptor stimulating antibody.
+Clinical Medicine|Biochemical pattern of primary hypothyroidism?|Raised TSH with low free T4.
+Clinical Medicine|Classic symptom triad of pheochromocytoma?|Headache, sweating and palpitations.
+Clinical Medicine|Typical blood count pattern in iron deficiency?|Microcytic hypochromic anaemia, often with raised RDW.
+Clinical Medicine|Typical smear in hereditary spherocytosis?|Spherocytes; confirm with tests such as eosin-5-maleimide binding.
+Clinical Medicine|First-line imaging for suspected gallstones?|Right upper quadrant ultrasound.
+Clinical Medicine|Classic presentation of aortic dissection?|Abrupt severe chest or back pain, sometimes with pulse or blood-pressure asymmetry.
+Clinical Medicine|Clinical definition of sepsis?|Life-threatening organ dysfunction due to a dysregulated host response to infection.
+Clinical Medicine|Most important immediate test in suspected ectopic pregnancy?|Pregnancy testing with urgent clinical assessment and pelvic ultrasound as indicated.
+Clinical Medicine|Typical symptom of peripheral arterial disease?|Exertional leg pain (claudication) relieved by rest.
+Clinical Medicine|Usual diagnostic test for suspected deep-vein thrombosis?|Compression venous ultrasonography, guided by clinical probability and D-dimer.
+Clinical Medicine|Classic feature of acute pericarditis?|Sharp pleuritic chest pain relieved by sitting forward, often with a pericardial friction rub.
 ''';
 
 final List<AtlasFlashcard> atlasFlashcards = List.unmodifiable(
@@ -225,7 +225,8 @@ class AtlasFlashcardsScreen extends StatefulWidget {
 class _AtlasFlashcardsScreenState extends State<AtlasFlashcardsScreen> {
   String subject = 'All';
   int index = 0;
-  bool revealed = false, bookmarksOnly = false, reversed = false;
+  bool revealed = false, bookmarksOnly = false;
+  List<int> shuffledIds = [];
   final Set<int> bookmarks = {};
   final Set<int> mastered = {};
   final Set<int> review = {};
@@ -237,7 +238,8 @@ class _AtlasFlashcardsScreenState extends State<AtlasFlashcardsScreen> {
       if (bookmarksOnly && !bookmarks.contains(i)) continue;
       ids.add(i);
     }
-    return reversed ? ids.reversed.toList() : ids;
+    if (shuffledIds.isNotEmpty && !bookmarksOnly && subject == 'All') return shuffledIds.where(ids.contains).toList();
+    return ids;
   }
 
   List<String> get subjects => ['All', ...{for (final c in atlasFlashcards) c.subject}];
@@ -265,7 +267,7 @@ class _AtlasFlashcardsScreenState extends State<AtlasFlashcardsScreen> {
           ),
           IconButton(
             tooltip: 'Shuffle cards',
-            onPressed: () => setState(() { reversed = !reversed; index = 0; revealed = false; }),
+            onPressed: () => setState(() { shuffledIds = List<int>.generate(atlasFlashcards.length, (i) => i)..shuffle(); index = 0; revealed = false; }),
             icon: const Icon(Icons.shuffle_rounded),
           ),
         ],
