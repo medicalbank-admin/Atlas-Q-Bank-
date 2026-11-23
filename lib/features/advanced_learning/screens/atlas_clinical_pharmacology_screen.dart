@@ -738,8 +738,7 @@ class _AtlasClinicalPharmacologyScreenState
       monitoring: 'ECG and electrolytes in high-risk patients, bowel function and antiemetic response.',
       pearls: 'It blocks serotonin-mediated emesis but does not reliably treat motion sickness.',
       sources: 'ASCO antiemetic guidance; FDA/DailyMed ondansetron prescribing information.'
-    )
-
+    ),
 
     _Drug(
       name: 'Carvedilol', generic: 'Carvedilol', group: 'Non-selective beta-adrenergic and alpha-1 blocker', category: 'Cardiovascular', className: 'Alpha/beta blocker',
@@ -1879,9 +1878,7 @@ Widget? _molecularStructureFor(_Drug drug) {
         note: 'Wild-type human DHFR ternary crystal complex with methotrexate and NADPH. The deposited structure directly represents the human drug target.',
       );
     default:
-      // The generated molecular asset catalogue currently covers the original
-      // 41-drug set. New profiles still receive their complete interactive MOA
-      // pathway above; do not render a broken or unverified 3D asset for them.
+      // Only display generated conformers when their matching asset exists.
       const conformerCatalogue = <String>{
         'Metoprolol', 'Amlodipine', 'Lisinopril', 'Furosemide',
         'Salbutamol', 'Metformin', 'Omeprazole', 'Ceftriaxone',
@@ -1898,9 +1895,11 @@ Widget? _molecularStructureFor(_Drug drug) {
       if (!conformerCatalogue.contains(drug.name)) return null;
       final slug = drug.name.toLowerCase()
           .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
-          .replaceAll(RegExp(r'^-+|-+
+          .replaceAll(RegExp(r'^-+|-+$'), '');
+      return AtlasDrugConformerViewer(drugName: drug.name, slug: slug);
   }
 }
+
 class _DrugCard extends StatelessWidget {
   final _Drug drug;
   final VoidCallback onTap;
