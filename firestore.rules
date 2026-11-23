@@ -709,7 +709,7 @@ service cloud.firestore {
           'studentUid', 'studentName', 'studentEmail', 'studentPhone',
           'studentUniversity', 'studentCountry', 'studentProfileImageUrl',
           'adminUid', 'adminName', 'lastMessage', 'lastMessageAt',
-          'lastSenderUid', 'unreadForStudent', 'unreadForAdmin',
+          'lastSenderUid', 'lastMessageId', 'unreadForStudent', 'unreadForAdmin',
           'createdAt', 'updatedAt'
         ]) &&
         request.resource.data.studentName is string &&
@@ -729,13 +729,14 @@ service cloud.firestore {
           (isAdmin() && request.resource.data.adminUid == request.auth.uid)) &&
         request.resource.data.lastMessage == '' &&
         request.resource.data.lastSenderUid == '' &&
+        request.resource.data.lastMessageId == '' &&
         request.resource.data.unreadForStudent == 0 &&
         request.resource.data.unreadForAdmin == 0;
 
       allow update: if isAdmin() ||
         (isConversationStudent() &&
           request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-            'lastMessage', 'lastMessageAt', 'lastSenderUid',
+            'lastMessage', 'lastMessageAt', 'lastSenderUid', 'lastMessageId',
             'unreadForAdmin', 'unreadForStudent', 'updatedAt'
           ]) &&
           (
@@ -747,6 +748,10 @@ service cloud.firestore {
               request.resource.data.lastMessage.size() <= 4000 &&
               request.resource.data.lastMessageAt is timestamp &&
               request.resource.data.lastSenderUid == request.auth.uid &&
+              request.resource.data.lastMessageId is string &&
+              request.resource.data.lastMessageId.size() > 0 &&
+              existsAfter(/databases/$(database)/documents/inbox_conversations/$(studentUid)/messages/$(request.resource.data.lastMessageId)) &&
+              getAfter(/databases/$(database)/documents/inbox_conversations/$(studentUid)/messages/$(request.resource.data.lastMessageId)).data.senderUid == request.auth.uid &&
               request.resource.data.unreadForStudent == 0 &&
               request.resource.data.unreadForAdmin is int &&
               request.resource.data.unreadForAdmin ==
