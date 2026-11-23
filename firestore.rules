@@ -660,6 +660,32 @@ service cloud.firestore {
     }
 
     // ==================================================
+    // STUDENT SMART FLASHCARD PROGRESS
+    // Each authenticated student may read and write only their own
+    // progress document. No student can access another student's data.
+    // ==================================================
+    match /user_flashcard_progress/{uid} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow create, update: if signedIn() &&
+        request.auth.uid == uid &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.keys().hasAll([
+          'userId', 'bookmarks', 'mastered', 'review', 'updatedAt'
+        ]) &&
+        request.resource.data.keys().hasOnly([
+          'userId', 'bookmarks', 'mastered', 'review', 'updatedAt'
+        ]) &&
+        request.resource.data.bookmarks is list &&
+        request.resource.data.bookmarks.size() <= 200 &&
+        request.resource.data.mastered is list &&
+        request.resource.data.mastered.size() <= 200 &&
+        request.resource.data.review is list &&
+        request.resource.data.review.size() <= 200 &&
+        request.resource.data.updatedAt is timestamp;
+      allow delete: if signedIn() && request.auth.uid == uid;
+    }
+
+    // ==================================================
     // DEFAULT DENY
     // ==================================================
 
