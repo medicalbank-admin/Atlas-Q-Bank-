@@ -189,7 +189,7 @@ class InboxService {
     final request = http.MultipartRequest(
       'POST',
       Uri.parse(
-        'https://api.cloudinary.com/v1_1/$cloudName/image/authenticated',
+        'https://api.cloudinary.com/v1_1/$cloudName/image/upload',
       ),
     );
     request.fields.addAll({
