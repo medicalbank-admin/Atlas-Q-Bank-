@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../app/atlas_academy_app.dart';
 import '../widgets/atlas_molecular_mechanism_diagram.dart';
+import '../widgets/atlas_molecular_structure_viewer.dart';
 
 class AtlasClinicalPharmacologyScreen extends StatefulWidget {
   const AtlasClinicalPharmacologyScreen({super.key});
@@ -876,6 +877,48 @@ class _Drug {
   });
 }
 
+Widget? _molecularStructureFor(_Drug drug) {
+  switch (drug.name) {
+    case 'Lisinopril':
+      return const AtlasMolecularStructureViewer(
+        structureKey: 'ace_lisinopril',
+        structureTitle: 'Human angiotensin-converting enzyme + lisinopril',
+        pdbId: '1O86', ligandName: 'Lisinopril', resolution: '2.00 Å',
+        note: 'Experimental co-crystal: the ligand is shown in its deposited binding pose. Protein coordinates are from the PDB entry; the model is not a docking prediction.',
+      );
+    case 'Atorvastatin':
+      return const AtlasMolecularStructureViewer(
+        structureKey: 'hmgcr_atorvastatin',
+        structureTitle: 'Human HMG-CoA reductase + atorvastatin',
+        pdbId: '1HWK', ligandName: 'Atorvastatin', resolution: '2.22 Å',
+        note: 'Experimental co-crystal: atorvastatin coordinates are taken from ligand component 117 in the deposited complex.',
+      );
+    case 'Ibuprofen':
+      return const AtlasMolecularStructureViewer(
+        structureKey: 'cox1_ibuprofen',
+        structureTitle: 'Ovine cyclo-oxygenase-1 + ibuprofen',
+        pdbId: '1EQG', ligandName: 'Ibuprofen', resolution: '2.61 Å',
+        note: 'Experimental co-crystal: ibuprofen is shown in the deposited COX-1 binding site. The protein is ovine, not human.',
+      );
+    case 'Apixaban':
+      return const AtlasMolecularStructureViewer(
+        structureKey: 'factorxa_apixaban',
+        structureTitle: 'Human coagulation factor Xa + apixaban',
+        pdbId: '2P16', ligandName: 'Apixaban', resolution: '2.30 Å',
+        note: 'Experimental co-crystal: apixaban is ligand component GG2 in the deposited factor Xa complex.',
+      );
+    case 'Methotrexate':
+      return const AtlasMolecularStructureViewer(
+        structureKey: 'dhfr_methotrexate',
+        structureTitle: 'Dihydrofolate reductase + methotrexate',
+        pdbId: '4DFR', ligandName: 'Methotrexate', resolution: '1.90 Å',
+        note: 'Experimental protein–inhibitor structure from the Protein Data Bank. Inspect the atom-level model by rotating and selecting atoms.',
+      );
+    default:
+      return null;
+  }
+}
+
 class _DrugCard extends StatelessWidget {
   final _Drug drug;
   final VoidCallback onTap;
@@ -963,6 +1006,10 @@ class _DrugDetailScreen extends StatelessWidget {
             isLast: entry.key == drug.steps.length - 1)),
         ])),
         ])),
+      if (_molecularStructureFor(drug) != null)
+        _SectionCard(title: '3D MOLECULAR STRUCTURE & BINDING SITE',
+          icon: Icons.view_in_ar_rounded,
+          child: _molecularStructureFor(drug)!),
       _SectionCard(title: 'INDICATIONS & CLINICAL USES',
         icon: Icons.medical_services_outlined, text: drug.indications),
       _SectionCard(title: 'PHARMACOKINETICS',
