@@ -745,7 +745,24 @@ async function createInboxImageUrl(env, claims, body) {
   const signature = await cloudinaryDeliverySignature(deliveryPath + apiSecret);
   const encodedPath = deliveryPath.split("/").map(encodeURIComponent).join("/");
   return { success: true, url: "https://res.cloudinary.com/" + cloudName +
-    "/image/authenticated/s--" + signature + "--/" + encodedPath, expiresInSeconds: 3600 };
+    "/image/authenticated/s--" + signature + "--/" + encodedPath };
+}
+
+async function proxyInboxImage(env, claims, body) {
+  const signed = await createInboxImageUrl(env, claims, body);
+  const upstream = await fetch(signed.url);
+  if (!upstream.ok) throw new Error("The stored image could not be retrieved from Cloudinary.");
+  const contentType = upstream.headers.get("Content-Type") || "image/jpeg";
+  if (!contentType.toLowerCase().startsWith("image/")) throw new Error("The stored attachment is not a valid image.");
+  return new Response(upstream.body, {
+    status: 200,
+    headers: {
+      ...CORS,
+      "Content-Type": contentType,
+      "Cache-Control": "private, no-store, max-age=0",
+      "X-Content-Type-Options": "nosniff",
+    },
+  });
 }
 async function checkBackendReady(env) {
   await getServiceAccessToken(env);
@@ -772,7 +789,7 @@ export default {
     }
     const url = new URL(request.url);
     const allowedPaths = ["/start", "/submit", "/daily/start", "/daily/status", "/daily/submit",
-      "/inbox/upload-signature", "/inbox/image-url"];
+      "/inbox/upload-signature", "/inbox/image-url", "/inbox/image"];
     if (request.method !== "POST" || !allowedPaths.includes(url.pathname)) {
       return fail("Endpoint not found.", 404);
     }
@@ -795,8 +812,10 @@ export default {
                 ? await dailyChallengeSubmit(env, claims.sub, body)
                 : url.pathname === "/inbox/upload-signature"
                   ? await createInboxUploadSignature(env, claims, body)
-                  : await createInboxImageUrl(env, claims, body);
-      return response(result);
+                  : url.pathname === "/inbox/image-url"
+                    ? await createInboxImageUrl(env, claims, body)
+                    : await proxyInboxImage(env, claims, body);
+      return result instanceof Response ? result : response(result);
     } catch (error) {
       const message = error?.message || "The MCQ request could not be completed.";
       const status = /sign-in token|sign in first|expired/i.test(message) ? 401 :
