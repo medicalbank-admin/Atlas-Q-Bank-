@@ -80,6 +80,38 @@ service firebase.storage {
     }
 
     // -----------------------------------------
+    // PRIVATE STUDENT ↔ ADMINISTRATOR INBOX IMAGES
+    // Path: inbox_media/{studentUid}/{uploaderUid}/{file}
+    // -----------------------------------------
+    match /inbox_media/{studentUid}/{uploaderUid}/{fileName} {
+      function conversationExists() {
+        return firestore.exists(
+          /databases/(default)/documents/inbox_conversations/$(studentUid)
+        );
+      }
+
+      function conversationStudent() {
+        return firestore.get(
+          /databases/(default)/documents/inbox_conversations/$(studentUid)
+        ).data.studentUid;
+      }
+
+      allow read: if isAdmin() ||
+        (isSignedIn() && conversationExists() &&
+         conversationStudent() == request.auth.uid);
+
+      allow create: if isSignedIn() &&
+        request.auth.uid == uploaderUid &&
+        conversationExists() &&
+        (isAdmin() || conversationStudent() == request.auth.uid) &&
+        fileName.matches('[A-Za-z0-9._-]+') &&
+        isValidImage() &&
+        request.resource.size < 8 * 1024 * 1024;
+
+      allow update, delete: if false;
+    }
+
+    // -----------------------------------------
     // DEFAULT DENY
     // -----------------------------------------
 
