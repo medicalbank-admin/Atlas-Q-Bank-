@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../../app/atlas_academy_app.dart';
 import '../data/anatomy_catalog.dart';
+import '../data/detailed_skeleton_catalog.dart';
 
 class AdminAnatomyManagementScreen extends StatefulWidget {
   const AdminAnatomyManagementScreen({super.key});
@@ -16,7 +17,11 @@ class _AdminAnatomyManagementScreenState extends State<AdminAnatomyManagementScr
 
   @override
   Widget build(BuildContext context) {
-    final items = anatomyCatalog.where((item) {
+    final combined = <Map<String, String>>[
+      ...detailedSkeletonCatalog,
+      ...anatomyCatalog.where((item) => item['system'] != 'skeleton'),
+    ];
+    final items = combined.where((item) {
       final matches = query.isEmpty || item['label']!.toLowerCase().contains(query.toLowerCase());
       return matches && (system == 'all' || item['system'] == system);
     }).toList();
@@ -162,6 +167,7 @@ class _AdminAnatomyManagementScreenState extends State<AdminAnatomyManagementScr
       final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
       await FirebaseFirestore.instance.collection('anatomy_content').doc(item['key']).set({
         'structureKey': item['key'], 'label': item['label'], 'system': item['system'],
+        'fma': item['fma'] ?? '',
         'latinName': latin.text.trim(), 'description': description.text.trim(),
         'function': function.text.trim(), 'clinicalRelevance': clinical.text.trim(),
         'bloodSupply': blood.text.trim(), 'innervation': nerves.text.trim(),
