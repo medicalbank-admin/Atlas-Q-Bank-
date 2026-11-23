@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:interactive_3d/interactive_3d.dart';
+import 'package:path_provider/path_provider.dart';
 import '../../../app/atlas_academy_app.dart';
 import '../../anatomy/data/anatomy_catalog.dart';
 import '../../anatomy/data/detailed_skeleton_catalog.dart';
@@ -129,7 +131,83 @@ class _SpotterScreenState extends State<_SpotterScreen> {
   int correct = 0, step = 0;
   static const int total = 5;
   bool finished = false;
+  bool loadingModel = false;
+  double downloadProgress = 0;
+  String? localModelPath;
+  String? modelError;
+  int preparationToken = 0;
   String get modelUrl => system == 'skeleton' ? _skeletonSpotterModel : (sex == 'male' ? _maleSpotterModel : _femaleSpotterModel);
+  String get modelFileName => system == 'skeleton' ? 'atlas-spotter-skeleton.glb' : (sex == 'male' ? 'atlas-spotter-male.glb' : 'atlas-spotter-female.glb');
+
+  @override
+  void initState() {
+    super.initState();
+    _prepareModel();
+  }
+
+  @override
+  void dispose() {
+    preparationToken++;
+    super.dispose();
+  }
+
+  Future<void> _prepareModel({bool forceDownload = false}) async {
+    final token = ++preparationToken;
+    if (mounted) setState(() {
+      loadingModel = true;
+      downloadProgress = 0;
+      localModelPath = null;
+      modelError = null;
+    });
+    HttpClient? client;
+    File? temporary;
+    try {
+      final directory = await getApplicationSupportDirectory();
+      final folder = Directory('${directory.path}/atlas_spotter_models');
+      if (!await folder.exists()) await folder.create(recursive: true);
+      final destination = File('${folder.path}/$modelFileName');
+      if (forceDownload && await destination.exists()) await destination.delete();
+      if (await destination.exists() && await destination.length() > 1024) {
+        if (!mounted || token != preparationToken) return;
+        setState(() { localModelPath = destination.path; loadingModel = false; downloadProgress = 1; });
+        return;
+      }
+      client = HttpClient()..connectionTimeout = const Duration(seconds: 30);
+      final request = await client.getUrl(Uri.parse(modelUrl));
+      request.headers.set(HttpHeaders.userAgentHeader, 'AtlasAcademy-Spotter/1.0');
+      final response = await request.close();
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw HttpException('Model server returned HTTP ${response.statusCode}.');
+      }
+      final totalBytes = response.contentLength;
+      var received = 0;
+      temporary = File('${destination.path}.part');
+      if (await temporary.exists()) await temporary.delete();
+      final sink = temporary.openWrite();
+      try {
+        await for (final chunk in response) {
+          if (!mounted || token != preparationToken) { await sink.close(); return; }
+          sink.add(chunk);
+          received += chunk.length;
+          if (totalBytes > 0) setState(() => downloadProgress = received / totalBytes);
+        }
+        await sink.flush();
+      } finally {
+        await sink.close();
+      }
+      if (received <= 1024) throw const FormatException('Downloaded 3D model is incomplete.');
+      if (!mounted || token != preparationToken) { await temporary.delete(); return; }
+      if (await destination.exists()) await destination.delete();
+      await temporary.rename(destination.path);
+      setState(() { localModelPath = destination.path; loadingModel = false; downloadProgress = 1; });
+    } catch (error) {
+      if (temporary != null && await temporary.exists()) await temporary.delete();
+      if (!mounted || token != preparationToken) return;
+      setState(() { loadingModel = false; modelError = error.toString(); });
+    } finally {
+      client?.close(force: true);
+    }
+  }
   List<Map<String,String>> get targets {
     final source = system == 'skeleton' ? detailedSkeletonCatalog : anatomyCatalog;
     return source.where((e) => e['system'] == system && e['key'] != null && e['label'] != null && _spotterLessons.containsKey(e['key'])).map((e) => Map<String,String>.from(e)).toList();
@@ -179,37 +257,78 @@ class _SpotterScreenState extends State<_SpotterScreen> {
           DropdownMenuItem(value:'skeleton',child:Text('Detailed skeleton')),
           DropdownMenuItem(value:'skin',child:Text('Skin')),
           DropdownMenuItem(value:'joints',child:Text('Joints')),
-        ], onChanged: (v) { if(v!=null) setState(() { system=v; target=null; selectedKey=null; finished=false; step=0; correct=0; }); })),
+        ], onChanged: (v) { if(v!=null) { setState(() { system=v; target=null; selectedKey=null; finished=false; step=0; correct=0; }); _prepareModel(forceDownload: true); } })),
         if (system != 'skeleton') ...[
           const SizedBox(width:8),
           SizedBox(width:105, child: DropdownButtonFormField<String>(value:sex, decoration: const InputDecoration(labelText:'Model'), items: const [
             DropdownMenuItem(value:'male',child:Text('Male')),
             DropdownMenuItem(value:'female',child:Text('Female')),
-          ], onChanged:(v){ if(v!=null) setState(() { sex=v; target=null; selectedKey=null; finished=false; }); })),
+          ], onChanged:(v){ if(v!=null) { setState(() { sex=v; target=null; selectedKey=null; finished=false; }); _prepareModel(forceDownload: true); } })),
         ]
       ]),
       const SizedBox(height: 12),
-      Container(height: 390, clipBehavior: Clip.antiAlias, decoration: BoxDecoration(color: const Color(0xFF07182C),borderRadius: BorderRadius.circular(20),border: Border.all(color: const Color(0xFF183A5C))), child: Interactive3d(
-        key: ValueKey(modelUrl),
-        controller: controller,
-        modelUrl: modelUrl,
-        defaultZoom: 1.3,
-        backgroundColor: const Color(0xFF07182C),
-        selectionColor: const [0.20,0.66,1.0,1.0],
-        onSelectionChanged: onSelection,
-        loadingWidget: const Center(child: Column(mainAxisSize: MainAxisSize.min,children: [
-          CircularProgressIndicator(color: Color(0xFF9CC9ED)),
-          SizedBox(height:12),
-          Text('Loading interactive 3D model…',style:TextStyle(color:Colors.white70,fontSize:12))
-        ])),
-        errorBuilder: (context,error) => Center(child: Padding(padding: const EdgeInsets.all(20),child: Column(mainAxisSize:MainAxisSize.min,children: [
-          const Icon(Icons.cloud_off_rounded,color:Color(0xFF9CC9ED),size:36),
-          const SizedBox(height:8),
-          const Text('3D model could not be loaded',style:TextStyle(color:Colors.white,fontWeight:FontWeight.w800)),
-          const SizedBox(height:5),
-          Text(error.toString(),textAlign:TextAlign.center,style:const TextStyle(color:Colors.white70,fontSize:11))
-        ]))),
-      )),
+      Container(height: 390, clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(color: const Color(0xFF07182C),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFF183A5C))),
+        child: localModelPath == null
+          ? Center(child: Padding(padding: const EdgeInsets.all(22), child: Column(
+              mainAxisSize: MainAxisSize.min, children: [
+                if (loadingModel) ...[
+                  const CircularProgressIndicator(color: Color(0xFF9CC9ED)),
+                  const SizedBox(height: 12),
+                  Text('Downloading 3D anatomy model… ${(downloadProgress * 100).round()}%',
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 8),
+                  LinearProgressIndicator(value: downloadProgress == 0 ? null : downloadProgress,
+                    backgroundColor: Colors.white24, color: const Color(0xFF9CC9ED)),
+                  const SizedBox(height: 8),
+                  const Text('The first download may take a little time.',
+                    textAlign: TextAlign.center, style: TextStyle(color: Colors.white70, fontSize: 11)),
+                ] else ...[
+                  const Icon(Icons.cloud_off_rounded, color: Color(0xFF9CC9ED), size: 36),
+                  const SizedBox(height: 9),
+                  const Text('3D model unavailable', style: TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.w800)),
+                  const SizedBox(height: 6),
+                  Text(modelError ?? 'Check your internet connection and try again.',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.white70, fontSize: 11)),
+                  const SizedBox(height: 12),
+                  FilledButton.icon(onPressed: () => _prepareModel(forceDownload: true),
+                    icon: const Icon(Icons.refresh_rounded), label: const Text('Retry model download')),
+                ],
+              ])))
+          : Interactive3d(
+              key: ValueKey('${modelFileName}_${preparationToken}'),
+              controller: controller,
+              modelFilePath: localModelPath!,
+              defaultZoom: 1.3,
+              backgroundColor: const Color(0xFF07182C),
+              selectionColor: const [0.20,0.66,1.0,1.0],
+              onSelectionChanged: onSelection,
+              onModelLoadError: (error, stack) {
+                if (mounted) setState(() => modelError = error.toString());
+              },
+              loadingWidget: const Center(child: Column(mainAxisSize: MainAxisSize.min,children: [
+                CircularProgressIndicator(color: Color(0xFF9CC9ED)),
+                SizedBox(height:12),
+                Text('Preparing interactive 3D model…',style:TextStyle(color:Colors.white70,fontSize:12))
+              ])),
+              errorBuilder: (context,error) => Center(child: Padding(
+                padding: const EdgeInsets.all(20), child: Column(
+                  mainAxisSize: MainAxisSize.min, children: [
+                    const Icon(Icons.error_outline_rounded,color:Color(0xFF9CC9ED),size:36),
+                    const SizedBox(height:8),
+                    const Text('3D model could not be rendered',style:TextStyle(color:Colors.white,fontWeight:FontWeight.w800)),
+                    const SizedBox(height:5),
+                    Text(error.toString(),textAlign:TextAlign.center,
+                      style:const TextStyle(color:Colors.white70,fontSize:11)),
+                    const SizedBox(height:10),
+                    FilledButton.icon(onPressed: () => _prepareModel(forceDownload: true),
+                      icon: const Icon(Icons.refresh_rounded), label: const Text('Retry')),
+                  ]))),
+            )),
       const SizedBox(height: 12),
       if (target == null && !finished) SizedBox(width:double.infinity,child:FilledButton.icon(onPressed:start,icon:const Icon(Icons.play_arrow_rounded),label:const Text('Start 5-station challenge'))),
       if (target != null) Card(child:Padding(padding:const EdgeInsets.all(15),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
