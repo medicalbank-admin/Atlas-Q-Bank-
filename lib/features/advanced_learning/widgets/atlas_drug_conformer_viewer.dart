@@ -12,9 +12,12 @@ class AtlasDrugConformerViewer extends StatefulWidget {
 }
 class _AtlasDrugConformerViewerState extends State<AtlasDrugConformerViewer> {
   final Interactive3dController _controller = Interactive3dController();
+  final Interactive3dController _targetController = Interactive3dController();
   bool _loaded = false;
   String _target = 'Loading target annotation…', _organism = '', _method = '3D conformer', _atomCount = '';
   String? _selectedAtom;
+  String? _targetAsset;
+  String _targetSource = '';
   @override
   void initState() { super.initState(); _loadMetadata(); }
   Future<void> _loadMetadata() async {
@@ -28,6 +31,8 @@ class _AtlasDrugConformerViewerState extends State<AtlasDrugConformerViewer> {
         _organism = item['organism'] as String? ?? '';
         _method = item['coordinate_method'] as String? ?? 'Computed conformer';
         _atomCount = '\${item['atom_count'] ?? '—'} atoms • \${item['bond_count'] ?? '—'} bonds';
+        _targetAsset = item['target_asset'] as String?;
+        _targetSource = item['target_structure_source'] as String? ?? '';
       });
     } catch (error) {
       debugPrint('Drug conformer metadata unavailable: $error');
@@ -62,6 +67,31 @@ class _AtlasDrugConformerViewerState extends State<AtlasDrugConformerViewer> {
             child: Text('3D conformer asset unavailable. Rebuild after molecular asset generation.\\n$error',
               textAlign: TextAlign.center, style: const TextStyle(color: Colors.white70,fontSize: 11)))),
         )),
+        if (_targetAsset != null) ...[
+          const Padding(
+            padding: EdgeInsets.fromLTRB(14, 13, 14, 6),
+            child: Text('PREDICTED TARGET PROTEIN STRUCTURE',
+              style: TextStyle(color: Color(0xFF73DDE1), fontSize: 9,
+                fontWeight: FontWeight.w900, letterSpacing: .8)),
+          ),
+          SizedBox(height: 270, child: Interactive3d(
+            key: ValueKey(_targetAsset), controller: _targetController,
+            modelPath: _targetAsset!,
+            backgroundColor: const Color(0xFF071A2D),
+            solidBackgroundColor: const [0.027,0.102,0.176,1.0],
+            defaultZoom: 1.0,
+            selectionColor: const [0.95,0.70,0.22,1.0],
+            onModelLoadError: (error, stack) => debugPrint('Target protein model load failed: $error'),
+            loadingWidget: const Center(child: CircularProgressIndicator(color: Color(0xFF73DDE1))),
+            errorBuilder: (context,error) => Center(child: Text('Target protein model unavailable\\n$error',
+              textAlign: TextAlign.center, style: const TextStyle(color: Colors.white70,fontSize: 10))),
+          )),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 4, 14, 8),
+            child: Text('$_targetSource • Predicted unbound target structure; not a drug-bound complex.',
+              style: const TextStyle(color: Color(0xFF8EADC4), fontSize: 9)),
+          ),
+        ],
         Padding(padding: const EdgeInsets.fromLTRB(14,5,14,14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(widget.drugName, style: const TextStyle(color: Colors.white,fontSize: 13,fontWeight: FontWeight.w900)),
           const SizedBox(height: 4),
