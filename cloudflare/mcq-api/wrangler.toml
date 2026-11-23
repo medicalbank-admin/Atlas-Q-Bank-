@@ -2,6 +2,8 @@ name = "atlas-academy-mcq-api"
 main = "src/index.js"
 compatibility_date = "2026-11-22"
 workers_dev = true
+keep_vars = true
 
 [vars]
 FIREBASE_PROJECT_ID = "the-atlas-academy-3fae0"
+CLOUDINARY_CLOUD_NAME = "ufteavlh"
