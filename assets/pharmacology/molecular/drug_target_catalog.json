@@ -338,7 +338,8 @@
     "pubchem_name": "Metronidazole",
     "target": "Reduced reactive intermediates damage microbial DNA; multi-target",
     "uniprot": null,
-    "organism": "Anaerobic microorganisms"
+    "organism": "Anaerobic microorganisms",
+    "scientific_note": "Metronidazole is activated by anaerobic microbial nitroreductases; reactive intermediates damage DNA. No single protein-binding receptor is claimed. The displayed B-DNA duplex is a reference structure, not a drug-bound complex."
   },
   {
     "drug": "Pantoprazole",
