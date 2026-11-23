@@ -60,6 +60,7 @@ flutter:
     - assets/icons/
     - assets/logo/
     - assets/anatomy/
+    - assets/pharmacology/molecular/
     
 
 flutter_launcher_icons:
