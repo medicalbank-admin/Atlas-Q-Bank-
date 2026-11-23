@@ -202,7 +202,7 @@ class _StudentAnatomyLabScreenState extends State<StudentAnatomyLabScreen> {
         _learningTools(),
         const SizedBox(height: 12),
         const Text(
-          'Anatomy model: Open Anatomy 3D, adapted from BodyParts3D and the Human Reference Atlas. CC BY 4.0. Educational use only; not for diagnosis.',
+          'Whole-body models: Open Anatomy 3D (CC BY 4.0). Detailed skeleton: BodyParts3D via OrganUI Skeleton (CC BY-SA 2.1 Japan). BodyParts3D © The Database Center for Life Science. Educational use only; not for diagnosis.',
           textAlign: TextAlign.center,
           style: TextStyle(color: AtlasColors.secondaryText, fontSize: 9, height: 1.45)),
       ]),
@@ -317,6 +317,7 @@ class _StudentAnatomyLabScreenState extends State<StudentAnatomyLabScreen> {
         defaultZoom: 1.35,
         backgroundColor: const Color(0xFF07182C),
         selectionColor: const [0.20, 0.66, 1.0, 1.0],
+        preselectedEntities: _selectedKey == null ? const [] : [_selectedKey!],
         onSelectionChanged: _onSelectionChanged,
         onModelLoaded: () {
           if (!mounted) return;
