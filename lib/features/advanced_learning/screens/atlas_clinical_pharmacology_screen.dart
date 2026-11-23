@@ -919,9 +919,9 @@ Widget? _molecularStructureFor(_Drug drug) {
     case 'Methotrexate':
       return const AtlasMolecularStructureViewer(
         structureKey: 'dhfr_methotrexate',
-        structureTitle: 'Dihydrofolate reductase + methotrexate',
-        pdbId: '4DFR', ligandName: 'Methotrexate', resolution: '1.70 Å',
-        note: 'Experimental protein–inhibitor structure from the Protein Data Bank. Inspect the atom-level model by rotating and selecting atoms.',
+        structureTitle: 'Human dihydrofolate reductase + methotrexate',
+        pdbId: '1U72', ligandName: 'Methotrexate', resolution: '1.90 Å',
+        note: 'Wild-type human DHFR ternary crystal complex with methotrexate and NADPH. The deposited structure directly represents the human drug target.',
       );
     default:
       final slug = drug.name.toLowerCase()
