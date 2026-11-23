@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../services/device_security_service.dart';
+
 import '../../admin/screens/admin_dashboard_screen.dart';
 import '../../dashboard/screens/student_dashboard_screen.dart';
 import 'auth_landing_screen.dart';
@@ -14,7 +16,39 @@ class AuthGate extends StatefulWidget {
   State<AuthGate> createState() => _AuthGateState();
 }
 
-class _AuthGateState extends State<AuthGate> {
+class _AuthGateState extends State<AuthGate> with WidgetsBindingObserver {
+  String? _deviceRegisteredUid;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _validateBoundDevice();
+  }
+
+  Future<void> _validateBoundDevice() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null || _deviceRegisteredUid != user.uid) return;
+    try {
+      await DeviceSecurityService().validateCurrentDevice();
+    } on DeviceSecurityException catch (error) {
+      if (error.replaced && FirebaseAuth.instance.currentUser?.uid == user.uid) {
+        await FirebaseAuth.instance.signOut();
+      }
+    } catch (_) {
+      // A temporary network failure must not sign out a legitimate student.
+    }
+  }
   int _retryCount = 0;
 
   void _retry() {
@@ -49,6 +83,10 @@ class _AuthGateState extends State<AuthGate> {
     if (tokenResult.claims?['admin'] == true) {
       return const AdminDashboardScreen();
     }
+
+    // Bind each student account to one app installation. Admins are exempt.
+    await DeviceSecurityService().registerCurrentDevice();
+    _deviceRegisteredUid = refreshedUser.uid;
 
     // Non-admin accounts follow the student access flow.
     final document = await FirebaseFirestore.instance
