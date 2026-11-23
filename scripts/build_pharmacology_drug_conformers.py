@@ -17,11 +17,11 @@ ELEMENTS = {
  "I": ([0.48,0.22,0.62,1],0.24), "H": ([0.88,0.90,0.94,1],0.09),
  "B": ([0.95,0.70,0.45,1],0.17), "SI": ([0.70,0.62,0.50,1],0.20)
 }
-def get(url, attempts=7):
+def get(url, attempts=7, timeout=90):
     req=urllib.request.Request(url,headers={"User-Agent":"AtlasAcademy-Pharmacology-Lab/1.0"})
     for attempt in range(attempts):
         try:
-            with urllib.request.urlopen(req,timeout=90) as r: return r.read()
+            with urllib.request.urlopen(req,timeout=timeout) as r: return r.read()
         except urllib.error.HTTPError as error:
             if error.code not in (429,500,502,503,504) or attempt == attempts-1:
                 raise
@@ -246,7 +246,7 @@ def main():
     # there is no single protein receptor. Show a clearly labelled reference
     # B-DNA duplex rather than inventing a protein target or drug-bound pose.
     try:
-        dna_pdb=get("https://files.rcsb.org/download/1BNA.pdb").decode("utf-8","replace")
+        dna_pdb=get("https://files.rcsb.org/download/1BNA.pdb",attempts=2,timeout=20).decode("utf-8","replace")
         dna_atoms=[]
         for line in dna_pdb.splitlines():
             if not line.startswith("ATOM  ") or len(line)<78:
