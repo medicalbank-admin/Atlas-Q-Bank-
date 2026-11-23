@@ -13,6 +13,7 @@ import '../../mcqs/screens/student_mcq_result_screen.dart';
 import '../../academic/screens/student_study_library_screen.dart';
 import '../../academic/screens/student_exam_centre_screen.dart';
 import '../../academic/screens/student_past_papers_screen.dart';
+import '../../anatomy/screens/student_anatomy_lab_screen.dart';
 import '../../subscriptions/screens/subscription_plans_screen.dart';
 import '../../advanced_learning/screens/advanced_student_tools_screen.dart';
 import '../../advanced_learning/services/push_notification_service.dart';
@@ -91,13 +92,14 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen>{
    if(key=='mockPredictions')page=const MockExamPredictionScreen();
    if(key=='discussionForum')page=const StudentDiscussionForumScreen();
    if(key=='askTeacher')page=const AskTeacherScreen();
+   if(key=='anatomyLab')page=const StudentAnatomyLabScreen();
    if(page!=null)await Navigator.push(context,MaterialPageRoute(builder:(_)=>page!));
   }catch(_){if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Unable to check membership.')));}
  }
  Future<void> select(int i)async{setState(()=>selected=i);if(MediaQuery.sizeOf(context).width<850)Navigator.of(context).maybePop();if(i>0){const keys=['','studyLibrary','mcqPractice','pastPapers','subjectExams','systemExams','mockExams','examsHistory','clinicalCases','mistakesNotebook','mockPredictions','discussionForum','askTeacher','membership','account'];await openFeature(keys[i]);if(mounted)setState(()=>selected=0);}}
  @override Widget build(BuildContext context){
   final wide=MediaQuery.sizeOf(context).width>=850;final u=FirebaseAuth.instance.currentUser;final name=u?.displayName?.trim().isNotEmpty==true?u!.displayName!.trim():'Student';
-  final pages=<Widget>[_Home(name:name,onSubjectExams:()=>openFeature('subjectExams'),onSystemExams:()=>openFeature('systemExams'),onMockExams:()=>openFeature('mockExams'),onPastPapers:()=>openFeature('pastPapers'),onMembership:()=>openFeature('membership')),_FeaturePage('Study Library',Icons.menu_book_rounded,()=>openFeature('studyLibrary')),_FeaturePage('MCQ Practice',Icons.quiz_rounded,()=>openFeature('mcqPractice')),_FeaturePage('Past Papers',Icons.history_edu_rounded,()=>openFeature('pastPapers')),_FeaturePage('Subject-Wise Exams',Icons.menu_book_rounded,()=>openFeature('subjectExams')),_FeaturePage('System-Wise Exams',Icons.account_tree_rounded,()=>openFeature('systemExams')),_FeaturePage('Mock Exams',Icons.fact_check_rounded,()=>openFeature('mockExams')),_FeaturePage('Exams History',Icons.history_rounded,()=>openFeature('examsHistory')),_FeaturePage('Clinical Cases',Icons.medical_services_rounded,()=>openFeature('clinicalCases')),_FeaturePage('Mistakes Notebook',Icons.bookmark_added_rounded,()=>openFeature('mistakesNotebook')),_FeaturePage('Mock Exam Readiness',Icons.insights_rounded,()=>openFeature('mockPredictions')),_FeaturePage('Discussion Forum',Icons.forum_rounded,()=>openFeature('discussionForum')),_FeaturePage('Ask a Teacher',Icons.support_agent_rounded,()=>openFeature('askTeacher')),_FeaturePage('Membership',Icons.workspace_premium_rounded,()=>openFeature('membership')),_FeaturePage('Account Status',Icons.verified_user_rounded,()=>openFeature('account'))];
+  final pages=<Widget>[_Home(name:name,onSubjectExams:()=>openFeature('subjectExams'),onSystemExams:()=>openFeature('systemExams'),onMockExams:()=>openFeature('mockExams'),onPastPapers:()=>openFeature('pastPapers'),onAnatomyLab:()=>openFeature('anatomyLab'),onMembership:()=>openFeature('membership')),_FeaturePage('Study Library',Icons.menu_book_rounded,()=>openFeature('studyLibrary')),_FeaturePage('MCQ Practice',Icons.quiz_rounded,()=>openFeature('mcqPractice')),_FeaturePage('Past Papers',Icons.history_edu_rounded,()=>openFeature('pastPapers')),_FeaturePage('Subject-Wise Exams',Icons.menu_book_rounded,()=>openFeature('subjectExams')),_FeaturePage('System-Wise Exams',Icons.account_tree_rounded,()=>openFeature('systemExams')),_FeaturePage('Mock Exams',Icons.fact_check_rounded,()=>openFeature('mockExams')),_FeaturePage('Exams History',Icons.history_rounded,()=>openFeature('examsHistory')),_FeaturePage('Clinical Cases',Icons.medical_services_rounded,()=>openFeature('clinicalCases')),_FeaturePage('Mistakes Notebook',Icons.bookmark_added_rounded,()=>openFeature('mistakesNotebook')),_FeaturePage('Mock Exam Readiness',Icons.insights_rounded,()=>openFeature('mockPredictions')),_FeaturePage('Discussion Forum',Icons.forum_rounded,()=>openFeature('discussionForum')),_FeaturePage('Ask a Teacher',Icons.support_agent_rounded,()=>openFeature('askTeacher')),_FeaturePage('Membership',Icons.workspace_premium_rounded,()=>openFeature('membership')),_FeaturePage('Account Status',Icons.verified_user_rounded,()=>openFeature('account'))];
   return Scaffold(backgroundColor:const Color(0xFFF3F7FF),drawer:wide?null:Drawer(backgroundColor:AtlasColors.navy,child:_SideNav(selected:selected,onSelect:select,onSignOut:signOut,onProfile:()=>openFeature('profile'))),body:SafeArea(child:Row(children:[
    if(wide)SizedBox(width:265,child:_SideNav(selected:selected,onSelect:select,onSignOut:signOut,onProfile:()=>openFeature('profile'))),
    Expanded(child:Column(children:[
@@ -353,13 +355,14 @@ class _SideNav extends StatelessWidget {
 }
 class _Home extends StatelessWidget {
   final String name;
-  final VoidCallback onSubjectExams, onSystemExams, onMockExams, onPastPapers, onMembership;
+  final VoidCallback onSubjectExams, onSystemExams, onMockExams, onPastPapers, onAnatomyLab, onMembership;
   const _Home({
     required this.name,
     required this.onSubjectExams,
     required this.onSystemExams,
     required this.onMockExams,
     required this.onPastPapers,
+    required this.onAnatomyLab,
     required this.onMembership,
   });
 
@@ -391,6 +394,9 @@ class _Home extends StatelessWidget {
             _ClinicalExamTile(title: 'Past Papers', icon: Icons.description_rounded,
               tint: const Color(0xFFE7F7F1), iconColor: const Color(0xFF168B69),
               action: 'Explore', onTap: onPastPapers),
+            _ClinicalExamTile(title: '3D Anatomy\nLab', icon: Icons.view_in_ar_rounded,
+              tint: const Color(0xFFE9F1FF), iconColor: const Color(0xFF315FA8),
+              action: 'Explore', onTap: onAnatomyLab),
           ],
         ),
         const SizedBox(height: 19),
