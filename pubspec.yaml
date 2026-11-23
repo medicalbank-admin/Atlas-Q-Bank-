@@ -55,6 +55,7 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/images/clinical/
     - assets/icons/
     - assets/logo/
     - assets/anatomy/
