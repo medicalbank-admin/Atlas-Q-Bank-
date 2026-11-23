@@ -219,7 +219,7 @@ class _CaseDetailState extends State<_CaseDetail> {
   String? selected; bool checked = false;
   @override Widget build(BuildContext context) {
     final c = widget.c;
-    final options = [c.answer, 'An unrelated diagnosis', 'A normal physiological response', 'A finding that excludes the clinical syndrome'];
+    final options = [c.answer, 'An unrelated diagnosis', 'A normal physiological response', 'A finding that excludes the clinical syndrome']..shuffle(Random(c.title.hashCode));
     return Scaffold(backgroundColor: AtlasColors.ivory, appBar: AppBar(title: const Text('Clinical case review')),
       body: ListView(padding: const EdgeInsets.all(16), children: [
         Container(padding: const EdgeInsets.all(17), decoration: BoxDecoration(color: AtlasColors.navy, borderRadius: BorderRadius.circular(18)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
