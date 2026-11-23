@@ -17,6 +17,7 @@ import '../../anatomy/screens/student_anatomy_lab_screen.dart';
 import '../../subscriptions/screens/subscription_plans_screen.dart';
 import '../../advanced_learning/screens/advanced_student_tools_screen.dart';
 import '../../advanced_learning/screens/atlas_clinical_learning_screen.dart';
+import '../../advanced_learning/screens/atlas_premium_learning_screen.dart';
 import '../../advanced_learning/services/push_notification_service.dart';
 import 'student_notifications_screen.dart';
 import '../../../shared/widgets/dashboard_announcement_welcome.dart';
@@ -387,7 +388,9 @@ class _Home extends StatelessWidget {
         DashboardAnnouncementWelcome(displayName: firstName),
         const SizedBox(height: 16),
         if (uid != null) _ProgressOverview(uid: uid),
-        const SizedBox(height: 17),
+        const SizedBox(height: 19),
+        const AtlasPremiumLearningHomeSection(),
+        const SizedBox(height: 23),
         GridView.count(
           crossAxisCount: 2, crossAxisSpacing: 12, mainAxisSpacing: 12,
           childAspectRatio: 1.50, shrinkWrap: true,
