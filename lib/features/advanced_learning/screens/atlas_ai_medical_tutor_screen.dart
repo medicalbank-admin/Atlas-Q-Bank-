@@ -44,7 +44,6 @@ local protocols. Keep answers readable with headings and concise bullet points.
         model: _modelName,
         systemInstruction: Content.system(_systemPrompt),
         generationConfig: GenerationConfig(
-          temperature: 0.35,
           maxOutputTokens: 1800,
         ),
       );
