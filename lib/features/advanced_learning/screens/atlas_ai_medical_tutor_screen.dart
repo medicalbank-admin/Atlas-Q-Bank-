@@ -128,6 +128,8 @@ local protocols. Keep answers readable with headings and concise bullet points.
             ? 'Firebase AI Logic is not enabled for this Firebase project yet. Enable the Gemini Developer API in Firebase Console → AI Logic, then try again.'
             : message.contains('QuotaExceeded') || message.contains('429')
                 ? 'The AI service has reached its current usage limit. Please wait and try again later.'
+                : message.toLowerCase().contains('app check') || message.toLowerCase().contains('attestation') || message.toLowerCase().contains('invalid token')
+                ? 'Firebase App Check rejected this device. Register this Android app in Firebase Console → Security → App Check, configure Play Integrity for the release signing certificate, and allow the debug token for debug builds.'
                 : 'Tutor request failed: ${message.replaceAll(RegExp(r'[\\r\\n]+'), ' ').substring(0, message.length > 220 ? 220 : message.length)}';
       });
     } finally {
