@@ -117,7 +117,7 @@ class FilamentRenderer(
 
         // Post-processing disabled — color output goes straight to the surface.
         // MSAA still works at hardware level without the post-processing pipeline.
-        filamentView?.isPostProcessingEnabled = true
+        filamentView?.isPostProcessingEnabled = false
         filamentView?.multiSampleAntiAliasingOptions = filamentView!!.multiSampleAntiAliasingOptions.apply {
             enabled = true
             sampleCount = 4
