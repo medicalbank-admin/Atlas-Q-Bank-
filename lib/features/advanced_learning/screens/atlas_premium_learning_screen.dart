@@ -166,7 +166,7 @@ class AtlasDashboardCoreFeatures extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final features = AtlasPremiumLearningHomeSection._features.where((feature) =>
-      const {'AI Medical Tutor', 'OSCE Simulator', 'ECG Interpretation', 'Radiology Lab'}.contains(feature.title)).toList();
+      const {'AI Medical Tutor', 'OSCE Simulator', 'ECG Interpretation', 'Radiology Lab', 'Clinical Pharmacology'}.contains(feature.title)).toList();
     return GridView.builder(
       shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
       itemCount: features.length,
@@ -178,7 +178,8 @@ class AtlasDashboardCoreFeatures extends StatelessWidget {
         final feature = features[index];
         return _PremiumFeatureCard(feature: feature, onTap: () =>
           Navigator.of(context).push(MaterialPageRoute(builder: (_) =>
-            feature.title == 'AI Medical Tutor' ? const AtlasAiMedicalTutorScreen()
+            feature.title == 'Clinical Pharmacology' ? const AtlasClinicalPharmacologyScreen()
+            : feature.title == 'AI Medical Tutor' ? const AtlasAiMedicalTutorScreen()
             : feature.title == 'OSCE Simulator' ? const AtlasOsceSimulatorScreen()
             : feature.title == 'ECG Interpretation' ? const AtlasEcgInterpretationScreen()
             : const AtlasRadiologyLearningScreen())));
