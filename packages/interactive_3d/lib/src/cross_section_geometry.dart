@@ -31,8 +31,7 @@ class SectionVector3 {
 /// A triangle soup: every consecutive three vertices form one triangle.
 class SectionTriangleMesh {
   final List<SectionVector3> vertices;
-  const SectionTriangleMesh(this.vertices)
-      : assert(vertices.length % 3 == 0);
+  const SectionTriangleMesh(this.vertices);
 }
 
 /// A clipped triangle soup and line segments forming the exposed cut boundary.
