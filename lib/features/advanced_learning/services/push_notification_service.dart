@@ -3,12 +3,63 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// Device registration is client-side; FCM message delivery is server-side.
 class PushNotificationService {
+  static final FlutterLocalNotificationsPlugin _local = FlutterLocalNotificationsPlugin();
+  static Future<void>? _localReady;
+
+  Future<void> _initializeLocalNotifications() {
+    return _localReady ??= () async {
+      const settings = InitializationSettings(
+        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+        iOS: DarwinInitializationSettings(
+          requestAlertPermission: false,
+          requestBadgePermission: false,
+          requestSoundPermission: false,
+        ),
+      );
+      await _local.initialize(settings);
+      final android = _local.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+      await android?.createNotificationChannel(const AndroidNotificationChannel(
+        'atlas_academy_updates',
+        'Academy Updates',
+        description: 'Important learning, membership and academy announcements.',
+        importance: Importance.max,
+        playSound: true,
+      ));
+      await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+        alert: true, badge: true, sound: true,
+      );
+    }();
+  }
+
+  Future<void> _showForegroundNotification(RemoteMessage message) async {
+    if (defaultTargetPlatform != TargetPlatform.android) return;
+    await _local.show(
+      DateTime.now().millisecondsSinceEpoch.remainder(2147483647),
+      message.notification?.title ?? 'The Atlas Academy',
+      message.notification?.body ?? 'You have a new notification.',
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'atlas_academy_updates',
+          'Academy Updates',
+          channelDescription: 'Important learning, membership and academy announcements.',
+          importance: Importance.max,
+          priority: Priority.high,
+          playSound: true,
+          icon: '@mipmap/ic_launcher',
+        ),
+      ),
+      payload: jsonEncode(message.data),
+    );
+  }
+
   static const String _apiUrl = String.fromEnvironment('PUSH_API_URL', defaultValue: 'https://atlas-academy-push-api.medicalbankadmin.workers.dev');
   StreamSubscription<String>? _refresh;
   StreamSubscription<RemoteMessage>? _foreground;
@@ -122,6 +173,7 @@ class PushNotificationService {
     if (user == null) return;
     try {
       final messaging = FirebaseMessaging.instance;
+      await _initializeLocalNotifications();
       final settings = await messaging.requestPermission(
         alert: true,
         badge: true,
@@ -133,13 +185,12 @@ class PushNotificationService {
       _refresh ??= messaging.onTokenRefresh.listen(
         (value) => _save(user.uid, value),
       );
-      _foreground ??= FirebaseMessaging.onMessage.listen((message) {
-        if (!context.mounted) return;
-        final title = message.notification?.title ?? 'The Atlas Academy';
-        final body = message.notification?.body ?? 'You have a new notification.';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$title: $body')),
-        );
+      _foreground ??= FirebaseMessaging.onMessage.listen((message) async {
+        try {
+          await _showForegroundNotification(message);
+        } catch (error) {
+          debugPrint('Unable to display foreground push notification: $error');
+        }
       });
       _opened ??= FirebaseMessaging.onMessageOpenedApp.listen((message) {
         _recordOpen(message);
