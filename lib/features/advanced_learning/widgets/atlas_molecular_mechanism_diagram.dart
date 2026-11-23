@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 /// Interactive, class-aware molecular pathway illustration used by the
@@ -25,6 +27,23 @@ class _AtlasMolecularMechanismDiagramState
     extends State<AtlasMolecularMechanismDiagram> {
   bool _drugAction = true;
   int? _expandedNode;
+  int _activeStep = 0;
+  Timer? _pathwayTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _pathwayTimer = Timer.periodic(const Duration(milliseconds: 1150), (_) {
+      if (!mounted || !_drugAction) return;
+      setState(() => _activeStep = (_activeStep + 1) % 4);
+    });
+  }
+
+  @override
+  void dispose() {
+    _pathwayTimer?.cancel();
+    super.dispose();
+  }
 
   static const Map<String, List<String>> _targets = {
     'Beta-blocker': ['β₁-adrenergic receptor', 'Gs / adenylyl cyclase', 'cAMP ↓ · PKA ↓', 'Heart rate & contractility ↓'],
@@ -193,6 +212,7 @@ class _AtlasMolecularMechanismDiagramState
                 Row(crossAxisAlignment: CrossAxisAlignment.start, children: List.generate(4, (index) {
                   final isTarget = index == 0;
                   final selected = _expandedNode == index;
+                  final active = _drugAction && _activeStep == index;
                   return Expanded(child: Padding(
                     padding: EdgeInsets.only(right: index == 3 ? 0 : 7),
                     child: InkWell(
@@ -203,25 +223,41 @@ class _AtlasMolecularMechanismDiagramState
                         constraints: const BoxConstraints(minHeight: 132),
                         padding: const EdgeInsets.all(9),
                         decoration: BoxDecoration(
-                          color: selected ? const Color(0xFFDCEBFA) : Colors.white,
+                          color: selected
+                              ? const Color(0xFFDCEBFA)
+                              : active ? const Color(0xFFE3F6F7) : Colors.white,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: selected ? const Color(0xFF2369A5) : const Color(0xFFDCE6F0),
-                            width: selected ? 1.7 : 1,
+                            color: selected || active
+                                ? const Color(0xFF35A7B0)
+                                : const Color(0xFFDCE6F0),
+                            width: selected ? 1.9 : active ? 1.6 : 1,
                           ),
-                          boxShadow: selected ? [const BoxShadow(color: Color(0x182369A5), blurRadius: 10, offset: Offset(0, 3))] : null,
+                          boxShadow: selected || active
+                              ? [BoxShadow(
+                                  color: active
+                                      ? const Color(0x3035A7B0)
+                                      : const Color(0x182369A5),
+                                  blurRadius: active ? 15 : 10,
+                                  offset: const Offset(0, 3),
+                                )]
+                              : null,
                         ),
                         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                           Container(width: 27, height: 27,
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
-                              color: isTarget ? const Color(0xFF2369A5) : const Color(0xFFEAF1F8),
+                              color: isTarget || active
+                                  ? const Color(0xFF2369A5)
+                                  : const Color(0xFFEAF1F8),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
                               [Icons.track_changes_rounded, Icons.swap_horiz_rounded, Icons.account_tree_rounded, Icons.monitor_heart_rounded][index],
                               size: 15,
-                              color: isTarget ? Colors.white : const Color(0xFF2369A5),
+                              color: isTarget || active
+                                  ? Colors.white
+                                  : const Color(0xFF2369A5),
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -278,6 +314,9 @@ class _AtlasMolecularMechanismDiagramState
         const SizedBox(height: 4),
         const Text('Tap a node for detail • Pinch to zoom • Switch modes to compare',
           style: TextStyle(fontSize: 9, color: Color(0xFF71879A), fontWeight: FontWeight.w600)),
+        const SizedBox(height: 4),
+        const Text('The animated pathway explains the drug mechanism; it is not a molecular docking pose or molecular-dynamics trajectory.',
+          style: TextStyle(fontSize: 9, height: 1.4, color: Color(0xFF71879A))),
       ]),
     );
   }
