@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/atlas_academy_app.dart';
+import 'atlas_flashcards_screen.dart';
 
 class AtlasPremiumLearningHomeSection extends StatelessWidget {
   const AtlasPremiumLearningHomeSection({super.key});
@@ -131,7 +132,9 @@ class AtlasPremiumLearningHomeSection extends StatelessWidget {
             return _PremiumFeatureCard(
               feature: feature,
               onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                builder: (_) => _PremiumFeatureDetailScreen(feature: feature),
+                builder: (_) => feature.title == 'Smart Flashcards'
+                    ? const AtlasFlashcardsScreen()
+                    : _PremiumFeatureDetailScreen(feature: feature),
               )),
             );
           },
