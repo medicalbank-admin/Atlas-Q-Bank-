@@ -135,11 +135,13 @@ def pubchem_conformer(item):
     from rdkit import Chem
     from rdkit.Chem import AllChem
     smiles=None
-    for prop in ("IsomericSMILES","CanonicalSMILES","SMILES"):
+    for prop in ("IsomericSMILES","CanonicalSMILES","SMILES","ConnectivitySMILES"):
         try:
             raw=json.loads(get(base+"/property/"+prop+"/JSON"))
             record=raw["PropertyTable"]["Properties"][0]
-            smiles=record.get(prop) or record.get("SMILES") or record.get("ConnectivitySMILES") or record.get("CanonicalSMILES") or record.get("IsomericSMILES")
+            smiles=(record.get(prop) or record.get("SMILES") or
+                    record.get("ConnectivitySMILES") or record.get("CanonicalSMILES") or
+                    record.get("IsomericSMILES"))
             if smiles: break
         except Exception as error:
             print("PubChem %s descriptor unavailable for %s: %s"%(prop,name,error))
