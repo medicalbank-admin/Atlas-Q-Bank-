@@ -18,6 +18,7 @@ import 'admin_notifications_screen.dart';
 import 'admin_analytics_screen.dart';
 import 'admin_advanced_learning_screens.dart';
 import '../../inbox/screens/inbox_screens.dart';
+import '../../inbox/screens/inbox_screens.dart';
 import '../../anatomy/screens/admin_anatomy_management_screen.dart';
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
@@ -213,6 +214,32 @@ class AdminDashboardScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
+        StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+          stream: FirebaseFirestore.instance.collection('inbox_conversations')
+              .where('unreadForAdmin', isGreaterThan: 0).snapshots(),
+          builder: (context, snapshot) {
+            final count = snapshot.data?.docs.fold<int>(0, (total, doc) =>
+                total + ((doc.data()['unreadForAdmin'] as num?)?.toInt() ?? 0)) ?? 0;
+            return Stack(clipBehavior: Clip.none, children: [
+              IconButton(
+                tooltip: 'Student Inbox',
+                onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => const AdminInboxScreen(),
+                )),
+                icon: const Icon(Icons.forum_rounded, color: AtlasColors.royalBlue, size: 25),
+              ),
+              if (count > 0)
+                Positioned(right: 0, top: 0, child: Container(
+                  constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  alignment: Alignment.center,
+                  decoration: const BoxDecoration(color: AtlasColors.error, shape: BoxShape.circle),
+                  child: Text(count > 99 ? '99+' : '$count',
+                    style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w900)),
+                )),
+            ]);
+          },
+        ),
         PopupMenuButton<String>(
           tooltip: 'Notifications and account',
           icon: const Icon(Icons.notifications_none_rounded, size: 25),
