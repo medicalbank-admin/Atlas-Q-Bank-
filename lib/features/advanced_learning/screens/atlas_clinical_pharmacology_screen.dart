@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../app/atlas_academy_app.dart';
 import '../widgets/atlas_molecular_mechanism_diagram.dart';
 import '../widgets/atlas_molecular_structure_viewer.dart';
+import '../widgets/atlas_drug_conformer_viewer.dart';
 
 class AtlasClinicalPharmacologyScreen extends StatefulWidget {
   const AtlasClinicalPharmacologyScreen({super.key});
@@ -915,7 +916,219 @@ Widget? _molecularStructureFor(_Drug drug) {
         note: 'Experimental protein–inhibitor structure from the Protein Data Bank. Inspect the atom-level model by rotating and selecting atoms.',
       );
     default:
-      return null;
+      final slug = drug.name.toLowerCase()
+          .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
+          .replaceAll(RegExp(r'^-|- extends StatelessWidget {
+  final _Drug drug;
+  final VoidCallback onTap;
+  const _DrugCard({required this.drug, required this.onTap});
+  @override
+  Widget build(BuildContext context) => Card(
+    margin: const EdgeInsets.only(bottom: 10),
+    child: InkWell(
+      onTap: onTap, borderRadius: BorderRadius.circular(19),
+      child: Padding(padding: const EdgeInsets.all(15), child: Row(children: [
+        Container(width: 47, height: 47, decoration: BoxDecoration(
+          color: const Color(0xFFEAF3FC), borderRadius: BorderRadius.circular(14)),
+          child: const Icon(Icons.medication_liquid_rounded,
+            color: AtlasColors.royalBlue, size: 25)),
+        const SizedBox(width: 13),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(drug.name, style: const TextStyle(color: AtlasColors.navy,
+            fontSize: 15, fontWeight: FontWeight.w900)),
+          const SizedBox(height: 2),
+          Text(drug.generic, style: const TextStyle(
+            color: AtlasColors.secondaryText, fontSize: 11)),
+          const SizedBox(height: 6),
+          Text('${drug.className} • ${drug.category}',
+            maxLines: 1, overflow: TextOverflow.ellipsis,
+            style: const TextStyle(color: AtlasColors.royalBlue,
+              fontSize: 10, fontWeight: FontWeight.w800)),
+        ])),
+        const Icon(Icons.chevron_right_rounded, color: AtlasColors.secondaryText),
+      ])),
+    ),
+  );
+}
+
+class _DrugDetailScreen extends StatelessWidget {
+  final _Drug drug;
+  final VoidCallback onBack;
+  const _DrugDetailScreen({required this.drug, required this.onBack});
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: AtlasColors.ivory,
+    appBar: AppBar(
+      leading: IconButton(onPressed: onBack,
+        icon: const Icon(Icons.arrow_back_rounded)),
+      title: Text(drug.name),
+    ),
+    body: ListView(padding: const EdgeInsets.fromLTRB(18, 8, 18, 30), children: [
+      Container(padding: const EdgeInsets.all(19), decoration: BoxDecoration(
+        gradient: const LinearGradient(colors: [Color(0xFF102B4C), Color(0xFF2369A5)]),
+        borderRadius: BorderRadius.circular(22)),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(drug.category.toUpperCase(), style: const TextStyle(
+            color: Color(0xFFB9DDF7), fontSize: 9, letterSpacing: 1.2,
+            fontWeight: FontWeight.w900)),
+          const SizedBox(height: 7),
+          Text(drug.name, style: const TextStyle(color: Colors.white,
+            fontSize: 25, fontWeight: FontWeight.w900)),
+          const SizedBox(height: 4),
+          Text(drug.generic, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+          const SizedBox(height: 11),
+          Text(drug.group, style: const TextStyle(color: Colors.white,
+            fontSize: 13, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 8),
+          Text(drug.summary, style: const TextStyle(color: Colors.white70,
+            fontSize: 12, height: 1.5)),
+        ])),
+      const SizedBox(height: 15),
+      _SectionCard(title: 'MECHANISM OF ACTION', icon: Icons.account_tree_rounded,
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(drug.moa, style: const TextStyle(color: AtlasColors.charcoal,
+            fontSize: 13, height: 1.65)),
+          const SizedBox(height: 14),
+          AtlasMolecularMechanismDiagram(
+            drugName: drug.name,
+            className: drug.className,
+            steps: drug.steps,
+          ),
+          const SizedBox(height: 14),
+          const Text('DETAILED MECHANISM SEQUENCE',
+            style: TextStyle(color: AtlasColors.royalBlue, fontSize: 9,
+              letterSpacing: .8, fontWeight: FontWeight.w900)),
+          const SizedBox(height: 10),
+          ...drug.steps.asMap().entries.map((entry) => _MechanismStep(
+            number: entry.key + 1, text: entry.value,
+            isLast: entry.key == drug.steps.length - 1)),
+        ])),
+      if (_molecularStructureFor(drug) != null)
+        _SectionCard(title: '3D MOLECULAR STRUCTURE & BINDING SITE',
+          icon: Icons.view_in_ar_rounded,
+          child: _molecularStructureFor(drug)!),
+      _SectionCard(title: 'INDICATIONS & CLINICAL USES',
+        icon: Icons.medical_services_outlined, text: drug.indications),
+      _SectionCard(title: 'PHARMACOKINETICS',
+        icon: Icons.science_outlined, text: drug.kinetics),
+      _SectionCard(title: 'DOSING PRINCIPLES',
+        icon: Icons.calculate_outlined, text: drug.dose),
+      _SectionCard(title: 'CONTRAINDICATIONS & PRECAUTIONS',
+        icon: Icons.warning_amber_rounded, text: drug.cautions),
+      _SectionCard(title: 'ADVERSE EFFECTS',
+        icon: Icons.healing_outlined, text: drug.adverse),
+      _SectionCard(title: 'IMPORTANT DRUG INTERACTIONS',
+        icon: Icons.compare_arrows_rounded, text: drug.interactions),
+      _SectionCard(title: 'MONITORING',
+        icon: Icons.monitor_heart_outlined, text: drug.monitoring),
+      _SectionCard(title: 'CLINICAL PEARLS',
+        icon: Icons.lightbulb_outline_rounded, text: drug.pearls),
+      _SectionCard(title: 'LEARNING REFERENCES',
+        icon: Icons.menu_book_outlined, text: drug.sources),
+      const SizedBox(height: 8),
+      const _SafetyNote(),
+    ]),
+  );
+}
+
+class _MechanismStep extends StatelessWidget {
+  final int number;
+  final String text;
+  final bool isLast;
+  const _MechanismStep({required this.number, required this.text, required this.isLast});
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 5),
+    child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      SizedBox(width: 31, child: Column(children: [
+        Container(width: 27, height: 27, alignment: Alignment.center,
+          decoration: const BoxDecoration(color: AtlasColors.royalBlue,
+            shape: BoxShape.circle),
+          child: Text('$number', style: const TextStyle(color: Colors.white,
+            fontSize: 11, fontWeight: FontWeight.w900))),
+        if (!isLast) Expanded(child: Container(width: 2, color: const Color(0xFFB8D4ED))),
+      ])),
+      const SizedBox(width: 9),
+      Expanded(child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(color: const Color(0xFFF0F6FC),
+          borderRadius: BorderRadius.circular(13),
+          border: Border.all(color: const Color(0xFFDCEAF6))),
+        child: Text(text, style: const TextStyle(color: AtlasColors.charcoal,
+          fontSize: 12, height: 1.5, fontWeight: FontWeight.w600)),
+      )),
+    ]),
+  );
+}
+
+class _SectionCard extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final String? text;
+  final Widget? child;
+  const _SectionCard({required this.title, required this.icon,
+    this.text, this.child});
+  @override
+  Widget build(BuildContext context) => Card(
+    margin: const EdgeInsets.only(bottom: 11),
+    child: Padding(padding: const EdgeInsets.all(15), child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Icon(icon, color: AtlasColors.royalBlue, size: 19),
+          const SizedBox(width: 8),
+          Expanded(child: Text(title, style: const TextStyle(
+            color: AtlasColors.navy, fontSize: 10, letterSpacing: .65,
+            fontWeight: FontWeight.w900))),
+        ]),
+        const SizedBox(height: 10),
+        if (child != null) child!,
+        if (text != null) Text(text!, style: const TextStyle(
+          color: AtlasColors.charcoal, fontSize: 12, height: 1.6)),
+      ],
+    )),
+  );
+}
+
+class _HeroPill extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  const _HeroPill({required this.icon, required this.label});
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+    decoration: BoxDecoration(color: Colors.white.withValues(alpha: .13),
+      borderRadius: BorderRadius.circular(30),
+      border: Border.all(color: Colors.white24)),
+    child: Row(mainAxisSize: MainAxisSize.min, children: [
+      Icon(icon, color: Colors.white, size: 13),
+      const SizedBox(width: 5),
+      Text(label, style: const TextStyle(color: Colors.white,
+        fontSize: 10, fontWeight: FontWeight.w700)),
+    ]),
+  );
+}
+
+class _SafetyNote extends StatelessWidget {
+  const _SafetyNote();
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(13),
+    decoration: BoxDecoration(color: const Color(0xFFFFF6E8),
+      borderRadius: BorderRadius.circular(14),
+      border: Border.all(color: const Color(0xFFF0D8AD))),
+    child: const Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Icon(Icons.health_and_safety_outlined, color: Color(0xFF9B6721), size: 18),
+      SizedBox(width: 9),
+      Expanded(child: Text(
+        'For medical education only. This reference is not a prescribing tool. Doses and treatment choices depend on indication, patient factors, local resistance and current guidance. Verify current product information and institutional protocols before clinical use.',
+        style: TextStyle(color: Color(0xFF76521F), fontSize: 10, height: 1.5))),
+    ]),
+  );
+}
+), '');
+      return AtlasDrugConformerViewer(drugName: drug.name, slug: slug);
   }
 }
 
