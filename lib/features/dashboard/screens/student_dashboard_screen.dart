@@ -125,10 +125,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen>{
           child: AtlasLogo(size: 70),
         )),
         StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-          stream: FirebaseAuth.instance.currentUser == null
-              ? const Stream.empty()
-              : FirebaseFirestore.instance.collection('inbox_conversations')
-                  .doc(FirebaseAuth.instance.currentUser!.uid).snapshots(),
+          stream: FirebaseFirestore.instance.collection('inbox_conversations')
+              .doc(FirebaseAuth.instance.currentUser!.uid).snapshots(),
           builder: (context, inboxSnapshot) {
             final unread = (inboxSnapshot.data?.data()?['unreadForStudent'] as num?)?.toInt() ?? 0;
             return Stack(clipBehavior: Clip.none, children: [
