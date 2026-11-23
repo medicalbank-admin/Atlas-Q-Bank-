@@ -45,26 +45,22 @@ service cloud.firestore {
     }
 
     function hasFeatureAccess(feature) {
+      let userData = get(
+        /databases/$(database)/documents/users/$(request.auth.uid)
+      ).data;
+      let permissions = userData.get('subscriptionAccessPermissions', {});
       return hasActiveAccess() &&
-        get(
-          /databases/$(database)/documents/users/$(request.auth.uid)
-        ).data.subscriptionExpiryAt > request.time &&
+        userData.get('subscriptionExpiryAt', timestamp.value(0)) is timestamp &&
+        userData.get('subscriptionExpiryAt', timestamp.value(0)) > request.time &&
+        permissions is map &&
         (
-          get(
-            /databases/$(database)/documents/users/$(request.auth.uid)
-          ).data.subscriptionAccessPermissions[feature] == true ||
+          permissions.get(feature, false) == true ||
           (
             feature == 'mistakesNotebook' &&
-            !get(
-              /databases/$(database)/documents/users/$(request.auth.uid)
-            ).data.subscriptionAccessPermissions.keys().hasAny(['mistakesNotebook']) &&
+            !permissions.keys().hasAny(['mistakesNotebook']) &&
             (
-              get(
-                /databases/$(database)/documents/users/$(request.auth.uid)
-              ).data.subscriptionAccessPermissions['mcqPractice'] == true ||
-              get(
-                /databases/$(database)/documents/users/$(request.auth.uid)
-              ).data.subscriptionAccessPermissions['examinations'] == true
+              permissions.get('mcqPractice', false) == true ||
+              permissions.get('examinations', false) == true
             )
           )
         );
