@@ -259,8 +259,13 @@ class InboxService {
     final uploadedId = result['public_id']?.toString() ?? '';
     final format = result['format']?.toString() ?? '';
     final version = result['version']?.toString() ?? '';
-    if (uploadedId != publicId || format.isEmpty || version.isEmpty) {
-      throw Exception('Cloudinary did not confirm the uploaded image.');
+    final expectedFolderId = '$folder/$publicId';
+    if ((uploadedId != publicId && uploadedId != expectedFolderId) ||
+        format.isEmpty || version.isEmpty) {
+      throw Exception(
+        'Cloudinary uploaded an image but returned an unexpected asset ID '
+        '(received: $uploadedId). Please contact support with this message.',
+      );
     }
     return '$uploadedId|$format|$version';
   }
@@ -336,42 +341,10 @@ class InboxService {
       return;
     }
 
-    final conversation = conversationRef(studentUid);
-    final message = conversation.collection('messages').doc();
-    final preview = text.isNotEmpty ? text : '📷 Photo';
-    final now = FieldValue.serverTimestamp();
-
-    await _db.runTransaction((transaction) async {
-      final current = await transaction.get(conversation);
-      if (!current.exists) {
-        throw Exception('This conversation is not ready. Reopen the inbox.');
-      }
-      transaction.set(message, {
-        'senderUid': uid,
-        'senderRole': fromAdmin ? 'admin' : 'student',
-        'body': text,
-        'imageUrl': imageUrl,
-        'imagePath': imagePath,
-        'createdAt': now,
-        'deliveredAt': null,
-        'readAt': null,
-      });
-      final conversationUpdate = <String, dynamic>{
-        'lastMessage': preview,
-        'lastMessageAt': now,
-        'lastSenderUid': uid,
-        'lastMessageId': message.id,
-        'unreadForAdmin': fromAdmin ? 0 : FieldValue.increment(1),
-        'unreadForStudent': fromAdmin ? FieldValue.increment(1) : 0,
-        'updatedAt': now,
-      };
-      // Student writes must not touch administrator-owned metadata. Firestore
-      // security rules intentionally restrict student updates to message fields.
-      if (fromAdmin) {
-        conversationUpdate['adminUid'] = uid;
-        conversationUpdate['adminName'] = 'The Atlas Administrator';
-      }
-      transaction.update(conversation, conversationUpdate);
+    await _workerRequest('/inbox/send', {
+      'studentUid': studentUid,
+      'body': text,
+      'imagePath': imagePath ?? '',
     });
   }
 
