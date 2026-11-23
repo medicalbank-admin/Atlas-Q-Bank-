@@ -112,7 +112,8 @@ class InboxService {
     if (bytes.isEmpty || bytes.length > 8 * 1024 * 1024) {
       throw Exception('Images must be smaller than 8 MB.');
     }
-    final safeName = fileName.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_').substring(0, fileName.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_').length.clamp(0, 120));
+    final normalizedName = fileName.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
+    final safeName = normalizedName.length > 120 ? normalizedName.substring(0, 120) : normalizedName;
     final path = 'inbox_media/$studentUid/$currentUid/${DateTime.now().microsecondsSinceEpoch}_$safeName';
     final ref = _storage.ref(path);
     await ref.putData(
