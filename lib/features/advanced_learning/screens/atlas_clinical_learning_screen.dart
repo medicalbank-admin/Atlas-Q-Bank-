@@ -172,10 +172,12 @@ class _SpotterScreenState extends State<_SpotterScreen> {
         setState(() { localModelPath = destination.path; loadingModel = false; downloadProgress = 1; });
         return;
       }
-      client = HttpClient()..connectionTimeout = const Duration(seconds: 30);
+      client = HttpClient()
+        ..connectionTimeout = const Duration(seconds: 20)
+        ..idleTimeout = const Duration(seconds: 25);
       final request = await client.getUrl(Uri.parse(modelUrl));
       request.headers.set(HttpHeaders.userAgentHeader, 'AtlasAcademy-Spotter/1.0');
-      final response = await request.close();
+      final response = await request.close().timeout(const Duration(seconds: 35));
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw HttpException('Model server returned HTTP ${response.statusCode}.');
       }
@@ -185,7 +187,7 @@ class _SpotterScreenState extends State<_SpotterScreen> {
       if (await temporary.exists()) await temporary.delete();
       final sink = temporary.openWrite();
       try {
-        await for (final chunk in response) {
+        await for (final chunk in response.timeout(const Duration(seconds: 25))) {
           if (!mounted || token != preparationToken) { await sink.close(); return; }
           sink.add(chunk);
           received += chunk.length;
@@ -196,6 +198,10 @@ class _SpotterScreenState extends State<_SpotterScreen> {
         await sink.close();
       }
       if (received <= 1024) throw const FormatException('Downloaded 3D model is incomplete.');
+      final header = await temporary.openRead(0, 4).fold<List<int>>(<int>[], (bytes, chunk) => bytes..addAll(chunk));
+      if (header.length != 4 || header[0] != 0x67 || header[1] != 0x6C || header[2] != 0x54 || header[3] != 0x46) {
+        throw const FormatException('The model server did not return a valid GLB file.');
+      }
       if (!mounted || token != preparationToken) { await temporary.delete(); return; }
       if (await destination.exists()) await destination.delete();
       await temporary.rename(destination.path);
@@ -277,7 +283,7 @@ class _SpotterScreenState extends State<_SpotterScreen> {
                 if (loadingModel) ...[
                   const CircularProgressIndicator(color: Color(0xFF9CC9ED)),
                   const SizedBox(height: 12),
-                  Text('Downloading 3D anatomy model… ${(downloadProgress * 100).round()}%',
+                  Text(downloadProgress > 0 ? 'Downloading 3D anatomy model… ${(downloadProgress * 100).round()}%' : 'Connecting to anatomy model server…',
                     style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
                   const SizedBox(height: 8),
                   LinearProgressIndicator(value: downloadProgress == 0 ? null : downloadProgress,
