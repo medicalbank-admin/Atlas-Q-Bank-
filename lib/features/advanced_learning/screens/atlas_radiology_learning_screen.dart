@@ -89,6 +89,8 @@ const Map<String,String> _verifiedRadiologyImages={
  '03':'https://commons.wikimedia.org/wiki/Special:FilePath/Pneumothorax_CXR.jpg?width=1400',
  '04':'https://commons.wikimedia.org/wiki/Special:FilePath/Chest_radiograph_with_signs_of_congestive_heart_failure_-_annotated.jpg?width=1400',
  '05':'https://openi.nlm.nih.gov/imgs/512/PMC3808860_kcj-43-632-g001.png',
+ '06':'https://commons.wikimedia.org/wiki/Special:FilePath/TB_CXR.jpg?width=1400',
+ '24':'https://commons.wikimedia.org/wiki/Special:FilePath/Intracerebral_hemorrage_%28CT_scan%29.jpg?width=1400',
  '27':'https://commons.wikimedia.org/wiki/Special:FilePath/Intracranial_bleed_with_significant_midline_shift.png?width=1400',
  '55':'https://commons.wikimedia.org/wiki/Special:FilePath/SWE_of_breast_cancer.jpg?width=1400',
 };
@@ -98,6 +100,8 @@ const Map<String,String> _radiologyAttributions={
  '03':'Clinical Cases — Wikimedia Commons, CC BY-SA 2.5. Left pneumothorax chest radiograph.',
  '04':'Wikimedia Commons. Chest radiograph demonstrating cardiomegaly, vascular congestion and Kerley B lines.',
  '05':'Open-i / NLM. Chest X-ray showing cardiomegaly without pulmonary oedema; open-access literature image.',
+ '06':'US Centers for Disease Control and Prevention (CDC) — public domain. Upper-lobe cavitary tuberculosis chest radiograph.',
+ '24':'Wikimedia Commons. CT showing intraparenchymal and intraventricular haemorrhage; source image attribution on Commons file page.',
  '27':'James Heilman, MD — Wikimedia Commons, CC BY-SA 3.0.',
  '55':'Sigrist et al. — Wikimedia Commons, CC BY 4.0.',
 };
