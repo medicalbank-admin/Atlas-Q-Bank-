@@ -470,6 +470,224 @@ async function submitSession(env, uid, body) {
     totalQuestions, correctAnswers, incorrectAnswers, unansweredQuestions, percentage };
 }
 
+
+function utcDayKey(date = new Date()) {
+  return date.toISOString().slice(0, 10);
+}
+
+function dayNumber(dayKey) {
+  return Math.floor(Date.parse(dayKey + "T00:00:00Z") / 86400000);
+}
+
+async function dailyChallengeStart(env, uid) {
+  await requireEntitlement(env, uid, "structured", true);
+  const today = utcDayKey();
+  const sessionId = uid + "_" + today;
+  const existing = await getDocument(env, "daily_challenge_sessions", sessionId);
+  if (existing) {
+    const session = existing.data;
+    return {
+      success: true, date: today, sessionId,
+      questionId: session.questionId,
+      question: session.question, options: session.options,
+      subject: session.subject || "", topic: session.topic || "",
+      difficulty: session.difficulty || "Medium",
+      alreadyCompleted: session.status === "completed",
+      selectedAnswer: session.selectedAnswer ?? null,
+      isCorrect: session.isCorrect ?? null,
+      correctAnswer: session.status === "completed" ? session.correctAnswer : null,
+      explanation: session.status === "completed" ? session.explanation : null,
+      completedAt: session.completedAt || null,
+    };
+  }
+  const pool = await queryQuestions(env, "");
+  const eligible = pool.filter((item) =>
+    item.data.isPublished === true &&
+    typeof item.data.question === "string" && item.data.question.trim() &&
+    Array.isArray(item.data.options) && item.data.options.length >= 4 &&
+    item.data.options.length <= 5
+  ).sort((a, b) => a.id.localeCompare(b.id));
+  if (!eligible.length) throw new Error("No published daily challenge questions are available yet.");
+  const index = ((dayNumber(today) % eligible.length) + eligible.length) % eligible.length;
+  const chosen = eligible[index];
+  const session = {
+    userId: uid, date: today, questionId: chosen.id,
+    question: chosen.data.question, options: chosen.data.options,
+    subject: chosen.data.subject || "", topic: chosen.data.topic || "",
+    difficulty: chosen.data.difficulty || "Medium",
+    status: "active", createdAt: new Date().toISOString(),
+  };
+  await firestoreRequest(env, ":commit", {
+    method: "POST",
+    body: JSON.stringify({ writes: [{
+      update: {
+        name: `projects/${PROJECT_ID}/databases/(default)/documents/daily_challenge_sessions/${sessionId}`,
+        fields: encodeFields(session),
+      },
+      currentDocument: { exists: false },
+    }] }),
+  });
+  return {
+    success: true, date: today, sessionId, questionId: chosen.id,
+    question: session.question, options: session.options,
+    subject: session.subject, topic: session.topic,
+    difficulty: session.difficulty, alreadyCompleted: false,
+  };
+}
+
+async function dailyChallengeStatus(env, uid) {
+  await requireEntitlement(env, uid, "structured", true);
+  const statsDoc = await getDocument(env, "daily_challenge_stats", uid);
+  const stats = statsDoc?.data || {};
+  const today = utcDayKey();
+  const session = await getDocument(env, "daily_challenge_sessions", uid + "_" + today);
+  const result = await firestoreRequest(env, ":runQuery", {
+    method: "POST",
+    body: JSON.stringify({
+      structuredQuery: {
+        from: [{ collectionId: "daily_challenge_attempts" }],
+        where: { fieldFilter: {
+          field: { fieldPath: "userId" }, op: "EQUAL",
+          value: { stringValue: uid },
+        } },
+        orderBy: [{ field: { fieldPath: "completedAt" }, direction: "DESCENDING" }],
+        limit: 30,
+      },
+    }),
+  });
+  const history = result.filter((item) => item.document).map((item) => {
+    const data = decodeFields(item.document.fields);
+    return {
+      date: data.date || "", isCorrect: data.isCorrect === true,
+      subject: data.subject || "", topic: data.topic || "",
+      completedAt: data.completedAt || "",
+    };
+  });
+  return {
+    success: true,
+    currentStreak: Number(stats.currentStreak) || 0,
+    longestStreak: Number(stats.longestStreak) || 0,
+    totalCompleted: Number(stats.totalCompleted) || 0,
+    totalCorrect: Number(stats.totalCorrect) || 0,
+    lastChallengeDate: stats.lastChallengeDate || "",
+    completedToday: session?.data.status === "completed",
+    history,
+  };
+}
+
+async function dailyChallengeSubmit(env, uid, body) {
+  await requireEntitlement(env, uid, "structured", true);
+  const today = utcDayKey();
+  const sessionId = uid + "_" + today;
+  const sessionDoc = await getDocument(env, "daily_challenge_sessions", sessionId);
+  if (!sessionDoc || sessionDoc.data.userId !== uid) {
+    throw new Error("Today's challenge has not been started. Refresh and try again.");
+  }
+  const session = sessionDoc.data;
+  if (session.status === "completed") {
+    return {
+      success: true, alreadySubmitted: true,
+      isCorrect: session.isCorrect === true,
+      selectedAnswer: session.selectedAnswer,
+      correctAnswer: session.correctAnswer,
+      explanation: session.explanation || "",
+      completedAt: session.completedAt,
+    };
+  }
+  const selected = body.selectedAnswer;
+  if (!Number.isInteger(selected) || selected < 0 || selected >= session.options.length) {
+    throw new Error("Select one answer before submitting.");
+  }
+  const [questionDoc, answerDoc] = await Promise.all([
+    getDocument(env, "mcqs", session.questionId),
+    getDocument(env, "mcq_answer_keys", session.questionId),
+  ]);
+  if (!questionDoc || questionDoc.data.isPublished !== true || !answerDoc) {
+    throw new Error("The daily question or its private answer key is unavailable.");
+  }
+  const correctAnswer = String(answerDoc.data.correctAnswer || "").toUpperCase();
+  const correctIndex = "ABCDE".indexOf(correctAnswer);
+  if (correctIndex < 0 || correctIndex >= session.options.length) {
+    throw new Error("The daily question has an invalid answer key.");
+  }
+  const isCorrect = selected === correctIndex;
+  const completedAt = new Date().toISOString();
+  const attemptId = crypto.randomUUID();
+  const attempt = {
+    userId: uid, date: today, questionId: session.questionId,
+    question: session.question, options: session.options,
+    selectedAnswer: String.fromCharCode(65 + selected),
+    correctAnswer, isCorrect, explanation: answerDoc.data.explanation || "",
+    subject: session.subject || "", topic: session.topic || "",
+    difficulty: session.difficulty || "Medium",
+    completedAt, createdAt: completedAt,
+  };
+  const statsDoc = await getDocument(env, "daily_challenge_stats", uid);
+  const old = statsDoc?.data || {};
+  const yesterday = utcDayKey(new Date(Date.now() - 86400000));
+  const lastDate = old.lastChallengeDate || "";
+  const currentStreak = lastDate === today
+    ? Number(old.currentStreak) || 1
+    : lastDate === yesterday ? (Number(old.currentStreak) || 0) + 1 : 1;
+  const stats = {
+    userId: uid, currentStreak,
+    longestStreak: Math.max(Number(old.longestStreak) || 0, currentStreak),
+    totalCompleted: (Number(old.totalCompleted) || 0) + 1,
+    totalCorrect: (Number(old.totalCorrect) || 0) + (isCorrect ? 1 : 0),
+    lastChallengeDate: today, updatedAt: completedAt,
+  };
+  const updatedSession = {
+    ...session, status: "completed",
+    selectedAnswer: attempt.selectedAnswer, correctAnswer,
+    isCorrect, explanation: attempt.explanation,
+    completedAt, attemptId,
+  };
+  const writes = [
+    {
+      update: {
+        name: `projects/${PROJECT_ID}/databases/(default)/documents/daily_challenge_attempts/${attemptId}`,
+        fields: encodeFields(attempt),
+      },
+      currentDocument: { exists: false },
+    },
+    {
+      update: {
+        name: sessionDoc.name,
+        fields: encodeFields(updatedSession),
+      },
+      updateMask: { fieldPaths: Object.keys(updatedSession) },
+      currentDocument: { updateTime: sessionDoc.updateTime },
+    },
+  ];
+  if (statsDoc) {
+    writes.push({
+      update: {
+        name: statsDoc.name,
+        fields: encodeFields(stats),
+      },
+      updateMask: { fieldPaths: Object.keys(stats) },
+      currentDocument: { updateTime: statsDoc.updateTime },
+    });
+  } else {
+    writes.push({
+      update: {
+        name: `projects/${PROJECT_ID}/databases/(default)/documents/daily_challenge_stats/${uid}`,
+        fields: encodeFields(stats),
+      },
+      currentDocument: { exists: false },
+    });
+  }
+  await firestoreRequest(env, ":commit", {
+    method: "POST", body: JSON.stringify({ writes }),
+  });
+  return {
+    success: true, isCorrect, selectedAnswer: attempt.selectedAnswer,
+    correctAnswer, explanation: attempt.explanation, completedAt,
+    currentStreak, longestStreak: stats.longestStreak,
+    totalCompleted: stats.totalCompleted, totalCorrect: stats.totalCorrect,
+  };
+}
+
 async function checkBackendReady(env) {
   await getServiceAccessToken(env);
   // A no-result/one-result query confirms the service account can reach Firestore.
@@ -494,7 +712,7 @@ export default {
       }
     }
     const url = new URL(request.url);
-    if (request.method !== "POST" || !["/start", "/submit"].includes(url.pathname)) {
+    if (request.method !== "POST" || !["/start", "/submit", "/daily/start", "/daily/status", "/daily/submit"].includes(url.pathname)) {
       return fail("Endpoint not found.", 404);
     }
     try {
@@ -506,7 +724,13 @@ export default {
       if (!body || typeof body !== "object" || Array.isArray(body)) return fail("Invalid request.", 400);
       const result = url.pathname === "/start"
         ? await startSession(env, claims.sub, body)
-        : await submitSession(env, claims.sub, body);
+        : url.pathname === "/submit"
+          ? await submitSession(env, claims.sub, body)
+          : url.pathname === "/daily/start"
+            ? await dailyChallengeStart(env, claims.sub)
+            : url.pathname === "/daily/status"
+              ? await dailyChallengeStatus(env, claims.sub)
+              : await dailyChallengeSubmit(env, claims.sub, body);
       return response(result);
     } catch (error) {
       const message = error?.message || "The MCQ request could not be completed.";
