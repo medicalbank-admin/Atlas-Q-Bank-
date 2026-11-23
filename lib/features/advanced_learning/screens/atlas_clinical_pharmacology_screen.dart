@@ -908,6 +908,13 @@ Widget? _molecularStructureFor(_Drug drug) {
         pdbId: '2P16', ligandName: 'Apixaban', resolution: '2.30 Å',
         note: 'Experimental co-crystal: apixaban is ligand component GG2 in the deposited factor Xa complex.',
       );
+    case 'Semaglutide':
+      return const AtlasMolecularStructureViewer(
+        structureKey: 'glp1r_semaglutide',
+        structureTitle: 'Human GLP-1 receptor + semaglutide peptide',
+        pdbId: '7KI0', ligandName: 'Semaglutide', resolution: '2.50 Å',
+        note: 'Experimental cryo-EM complex of semaglutide bound to GLP-1R with Gs protein. The peptide chain is shown in its deposited receptor-bound conformation; this is not an isolated peptide conformer.',
+      );
     case 'Methotrexate':
       return const AtlasMolecularStructureViewer(
         structureKey: 'dhfr_methotrexate',
