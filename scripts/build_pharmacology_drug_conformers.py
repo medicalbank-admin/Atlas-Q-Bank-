@@ -1,0 +1,163 @@
+#!/usr/bin/env python3
+"""Build 3D small-molecule assets for every Atlas clinical-pharmacology drug.
+
+Coordinates are either PubChem 3D conformers or deterministic RDKit-generated
+conformers from PubChem isomeric SMILES. They are molecular conformers, NOT
+experimental protein-bound poses or docking/energy simulations.
+"""
+import json, math, os, struct, urllib.parse, urllib.request
+
+ROOT = "assets/pharmacology/molecular"
+CATALOG = os.path.join(ROOT, "drug_target_catalog.json")
+ELEMENTS = {
+ "C": ([0.66,0.70,0.75,1],0.18), "N": ([0.20,0.42,0.95,1],0.17),
+ "O": ([0.92,0.22,0.20,1],0.16), "S": ([0.96,0.72,0.12,1],0.21),
+ "P": ([1.00,0.48,0.12,1],0.21), "F": ([0.45,0.82,0.40,1],0.16),
+ "CL": ([0.20,0.75,0.25,1],0.20), "BR": ([0.55,0.30,0.18,1],0.22),
+ "I": ([0.48,0.22,0.62,1],0.24), "H": ([0.88,0.90,0.94,1],0.09),
+ "B": ([0.95,0.70,0.45,1],0.17), "SI": ([0.70,0.62,0.50,1],0.20)
+}
+def get(url):
+    req=urllib.request.Request(url,headers={"User-Agent":"AtlasAcademy-Pharmacology-Lab/1.0"})
+    with urllib.request.urlopen(req,timeout=60) as r: return r.read()
+def sphere():
+    v=[(0,0,1),(0.894,0,0.447),(0.276,0.851,0.447),(-0.724,0.526,0.447),(-0.724,-0.526,0.447),(0.276,-0.851,0.447),
+       (0.724,0.526,-0.447),(-0.276,0.851,-0.447),(-0.894,0,-0.447),(-0.276,-0.851,-0.447),(0.724,-0.526,-0.447),(0,0,-1)]
+    f=[(0,1,2),(0,2,3),(0,3,4),(0,4,5),(0,5,1),(1,6,2),(2,6,7),(2,7,3),(3,7,8),(3,8,4),(4,8,9),(4,9,5),(5,9,10),(5,10,1),(1,10,6),(11,7,6),(11,8,7),(11,9,8),(11,10,9),(11,6,10)]
+    return v,[x for tri in f for x in tri]
+def cylinder():
+    v=[]; faces=[]; n=10
+    for y in (-0.5,0.5):
+        for i in range(n):
+            a=2*math.pi*i/n; v.append((math.cos(a),y,math.sin(a)))
+    for i in range(n):
+        j=(i+1)%n; faces.extend((i,j,n+j,i,n+j,n+i))
+    faces.extend(tuple(reversed(range(n)))); faces.extend(range(n,2*n))
+    return v,faces
+def glb(path, atoms, bonds, title):
+    if not atoms: raise RuntimeError("No molecular atoms: "+title)
+    xyz=[a["xyz"] for a in atoms]
+    center=[sum(p[i] for p in xyz)/len(xyz) for i in range(3)]
+    extent=max(max(abs(p[i]-center[i]) for p in xyz) for i in range(3)) or 1
+    scale=1.65/extent
+    sv,si=sphere(); cv,ci=cylinder()
+    binary=bytearray(); views=[]; accessors=[]
+    def blob(data,target):
+        while len(binary)%4: binary.append(0)
+        off=len(binary); binary.extend(data)
+        views.append({"buffer":0,"byteOffset":off,"byteLength":len(data),"target":target})
+        return len(views)-1
+    def geometry(vertices,indices):
+        p=struct.pack("<"+"f"*(len(vertices)*3),*[z for v in vertices for z in v])
+        pv=blob(p,34962); pa=len(accessors)
+        accessors.append({"bufferView":pv,"componentType":5126,"count":len(vertices),"type":"VEC3",
+          "min":[min(v[i] for v in vertices) for i in range(3)],"max":[max(v[i] for v in vertices) for i in range(3)]})
+        ix=struct.pack("<"+"H"*len(indices),*indices); iv=blob(ix,34963); ia=len(accessors)
+        accessors.append({"bufferView":iv,"componentType":5123,"count":len(indices),"type":"SCALAR"})
+        return pa,ia
+    sphere_pos,sphere_idx=geometry(sv,si); cyl_pos,cyl_idx=geometry(cv,ci)
+    materials=[]; meshes=[]; nodes=[]; mesh_map={}
+    for el,(color,radius) in ELEMENTS.items():
+        mesh_map[el]=len(meshes)
+        materials.append({"name":"Element "+el,"pbrMetallicRoughness":{"baseColorFactor":color,"metallicFactor":0.04,"roughnessFactor":0.34}})
+        meshes.append({"name":"Atom "+el,"primitives":[{"attributes":{"POSITION":sphere_pos},"indices":sphere_idx,"material":len(materials)-1}]})
+    bond_material=len(materials)
+    materials.append({"name":"Covalent bonds","pbrMetallicRoughness":{"baseColorFactor":[0.48,0.56,0.64,1],"metallicFactor":0.05,"roughnessFactor":0.5}})
+    bond_mesh=len(meshes); meshes.append({"name":"Covalent bond","primitives":[{"attributes":{"POSITION":cyl_pos},"indices":cyl_idx,"material":bond_material}]})
+    for idx,a in enumerate(atoms):
+        el=a["element"].upper()
+        if el not in ELEMENTS: el="C"
+        radius=ELEMENTS[el][1]
+        nodes.append({"name":"ATOM_%03d_%s_%s"%(idx+1,el,a.get("name",""))[:60],"mesh":mesh_map[el],
+          "translation":[(a["xyz"][i]-center[i])*scale for i in range(3)],"scale":[radius*scale*2.1]*3})
+    for bi,(ia,ib,order) in enumerate(bonds):
+        if ia>=len(atoms) or ib>=len(atoms): continue
+        p=atoms[ia]["xyz"]; q=atoms[ib]["xyz"]
+        d=[q[i]-p[i] for i in range(3)]; length=math.sqrt(sum(x*x for x in d))
+        if length<1e-5: continue
+        mid=[(p[i]+q[i])*0.5 for i in range(3)]
+        # Quaternion rotating the cylinder's local +Y axis onto the bond vector.
+        ux,uy,uz=d[0]/length,d[1]/length,d[2]/length
+        qw=math.sqrt(max(0,1+uy))*0.5
+        if qw>1e-7: qx=uz/(4*qw); qy=0.0; qz=-ux/(4*qw)
+        else: qx=1.0; qy=0.0; qz=0.0
+        nodes.append({"name":"BOND_%03d"%(bi+1),"mesh":bond_mesh,
+          "translation":[(mid[i]-center[i])*scale for i in range(3)],
+          "rotation":[qx,qy,qz,qw],"scale":[0.045*scale*2.1,length*scale,0.045*scale*2.1]})
+    doc={"asset":{"version":"2.0","generator":"Atlas Academy PubChem/RDKit molecular conformer builder"},
+      "scene":0,"scenes":[{"nodes":list(range(len(nodes)))}],"nodes":nodes,"meshes":meshes,"materials":materials,
+      "buffers":[{"byteLength":len(binary)}],"bufferViews":views,"accessors":accessors}
+    js=json.dumps(doc,separators=(",",":")).encode()
+    while len(js)%4: js+=b" "
+    while len(binary)%4: binary.append(0)
+    total=12+8+len(js)+8+len(binary)
+    with open(path,"wb") as f:
+        f.write(struct.pack("<4sII",b"glTF",2,total)); f.write(struct.pack("<I4s",len(js),b"JSON")); f.write(js)
+        f.write(struct.pack("<I4s",len(binary),b"BIN\x00")); f.write(binary)
+def parse_sdf(sdf):
+    lines=sdf.splitlines()
+    if len(lines)<5: raise ValueError("Invalid SDF")
+    counts=lines[3]
+    na=int(counts[:3]); nb=int(counts[3:6])
+    atoms=[]
+    for line in lines[4:4+na]:
+        atoms.append({"xyz":(float(line[0:10]),float(line[10:20]),float(line[20:30])),
+                      "element":line[31:34].strip().upper(),"name":line[31:34].strip()})
+    bonds=[]
+    for line in lines[4+na:4+na+nb]:
+        bonds.append((int(line[:3])-1,int(line[3:6])-1,int(line[6:9])))
+    return atoms,bonds
+def pubchem_conformer(name):
+    q=urllib.parse.quote(name,safe="")
+    # Prefer PubChem's deposited 3D conformer.
+    try:
+        sdf=get("https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/%s/SDF?record_type=3d"%q).decode("utf-8","replace")
+        atoms,bonds=parse_sdf(sdf)
+        if atoms and any(abs(a["xyz"][2])>0.01 for a in atoms):
+            return atoms,bonds,"PubChem 3D conformer"
+    except Exception as e: print("PubChem 3D unavailable for %s: %s"%(name,e))
+    # Deterministic 3D conformer from PubChem isomeric SMILES using RDKit.
+    from rdkit import Chem
+    from rdkit.Chem import AllChem
+    raw=json.loads(get("https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/%s/property/IsomericSMILES/JSON"%q))
+    smiles=raw["PropertyTable"]["Properties"][0]["IsomericSMILES"]
+    mol=Chem.MolFromSmiles(smiles)
+    if mol is None: raise RuntimeError("Could not parse PubChem SMILES for "+name)
+    mol=Chem.AddHs(mol)
+    params=AllChem.ETKDGv3(); params.randomSeed=20261123; params.useRandomCoords=False
+    status=AllChem.EmbedMolecule(mol,params)
+    if status!=0: raise RuntimeError("RDKit could not generate 3D conformer for "+name)
+    if AllChem.MMFFHasAllMoleculeParams(mol): AllChem.MMFFOptimizeMolecule(mol,maxIters=500)
+    conf=mol.GetConformer()
+    atoms=[]
+    for i,a in enumerate(mol.GetAtoms()):
+        p=conf.GetAtomPosition(i)
+        atoms.append({"xyz":(p.x,p.y,p.z),"element":a.GetSymbol().upper(),"name":str(i+1)})
+    bonds=[(b.GetBeginAtomIdx(),b.GetEndAtomIdx(),int(b.GetBondTypeAsDouble())) for b in mol.GetBonds()]
+    return atoms,bonds,"RDKit ETKDGv3 conformer from PubChem isomeric SMILES"
+def main():
+    os.makedirs(ROOT,exist_ok=True)
+    with open(CATALOG) as f: catalog=json.load(f)
+    manifest={}
+    failures=[]
+    for item in catalog:
+        slug=item["slug"]; name=item["pubchem_name"]
+        try:
+            atoms,bonds,method=pubchem_conformer(name)
+            asset=os.path.join(ROOT,"drugs",slug+".glb")
+            os.makedirs(os.path.dirname(asset),exist_ok=True)
+            glb(asset,atoms,bonds,name)
+            manifest[slug]={**item,"asset":asset,"atom_count":len(atoms),"bond_count":len(bonds),
+              "coordinate_method":method,"structure_status":"3D conformer generated",
+              "scientific_note":"This is an isolated-molecule conformer, not an experimentally observed receptor-bound pose."}
+            print("OK %s: %d atoms, %d bonds (%s)"%(name,len(atoms),len(bonds),method))
+        except Exception as e:
+            failures.append({"drug":name,"error":str(e)})
+            manifest[slug]={**item,"asset":None,"structure_status":"generation failed","error":str(e)}
+            print("FAILED %s: %s"%(name,e))
+    with open(os.path.join(ROOT,"drug_manifest.json"),"w") as f: json.dump(manifest,f,indent=2)
+    print("Generated %d/%d molecular conformers"%(len(catalog)-len(failures),len(catalog)))
+    if failures:
+        print("Molecular generation failures: "+json.dumps(failures))
+        raise SystemExit(1)
+if __name__=="__main__": main()
