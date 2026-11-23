@@ -16,6 +16,7 @@ import 'admin_subscription_requests_screen.dart';
 import 'admin_payment_settings_screen.dart';
 import 'admin_notifications_screen.dart';
 import 'admin_analytics_screen.dart';
+import 'admin_device_security_screen.dart';
 import 'admin_advanced_learning_screens.dart';
 import '../../inbox/screens/inbox_screens.dart';
 import '../../advanced_learning/services/push_notification_service.dart';
@@ -427,6 +428,13 @@ class AdminDashboardScreen extends StatelessWidget {
   }
   Widget _buildManagementGrid(BuildContext context) {
     final items = [
+      _AdminItem(
+        icon: Icons.security_rounded,
+        title: 'Device Security',
+        subtitle: 'Review device changes and possible VPN/proxy activity',
+        color: AtlasColors.gold,
+        page: const AdminDeviceSecurityScreen(),
+      ),
       _AdminItem(
         icon: Icons.mark_chat_unread_rounded,
         title: 'Student Inbox',
