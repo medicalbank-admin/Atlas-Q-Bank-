@@ -32,6 +32,13 @@ jobs:
             git commit -m "Add verified clinical image library"
             git push
           fi
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Refresh source after publishing generated assets
+        run: git pull --rebase origin main
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
