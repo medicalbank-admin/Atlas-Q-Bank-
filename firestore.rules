@@ -764,8 +764,10 @@ service cloud.firestore {
           request.resource.data.body is string &&
           request.resource.data.body.size() <= 4000 &&
           (request.resource.data.body.size() > 0 ||
-            (request.resource.data.imageUrl is string &&
-             request.resource.data.imageUrl.size() > 0)) &&
+            ((request.resource.data.imageUrl is string &&
+              request.resource.data.imageUrl.size() > 0) ||
+             (request.resource.data.imagePath is string &&
+              request.resource.data.imagePath.size() > 0))) &&
           (request.resource.data.imageUrl == null ||
             (request.resource.data.imageUrl is string &&
              request.resource.data.imageUrl.size() <= 2048)) &&
