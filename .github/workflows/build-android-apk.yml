@@ -37,6 +37,9 @@ jobs:
           python -m pip install --quiet Pillow CairoSVG
           python scripts/prepare_launcher_icons.py
 
+      - name: Generate experimental molecular structure assets
+        run: python scripts/build_pharmacology_molecular_models.py
+
       - name: Install Flutter dependencies
         run: flutter pub get
 
