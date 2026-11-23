@@ -394,7 +394,7 @@ class _QuizScreenState extends State<_QuizScreen> {
   @override Widget build(BuildContext context) {
     if (questions.isEmpty) return ListView(padding: const EdgeInsets.all(16), children: [
       Text('Advanced medical MCQ bank', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: AtlasColors.navy, fontWeight: FontWeight.w900)),
-      const SizedBox(height: 5), Text(_bank.length.toString()+' original hardcoded single-best-answer MCQs across '+systems.length.toString()+' system groups.', style: const TextStyle(color: AtlasColors.secondaryText)),
+      const SizedBox(height: 5), Text(_bank.length.toString()+' original hardcoded single-best-answer MCQs across '+(systems.length-1).toString()+' medical systems.', style: const TextStyle(color: AtlasColors.secondaryText)),
       const SizedBox(height: 12), _Config(title: 'Medical system', child: DropdownButtonFormField<String>(value: system, isExpanded: true, items: systems.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(), onChanged: (v) => setState(() => system = v ?? 'All systems'))),
       _Config(title: 'Questions per attempt', child: Wrap(spacing: 7, children: [10,20,50,100].map((n) => ChoiceChip(label: Text(n.toString()), selected: amount == n, onSelected: (_) => setState(() => amount = n))).toList())),
       Card(child: Padding(padding: const EdgeInsets.all(15), child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
