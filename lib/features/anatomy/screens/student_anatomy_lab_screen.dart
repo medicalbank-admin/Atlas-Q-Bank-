@@ -485,7 +485,7 @@ class _StudentAnatomyLabScreenState extends State<StudentAnatomyLabScreen> {
     const SizedBox(height: 9),
     Row(children: [
       Expanded(child: _tool(Icons.search_rounded, 'Structure index',
-        'Browse 242 bones and 147 body structures', _openSearch)),
+        'Browse 242 skeletal parts + 147 body structures', _openSearch)),
       const SizedBox(width: 10),
       Expanded(child: _tool(Icons.quiz_rounded, 'Spotter practice',
         'Identify five structures', _startSpotter)),
