@@ -10,7 +10,7 @@ class LearningResourceUploadDialog extends StatefulWidget {
   final String subjectId;
   final String topicId;
   const LearningResourceUploadDialog({
-    super.key, required this.yearId, required this.subjectId, required this.topicId,
+    super.key, this.yearId = '', this.subjectId = '', this.topicId = '',
   });
 
   @override
@@ -80,7 +80,7 @@ class _LearningResourceUploadDialogState extends State<LearningResourceUploadDia
         final file = _file!;
         final safeName = file.name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
         final storageRef = FirebaseStorage.instance.ref().child(
-          'learning_resources/${widget.yearId}/${widget.subjectId}/${widget.topicId}/${DateTime.now().millisecondsSinceEpoch}_$safeName',
+          'learning_resources/${DateTime.now().millisecondsSinceEpoch}_$safeName',
         );
         final extension = file.extension?.toLowerCase();
         final contentType = _type == LearningResourceType.pdf ? 'application/pdf'
@@ -119,7 +119,7 @@ class _LearningResourceUploadDialogState extends State<LearningResourceUploadDia
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-    title: const Text('Add PDF, Text Note or Video'),
+    title: const Text('Publish Learning Content'),
     content: SizedBox(
       width: 460,
       child: SingleChildScrollView(
@@ -185,7 +185,7 @@ class _LearningResourceUploadDialogState extends State<LearningResourceUploadDia
     ),
     actions: [
       TextButton(onPressed: _saving ? null : () => Navigator.pop(context, false), child: const Text('Cancel')),
-      FilledButton(onPressed: _saving ? null : _save, child: Text(_saving ? 'Saving...' : 'Save as draft')),
+      FilledButton(onPressed: _saving ? null : _save, child: Text(_saving ? 'Publishing...' : 'Publish')),
     ],
   );
 }
