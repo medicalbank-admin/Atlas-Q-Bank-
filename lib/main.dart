@@ -19,8 +19,12 @@ Future<void> main() async {
   // requests without a valid App Check token when enforcement is enabled.
   try {
     await FirebaseAppCheck.instance.activate(
-      androidProvider: kDebugMode ? AndroidProvider.debug : AndroidProvider.playIntegrity,
-      appleProvider: kDebugMode ? AppleProvider.debug : AppleProvider.appAttest,
+      providerAndroid: kDebugMode
+          ? const AndroidDebugProvider()
+          : const AndroidPlayIntegrityProvider(),
+      providerApple: kDebugMode
+          ? const AppleDebugProvider()
+          : const AppleAppAttestProvider(),
     );
   } catch (error) {
     // Keep the learning app usable if attestation initialization is unavailable.
