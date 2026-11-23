@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../app/atlas_academy_app.dart';
 import 'atlas_flashcards_screen.dart';
 import 'atlas_ai_medical_tutor_screen.dart';
+import 'atlas_osce_simulator_screen.dart';
 
 class AtlasPremiumLearningHomeSection extends StatelessWidget {
   const AtlasPremiumLearningHomeSection({super.key});
@@ -137,7 +138,9 @@ class AtlasPremiumLearningHomeSection extends StatelessWidget {
                     ? const AtlasFlashcardsScreen()
                     : feature.title == 'AI Medical Tutor'
                         ? const AtlasAiMedicalTutorScreen()
-                        : _PremiumFeatureDetailScreen(feature: feature),
+                        : feature.title == 'OSCE Simulator'
+                            ? const AtlasOsceSimulatorScreen()
+                            : _PremiumFeatureDetailScreen(feature: feature),
               )),
             );
           },
