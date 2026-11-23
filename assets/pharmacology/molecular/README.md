@@ -5,7 +5,7 @@ This folder is the build-time source and destination for the complete 41-profile
 ## Build pipeline
 
 1. `drug_target_catalog.json` contains the 41 drug identities, target annotations, reference organisms, and UniProt accessions where a single protein target is appropriate.
-2. `scripts/build_pharmacology_molecular_models.py` downloads curated experimental complexes from the RCSB Protein Data Bank and builds atom-level GLB files. It includes experimental complexes for lisinopril, atorvastatin, ibuprofen, apixaban, methotrexate, semaglutide, azithromycin, and gentamicin.
+2. `scripts/build_pharmacology_molecular_models.py` downloads curated experimental complexes from the RCSB Protein Data Bank and builds atom-level GLB files. It includes experimental complexes for lisinopril, atorvastatin, ibuprofen, apixaban, methotrexate, semaglutide, azithromycin, gentamicin, furosemide, salbutamol, empagliflozin, diazepam, morphine, and acyclovir triphosphate.
 3. `scripts/build_pharmacology_drug_conformers.py` builds a rotatable, atom-and-bond model for every remaining drug profile. It prefers PubChem 3D conformers and falls back to a deterministic RDKit ETKDGv3 conformer generated from PubChem isomeric chemical identity data.
 4. Where a UniProt target accession is available, the same script retrieves the corresponding AlphaFold DB predicted protein model and builds an interactive target-protein GLB. The viewer explicitly labels these as predicted, unbound target structures.
 
@@ -13,7 +13,7 @@ This folder is the build-time source and destination for the complete 41-profile
 
 - A PubChem/RDKit isolated-molecule conformer is **not** a receptor-bound pose, docking result, molecular-dynamics trajectory, or binding-energy calculation.
 - An AlphaFold DB protein model is a predicted target structure, not a drug-bound experimental complex.
-- Only the eight named experimental PDB complexes are presented as co-crystallised/co-resolved drug–target structures. Semaglutide uses 7KI0 (GLP-1R, cryo-EM); methotrexate uses wild-type human DHFR structure 1U72; azithromycin uses 1M1K (archaeal 50S/23S rRNA); gentamicin C1a uses 2ET3 (16S rRNA A-site oligonucleotide).
+- Only the fourteen named experimental PDB complexes are presented as co-crystallised/co-resolved drug–target structures. These include 7KI0 (semaglutide–GLP-1R), 1U72 (human DHFR–methotrexate), 1M1K (azithromycin–archaeal 23S rRNA), 2ET3 (gentamicin C1a–16S rRNA), 9C0E (furosemide–human NKCC1), 7DHI (salbutamol–β2AR), 7VSI (empagliflozin–SGLT2), 6X3X (diazepam–GABAA receptor), 8EF6 (morphine–μ-opioid receptor), and 8V1T (acyclovir triphosphate–HSV-1 DNA polymerase), in addition to the lisinopril, atorvastatin, ibuprofen and apixaban complexes.
 - Several medicines act on RNA, multiple proteins, or indirect pathways rather than one unique protein. The catalogue labels these accurately; it must not invent a single receptor structure for them.
 - Gentamicin is a mixture; the displayed molecular conformer is the representative gentamicin C1a component. Sodium valproate is represented by the valproate/valproic-acid active moiety.
 
