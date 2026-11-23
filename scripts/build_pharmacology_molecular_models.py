@@ -16,7 +16,7 @@ ROOT = "assets/pharmacology/molecular"
 STRUCTURES = {
     "ace_lisinopril": ("1O86", "LPR", "Human ACE with lisinopril"),
     "hmgcr_atorvastatin": ("1HWK", "117", "HMG-CoA reductase with atorvastatin"),
-    "cox1_ibuprofen": ("1EQG", "IBU", "Cyclo-oxygenase-1 with ibuprofen"),
+    "cox1_ibuprofen": ("1EQG", "IBP", "Cyclo-oxygenase-1 with ibuprofen"),
     "factorxa_apixaban": ("2P16", "GG2", "Factor Xa with apixaban"),
     "dhfr_methotrexate": ("4DFR", "MTX", "Dihydrofolate reductase with methotrexate"),
     "adrb2_carazolol": ("2RH1", "CAU", "Beta-2 adrenergic receptor with carazolol"),
@@ -140,6 +140,8 @@ def main():
             if not (line.startswith("ATOM  ") or line.startswith("HETATM")): continue
             if len(line)<78: continue
             residue=line[17:20].strip()
+            chain=line[21:22].strip() or "A"
+            if line.startswith("ATOM  ") and chain != "A": continue
             is_ligand=line.startswith("HETATM") and residue==ligand_code
             if line.startswith("HETATM") and not is_ligand: continue
             if residue in WATER: continue
@@ -147,7 +149,7 @@ def main():
             if element in ("H","D"): continue
             try: xyz=(float(line[30:38]),float(line[38:46]),float(line[46:54]))
             except ValueError: continue
-            atoms.append((xyz,element,line[12:16].strip(),residue,line[21:22].strip() or "A",is_ligand))
+            atoms.append((xyz,element,line[12:16].strip(),residue,chain,is_ligand))
         if not any(a[5] for a in atoms):
             raise RuntimeError("Expected co-crystallised ligand %s not found in %s" % (ligand_code,pdb_id))
         path=os.path.join(ROOT,key+".glb")
