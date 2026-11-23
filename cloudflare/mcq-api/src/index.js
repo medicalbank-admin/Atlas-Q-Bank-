@@ -789,7 +789,7 @@ export default {
     }
     const url = new URL(request.url);
     const allowedPaths = ["/start", "/submit", "/daily/start", "/daily/status", "/daily/submit",
-      "/inbox/upload-signature", "/inbox/image-url", "/inbox/image"];
+      "/inbox/upload-signature", "/inbox/image"];
     if (request.method !== "POST" || !allowedPaths.includes(url.pathname)) {
       return fail("Endpoint not found.", 404);
     }
@@ -820,7 +820,7 @@ export default {
       const message = error?.message || "The MCQ request could not be completed.";
       const status = /sign-in token|sign in first|expired/i.test(message) ? 401 :
         /not found|unavailable/i.test(message) ? 404 :
-        /subscription|permission|not available to your account/i.test(message) ? 403 :
+        /subscription|permission|not allowed|not available to your account/i.test(message) ? 403 :
         /submission window/i.test(message) ? 410 : 400;
       return fail(message, status);
     }
