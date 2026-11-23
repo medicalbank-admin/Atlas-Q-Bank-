@@ -156,6 +156,74 @@ class AtlasPremiumLearningHomeSection extends StatelessWidget {
   }
 }
 
+
+class AtlasDashboardCoreFeatures extends StatelessWidget {
+  const AtlasDashboardCoreFeatures({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final features = AtlasPremiumLearningHomeSection._features.where((feature) =>
+      const {'AI Medical Tutor', 'OSCE Simulator', 'ECG Interpretation', 'Radiology Lab'}.contains(feature.title)).toList();
+    return GridView.builder(
+      shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
+      itemCount: features.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2, crossAxisSpacing: 10, mainAxisSpacing: 10,
+        childAspectRatio: 1.48,
+      ),
+      itemBuilder: (context, index) {
+        final feature = features[index];
+        return _PremiumFeatureCard(feature: feature, onTap: () =>
+          Navigator.of(context).push(MaterialPageRoute(builder: (_) =>
+            feature.title == 'AI Medical Tutor' ? const AtlasAiMedicalTutorScreen()
+            : feature.title == 'OSCE Simulator' ? const AtlasOsceSimulatorScreen()
+            : feature.title == 'ECG Interpretation' ? const AtlasEcgInterpretationScreen()
+            : const AtlasRadiologyLearningScreen())));
+      },
+    );
+  }
+}
+
+class AtlasDashboardDailyChallenge extends StatelessWidget {
+  const AtlasDashboardDailyChallenge({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final feature = AtlasPremiumLearningHomeSection._features.firstWhere(
+      (item) => item.title == 'Daily Medical Challenge');
+    return Material(
+      color: Colors.white, borderRadius: BorderRadius.circular(17),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(17),
+        onTap: () => Navigator.of(context).push(MaterialPageRoute(
+          builder: (_) => _PremiumFeatureDetailScreen(feature: feature))),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(17),
+            border: Border.all(color: const Color(0xFFE3EAF3))),
+          child: Row(children: [
+            Container(width: 43, height: 43,
+              decoration: BoxDecoration(gradient: LinearGradient(colors: feature.colors),
+                borderRadius: BorderRadius.circular(13)),
+              child: Icon(feature.icon, color: Colors.white, size: 23)),
+            const SizedBox(width: 12),
+            const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('DAILY MEDICAL CHALLENGE', style: TextStyle(
+                  color: AtlasColors.royalBlue, fontSize: 9, letterSpacing: .7,
+                  fontWeight: FontWeight.w900)),
+                SizedBox(height: 3),
+                Text('Test your clinical knowledge every day', maxLines: 1,
+                  overflow: TextOverflow.ellipsis, style: TextStyle(
+                    color: AtlasColors.navy, fontSize: 12, fontWeight: FontWeight.w800)),
+              ])),
+            const Icon(Icons.arrow_forward_ios_rounded,
+              color: AtlasColors.secondaryText, size: 15),
+          ]),
+        ),
+      ),
+    );
+  }
+}
+
 class _PremiumFeature {
   final String title;
   final String subtitle;
