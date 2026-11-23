@@ -14,10 +14,10 @@ import urllib.request
 ROOT = "assets/pharmacology/molecular"
 # PDB ID, ligand residue code, short scientific label
 STRUCTURES = {
-    "ace_lisinopril": ("1O86", "LIS", "Human ACE with lisinopril"),
-    "hmgcr_atorvastatin": ("1HWK", "ATO", "HMG-CoA reductase with atorvastatin"),
+    "ace_lisinopril": ("1O86", "LPR", "Human ACE with lisinopril"),
+    "hmgcr_atorvastatin": ("1HWK", "117", "HMG-CoA reductase with atorvastatin"),
     "cox1_ibuprofen": ("1EQG", "IBU", "Cyclo-oxygenase-1 with ibuprofen"),
-    "factorxa_apixaban": ("2P16", "1FX", "Factor Xa with apixaban"),
+    "factorxa_apixaban": ("2P16", "GG2", "Factor Xa with apixaban"),
     "dhfr_methotrexate": ("4DFR", "MTX", "Dihydrofolate reductase with methotrexate"),
     "adrb2_carazolol": ("2RH1", "CAU", "Beta-2 adrenergic receptor with carazolol"),
 }
@@ -108,7 +108,7 @@ def make_glb(atoms, out_path, title):
         })
     gltf = {
         "asset":{"version":"2.0","generator":"Atlas Academy PDB atom model builder","copyright":"Coordinates: RCSB Protein Data Bank"},
-        "scene":0,"scenes":[{"nodes":list(range(len(nodes))}],
+        "scene":0,"scenes":[{"nodes":list(range(len(nodes)))}],
         "nodes":nodes,"meshes":meshes,"materials":materials,
         "buffers":[{"byteLength":len(binary)}],"bufferViews":views,"accessors":accessors,
     }
