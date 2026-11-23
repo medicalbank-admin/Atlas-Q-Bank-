@@ -64,6 +64,19 @@ service firebase.storage {
       allow update, delete: if isAdmin();
     }
 
+    // Flat path used by the simplified one-step learning publisher.
+    // Legacy nested resource paths remain supported below.
+    match /learning_resources/{fileName} {
+      allow read: if isSignedIn();
+      allow create, update: if isAdmin()
+        && request.resource != null
+        && request.resource.size < 200 * 1024 * 1024
+        && request.resource.contentType.matches(
+          '(application/pdf|video/mp4|video/quicktime|video/webm)'
+        );
+      allow delete: if isAdmin();
+    }
+
     // -----------------------------------------
     // ADMIN LEARNING MATERIALS
     // PDFs and videos uploaded by administrators.
