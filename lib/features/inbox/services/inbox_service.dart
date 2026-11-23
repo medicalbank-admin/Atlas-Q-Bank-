@@ -48,26 +48,28 @@ class InboxService {
     required Map<String, dynamic> profile,
   }) async {
     final ref = conversationRef(studentUid);
-    final snapshot = await ref.get();
-    if (snapshot.exists) return;
-    await ref.set({
-      'studentUid': studentUid,
-      'studentName': (profile['fullName'] ?? 'Student').toString(),
-      'studentEmail': (profile['email'] ?? _auth.currentUser?.email ?? '').toString(),
-      'studentPhone': (profile['whatsappNumber'] ?? '').toString(),
-      'studentUniversity': (profile['university'] ?? '').toString(),
-      'studentCountry': (profile['countryOfStudy'] ?? '').toString(),
-      'studentProfileImageUrl': (profile['profileImageUrl'] ?? '').toString(),
-      'adminUid': null,
-      'adminName': 'The Atlas Administrator',
-      'lastMessage': '',
-      'lastMessageAt': FieldValue.serverTimestamp(),
-      'lastSenderUid': '',
-      'lastMessageId': '',
-      'unreadForStudent': 0,
-      'unreadForAdmin': 0,
-      'createdAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
+    await _db.runTransaction((transaction) async {
+      final snapshot = await transaction.get(ref);
+      if (snapshot.exists) return;
+      transaction.set(ref, {
+        'studentUid': studentUid,
+        'studentName': (profile['fullName'] ?? 'Student').toString(),
+        'studentEmail': (profile['email'] ?? _auth.currentUser?.email ?? '').toString(),
+        'studentPhone': (profile['whatsappNumber'] ?? '').toString(),
+        'studentUniversity': (profile['university'] ?? '').toString(),
+        'studentCountry': (profile['countryOfStudy'] ?? '').toString(),
+        'studentProfileImageUrl': (profile['profileImageUrl'] ?? '').toString(),
+        'adminUid': null,
+        'adminName': 'The Atlas Administrator',
+        'lastMessage': '',
+        'lastMessageAt': FieldValue.serverTimestamp(),
+        'lastSenderUid': '',
+        'lastMessageId': '',
+        'unreadForStudent': 0,
+        'unreadForAdmin': 0,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
     });
   }
 
@@ -76,26 +78,28 @@ class InboxService {
     required Map<String, dynamic> profile,
   }) async {
     final ref = conversationRef(studentUid);
-    final snapshot = await ref.get();
-    if (snapshot.exists) return;
-    await ref.set({
-      'studentUid': studentUid,
-      'studentName': (profile['fullName'] ?? 'Student').toString(),
-      'studentEmail': (profile['email'] ?? '').toString(),
-      'studentPhone': (profile['whatsappNumber'] ?? '').toString(),
-      'studentUniversity': (profile['university'] ?? '').toString(),
-      'studentCountry': (profile['countryOfStudy'] ?? '').toString(),
-      'studentProfileImageUrl': (profile['profileImageUrl'] ?? '').toString(),
-      'adminUid': currentUid,
-      'adminName': 'The Atlas Administrator',
-      'lastMessage': '',
-      'lastMessageAt': FieldValue.serverTimestamp(),
-      'lastSenderUid': '',
-      'lastMessageId': '',
-      'unreadForStudent': 0,
-      'unreadForAdmin': 0,
-      'createdAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
+    await _db.runTransaction((transaction) async {
+      final snapshot = await transaction.get(ref);
+      if (snapshot.exists) return;
+      transaction.set(ref, {
+        'studentUid': studentUid,
+        'studentName': (profile['fullName'] ?? 'Student').toString(),
+        'studentEmail': (profile['email'] ?? '').toString(),
+        'studentPhone': (profile['whatsappNumber'] ?? '').toString(),
+        'studentUniversity': (profile['university'] ?? '').toString(),
+        'studentCountry': (profile['countryOfStudy'] ?? '').toString(),
+        'studentProfileImageUrl': (profile['profileImageUrl'] ?? '').toString(),
+        'adminUid': currentUid,
+        'adminName': 'The Atlas Administrator',
+        'lastMessage': '',
+        'lastMessageAt': FieldValue.serverTimestamp(),
+        'lastSenderUid': '',
+        'lastMessageId': '',
+        'unreadForStudent': 0,
+        'unreadForAdmin': 0,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
     });
   }
 
@@ -108,7 +112,7 @@ class InboxService {
     if (bytes.isEmpty || bytes.length > 8 * 1024 * 1024) {
       throw Exception('Images must be smaller than 8 MB.');
     }
-    final safeName = fileName.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
+    final safeName = fileName.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_').substring(0, fileName.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_').length.clamp(0, 120));
     final path = 'inbox_media/$studentUid/$currentUid/${DateTime.now().microsecondsSinceEpoch}_$safeName';
     final ref = _storage.ref(path);
     await ref.putData(
