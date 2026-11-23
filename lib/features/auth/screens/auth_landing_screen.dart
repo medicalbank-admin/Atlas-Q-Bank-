@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../app/atlas_academy_app.dart';
 import 'student_login_screen.dart';
 import 'student_registration_screen.dart';
+import '../../../shared/widgets/atlas_logo.dart';
 
 class AuthLandingScreen extends StatelessWidget {
   const AuthLandingScreen({super.key});
@@ -51,44 +52,8 @@ class AuthLandingScreen extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    Container(
-                      height: 108,
-                      width: 108,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(30),
-                        border: Border.all(
-                          color: AtlasColors.royalBlue.withValues(
-                            alpha: 0.65,
-                          ),
-                          width: 1.3,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.18),
-                            blurRadius: 25,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.school_rounded,
-                        color: AtlasColors.royalBlue,
-                        size: 58,
-                      ),
-                    ),
-                    const SizedBox(height: 23),
-                    const Text(
-                      'THE ATLAS ACADEMY',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 19,
-                        letterSpacing: 2.1,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    const SizedBox(height: 9),
+                    const AtlasLogo(size: 102),
+                    const SizedBox(height: 24),
                     Container(
                       height: 3,
                       width: 58,
