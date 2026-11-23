@@ -17,7 +17,43 @@ class _AtlasRadiologyLearningScreenState extends State<AtlasRadiologyLearningScr
  Container(margin:const EdgeInsets.fromLTRB(16,8,16,12),padding:const EdgeInsets.all(17),decoration:BoxDecoration(gradient:const LinearGradient(colors:[Color(0xFF174B68),Color(0xFF287F99),Color(0xFF53B2B5)]),borderRadius:BorderRadius.circular(21)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[const Row(children:[Icon(Icons.image_search_rounded,color:Color(0xFFB8F1EA),size:27),SizedBox(width:10),Expanded(child:Text('REAL-WORLD RADIOLOGY CASES',style:TextStyle(color:Colors.white,fontSize:13,fontWeight:FontWeight.w900,letterSpacing:.7)))]),const SizedBox(height:8),Text('${done.length} cases reviewed • ${80-done.length} to explore',style:const TextStyle(color:Colors.white70,fontSize:11))])),
  Padding(padding:const EdgeInsets.fromLTRB(16,0,16,9),child:TextField(onChanged:(v)=>setState(()=>query=v),decoration:InputDecoration(hintText:'Search modality or diagnosis',prefixIcon:const Icon(Icons.search_rounded),filled:true,fillColor:Colors.white,border:OutlineInputBorder(borderRadius:BorderRadius.circular(14),borderSide:BorderSide.none)))),
  SizedBox(height:40,child:ListView(scrollDirection:Axis.horizontal,padding:const EdgeInsets.symmetric(horizontal:16),children:filters.map((f)=>Padding(padding:const EdgeInsets.only(right:7),child:ChoiceChip(label:Text(f),selected:filter==f,onSelected:(_)=>setState(()=>filter=f),selectedColor:AtlasColors.navy,labelStyle:TextStyle(color:filter==f?Colors.white:AtlasColors.charcoal,fontSize:10,fontWeight:FontWeight.w700)))).toList())),
- Expanded(child:visible.isEmpty?const Center(child:Text('No cases match your search.')):ListView.builder(padding:const EdgeInsets.fromLTRB(16,6,16,22),itemCount:visible.length,itemBuilder:(context,i){final c=visible[i];final isDone=done.contains(c.id);return Card(elevation:0,color:Colors.white,margin:const EdgeInsets.only(bottom:9),shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(15),side:const BorderSide(color:Color(0xFFE0EAF1))),child:ListTile(contentPadding:const EdgeInsets.symmetric(horizontal:15,vertical:7),leading:Container(width:43,height:43,decoration:BoxDecoration(color:const Color(0xFFE8F3F7),borderRadius:BorderRadius.circular(12)),child:Icon(c.mod=='MRI'?Icons.image_search_rounded:c.mod=='CT'?Icons.scanner_rounded:c.mod=='Ultrasound'?Icons.waves_rounded:Icons.monitor_heart_rounded,color:const Color(0xFF287F99))),title:Text(c.title,style:const TextStyle(color:AtlasColors.navy,fontWeight:FontWeight.w800,fontSize:13)),subtitle:Text('CASE ${c.id} • ${c.mod.toUpperCase()}',style:const TextStyle(color:AtlasColors.secondaryText,fontSize:9,fontWeight:FontWeight.w800)),trailing:Icon(isDone?Icons.check_circle_rounded:Icons.chevron_right_rounded,color:isDone?const Color(0xFF15958A):AtlasColors.royalBlue),onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>_RadiologyCaseScreen(caseData:c,onComplete:()=>_mark(c)))));}))
+  Expanded(child: visible.isEmpty
+    ? const Center(child: Text('No cases match your search.'))
+    : ListView.builder(
+        padding: const EdgeInsets.fromLTRB(16,6,16,22),
+        itemCount: visible.length,
+        itemBuilder: (context,i) {
+          final c=visible[i];
+          final isDone=done.contains(c.id);
+          return Card(
+            elevation:0,
+            color:Colors.white,
+            margin:const EdgeInsets.only(bottom:9),
+            shape:RoundedRectangleBorder(
+              borderRadius:BorderRadius.circular(15),
+              side:const BorderSide(color:Color(0xFFE0EAF1)),
+            ),
+            child:ListTile(
+              contentPadding:const EdgeInsets.symmetric(horizontal:15,vertical:7),
+              leading:Container(
+                width:43,height:43,
+                decoration:BoxDecoration(color:const Color(0xFFE8F3F7),borderRadius:BorderRadius.circular(12)),
+                child:Icon(
+                  c.mod=='MRI'?Icons.image_search_rounded:
+                  c.mod=='CT'?Icons.scanner_rounded:
+                  c.mod=='Ultrasound'?Icons.waves_rounded:Icons.monitor_heart_rounded,
+                  color:const Color(0xFF287F99),
+                ),
+              ),
+              title:Text(c.title,style:const TextStyle(color:AtlasColors.navy,fontWeight:FontWeight.w800,fontSize:13)),
+              subtitle:Text('CASE ${c.id} • ${c.mod.toUpperCase()}',style:const TextStyle(color:AtlasColors.secondaryText,fontSize:9,fontWeight:FontWeight.w800)),
+              trailing:Icon(isDone?Icons.check_circle_rounded:Icons.chevron_right_rounded,color:isDone?const Color(0xFF15958A):AtlasColors.royalBlue),
+              onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>_RadiologyCaseScreen(caseData:c,onComplete:()=>_mark(c)))),
+            ),
+          );
+        },
+      ),
+  ),
  ]));
 }
 
