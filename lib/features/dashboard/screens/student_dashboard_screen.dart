@@ -16,6 +16,7 @@ import '../../academic/screens/student_past_papers_screen.dart';
 import '../../anatomy/screens/student_anatomy_lab_screen.dart';
 import '../../subscriptions/screens/subscription_plans_screen.dart';
 import '../../advanced_learning/screens/advanced_student_tools_screen.dart';
+import '../../advanced_learning/screens/atlas_clinical_learning_screen.dart';
 import '../../advanced_learning/services/push_notification_service.dart';
 import 'student_notifications_screen.dart';
 import '../../../shared/widgets/dashboard_announcement_welcome.dart';
@@ -32,7 +33,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen>{
  Future<void> _handleNotificationTap(RemoteMessage message) async {
   final destination=(message.data['destination']??'').toString();
   if(destination.startsWith('forum_thread:')){await openFeature('discussionForum');return;}
-  const destinations={'study_library':'studyLibrary','mcq_practice':'mcqPractice','past_papers':'pastPapers','exams_history':'examsHistory','clinical_cases':'clinicalCases','mistakes_notebook':'mistakesNotebook','mock_predictions':'mockPredictions','discussion_forum':'discussionForum','ask_teacher':'askTeacher','membership':'membership'};
+  const destinations={'study_library':'studyLibrary','mcq_practice':'mcqPractice','past_papers':'pastPapers','exams_history':'examsHistory','clinical_cases':'clinicalCases','spotter_challenges':'spotterChallenges','clinical_correlations':'clinicalCorrelations','advanced_quizzes':'advancedQuizzes','mistakes_notebook':'mistakesNotebook','mock_predictions':'mockPredictions','discussion_forum':'discussionForum','ask_teacher':'askTeacher','membership':'membership'};
   final key=destinations[destination];
   if(key!=null&&mounted)await openFeature(key);
  }
@@ -73,7 +74,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen>{
    final snap=await FirebaseFirestore.instance.collection('users').doc(u.uid).get();final d=snap.data()??{};
    final p=Map<String,dynamic>.from(d['subscriptionAccessPermissions']??const{});final e=d['subscriptionExpiryAt'];
    final valid=e is Timestamp&&e.toDate().isAfter(DateTime.now());
-   final permissionKey=key=='clinicalCases'?'clinicalCases':(['subjectExams','systemExams','mockExams'].contains(key)?'examinations':key);
+   final permissionKey=['clinicalCases','clinicalCorrelations'].contains(key)?'clinicalCases':key=='spotterChallenges'?'anatomyLab':key=='advancedQuizzes'?'mcqPractice':(['subjectExams','systemExams','mockExams'].contains(key)?'examinations':key);
    final allowed=key=='pastPapers'?(p['pastPapers']==true||p['examinations']==true):key=='examsHistory'?(p['examinations']==true||p['mcqPractice']==true||p['pastPapers']==true):p[permissionKey]==true;
    if(!mounted)return;
    if(d['subscriptionStatus']!='active'||d['accessEnabled']!=true||!valid||!allowed){await Navigator.push(context,MaterialPageRoute(builder:(_)=>const SubscriptionPlansScreen()));return;}
@@ -88,6 +89,9 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen>{
     page=StudentExamCentreScreen(section:section);
    }
    if(key=='clinicalCases')page=const ClinicalCaseLearningScreen();
+    if(key=='spotterChallenges')page=const AtlasClinicalLearningScreen(initialMode:'spotter');
+    if(key=='clinicalCorrelations')page=const AtlasClinicalLearningScreen(initialMode:'cases');
+    if(key=='advancedQuizzes')page=const AtlasClinicalLearningScreen(initialMode:'quiz');
    if(key=='mistakesNotebook')page=const MistakesNotebookScreen();
    if(key=='mockPredictions')page=const MockExamPredictionScreen();
    if(key=='discussionForum')page=const StudentDiscussionForumScreen();
@@ -96,10 +100,10 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen>{
    if(page!=null)await Navigator.push(context,MaterialPageRoute(builder:(_)=>page!));
   }catch(_){if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Unable to check membership.')));}
  }
- Future<void> select(int i)async{setState(()=>selected=i);if(MediaQuery.sizeOf(context).width<850)Navigator.of(context).maybePop();if(i>0){const keys=['','studyLibrary','mcqPractice','pastPapers','anatomyLab','subjectExams','systemExams','mockExams','examsHistory','clinicalCases','mistakesNotebook','mockPredictions','discussionForum','askTeacher','membership','account'];await openFeature(keys[i]);if(mounted)setState(()=>selected=0);}}
+ Future<void> select(int i)async{setState(()=>selected=i);if(MediaQuery.sizeOf(context).width<850)Navigator.of(context).maybePop();if(i>0){const keys=['','studyLibrary','mcqPractice','pastPapers','anatomyLab','subjectExams','systemExams','mockExams','examsHistory','clinicalCases','spotterChallenges','clinicalCorrelations','advancedQuizzes','mistakesNotebook','mockPredictions','discussionForum','askTeacher','membership','account'];await openFeature(keys[i]);if(mounted)setState(()=>selected=0);}}
  @override Widget build(BuildContext context){
   final wide=MediaQuery.sizeOf(context).width>=850;final u=FirebaseAuth.instance.currentUser;final name=u?.displayName?.trim().isNotEmpty==true?u!.displayName!.trim():'Student';
-  final pages=<Widget>[_Home(name:name,onSubjectExams:()=>openFeature('subjectExams'),onSystemExams:()=>openFeature('systemExams'),onMockExams:()=>openFeature('mockExams'),onPastPapers:()=>openFeature('pastPapers'),onAnatomyLab:()=>openFeature('anatomyLab'),onMembership:()=>openFeature('membership')),_FeaturePage('Study Library',Icons.menu_book_rounded,()=>openFeature('studyLibrary')),_FeaturePage('MCQ Practice',Icons.quiz_rounded,()=>openFeature('mcqPractice')),_FeaturePage('Past Papers',Icons.history_edu_rounded,()=>openFeature('pastPapers')),_FeaturePage('3D Anatomy Lab',Icons.view_in_ar_rounded,()=>openFeature('anatomyLab')),_FeaturePage('Subject-Wise Exams',Icons.menu_book_rounded,()=>openFeature('subjectExams')),_FeaturePage('System-Wise Exams',Icons.account_tree_rounded,()=>openFeature('systemExams')),_FeaturePage('Mock Exams',Icons.fact_check_rounded,()=>openFeature('mockExams')),_FeaturePage('Exams History',Icons.history_rounded,()=>openFeature('examsHistory')),_FeaturePage('Clinical Cases',Icons.medical_services_rounded,()=>openFeature('clinicalCases')),_FeaturePage('Mistakes Notebook',Icons.bookmark_added_rounded,()=>openFeature('mistakesNotebook')),_FeaturePage('Mock Exam Readiness',Icons.insights_rounded,()=>openFeature('mockPredictions')),_FeaturePage('Discussion Forum',Icons.forum_rounded,()=>openFeature('discussionForum')),_FeaturePage('Ask a Teacher',Icons.support_agent_rounded,()=>openFeature('askTeacher')),_FeaturePage('Membership',Icons.workspace_premium_rounded,()=>openFeature('membership')),_FeaturePage('Account Status',Icons.verified_user_rounded,()=>openFeature('account'))];
+  final pages=<Widget>[_Home(name:name,onSubjectExams:()=>openFeature('subjectExams'),onSystemExams:()=>openFeature('systemExams'),onMockExams:()=>openFeature('mockExams'),onPastPapers:()=>openFeature('pastPapers'),onAnatomyLab:()=>openFeature('anatomyLab'),onMembership:()=>openFeature('membership')),_FeaturePage('Study Library',Icons.menu_book_rounded,()=>openFeature('studyLibrary')),_FeaturePage('MCQ Practice',Icons.quiz_rounded,()=>openFeature('mcqPractice')),_FeaturePage('Past Papers',Icons.history_edu_rounded,()=>openFeature('pastPapers')),_FeaturePage('3D Anatomy Lab',Icons.view_in_ar_rounded,()=>openFeature('anatomyLab')),_FeaturePage('Subject-Wise Exams',Icons.menu_book_rounded,()=>openFeature('subjectExams')),_FeaturePage('System-Wise Exams',Icons.account_tree_rounded,()=>openFeature('systemExams')),_FeaturePage('Mock Exams',Icons.fact_check_rounded,()=>openFeature('mockExams')),_FeaturePage('Exams History',Icons.history_rounded,()=>openFeature('examsHistory')),_FeaturePage('Clinical Cases',Icons.medical_services_rounded,()=>openFeature('clinicalCases')),_FeaturePage('Spotter Challenges',Icons.view_in_ar_rounded,()=>openFeature('spotterChallenges')),_FeaturePage('Clinical Correlations',Icons.medical_information_rounded,()=>openFeature('clinicalCorrelations')),_FeaturePage('Advanced Quizzes',Icons.quiz_rounded,()=>openFeature('advancedQuizzes')),_FeaturePage('Mistakes Notebook',Icons.bookmark_added_rounded,()=>openFeature('mistakesNotebook')),_FeaturePage('Mock Exam Readiness',Icons.insights_rounded,()=>openFeature('mockPredictions')),_FeaturePage('Discussion Forum',Icons.forum_rounded,()=>openFeature('discussionForum')),_FeaturePage('Ask a Teacher',Icons.support_agent_rounded,()=>openFeature('askTeacher')),_FeaturePage('Membership',Icons.workspace_premium_rounded,()=>openFeature('membership')),_FeaturePage('Account Status',Icons.verified_user_rounded,()=>openFeature('account'))];
   return Scaffold(backgroundColor:const Color(0xFFF3F7FF),drawer:wide?null:Drawer(backgroundColor:AtlasColors.navy,child:_SideNav(selected:selected,onSelect:select,onSignOut:signOut,onProfile:()=>openFeature('profile'))),body:SafeArea(child:Row(children:[
    if(wide)SizedBox(width:265,child:_SideNav(selected:selected,onSelect:select,onSignOut:signOut,onProfile:()=>openFeature('profile'))),
    Expanded(child:Column(children:[
@@ -218,6 +222,9 @@ class _SideNav extends StatelessWidget {
     (Icons.fact_check_rounded, 'Mock Exams'),
     (Icons.history_rounded, 'Exams History'),
     (Icons.medical_services_rounded, 'Clinical Cases'),
+    (Icons.view_in_ar_rounded, 'Spotter Challenges'),
+    (Icons.medical_information_rounded, 'Clinical Correlations'),
+    (Icons.quiz_rounded, 'Advanced Quizzes'),
     (Icons.bookmark_added_rounded, 'Mistakes Notebook'),
     (Icons.insights_rounded, 'Mock Exam Readiness'),
     (Icons.forum_rounded, 'Discussion Forum'),
