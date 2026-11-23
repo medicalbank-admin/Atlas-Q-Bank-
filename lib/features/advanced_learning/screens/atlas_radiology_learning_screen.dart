@@ -70,7 +70,7 @@ class _RadiologyCaseScreenState extends State<_RadiologyCaseScreen>{
  Container(padding:const EdgeInsets.all(20),decoration:BoxDecoration(gradient:const LinearGradient(colors:[Color(0xFF174B68),Color(0xFF287F99)]),borderRadius:BorderRadius.circular(20)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(c.mod.toUpperCase(),style:const TextStyle(color:Colors.white70,fontSize:10,fontWeight:FontWeight.w900,letterSpacing:1)),const SizedBox(height:10),Text(c.title,style:const TextStyle(color:Colors.white,fontSize:22,fontWeight:FontWeight.w900)),const SizedBox(height:8),const Text('SYSTEMATIC IMAGE REVIEW',style:TextStyle(color:Colors.white70,fontSize:10,fontWeight:FontWeight.w800,letterSpacing:1))])),
  const SizedBox(height:14),
  Container(padding:const EdgeInsets.all(14),decoration:BoxDecoration(color:const Color(0xFF172D3C),borderRadius:BorderRadius.circular(17)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
- Row(children:[const Icon(Icons.photo_library_rounded,color:Color(0xFF8DD1D4)),const SizedBox(width:8),Expanded(child:Text(imageUrl==null?'REAL CASE IMAGE NOT YET VERIFIED':'REAL CLINICAL CASE IMAGE',style:const TextStyle(color:Colors.white,fontSize:10,fontWeight:FontWeight.w900)))]),
+ Row(children:[const Icon(Icons.photo_library_rounded,color:Color(0xFF8DD1D4)),const SizedBox(width:8),Expanded(child:Text('CLINICAL IMAGE LIBRARY',style:const TextStyle(color:Colors.white,fontSize:10,fontWeight:FontWeight.w900)))]),
  const SizedBox(height:12),
  if(imageUrl!=null)ClipRRect(borderRadius:BorderRadius.circular(10),child:Image.asset(imageUrl!,width:double.infinity,height:250,fit:BoxFit.contain,errorBuilder:(_,__,___)=>_imageUnavailable())) else _imageUnavailable(),
  const SizedBox(height:9),
