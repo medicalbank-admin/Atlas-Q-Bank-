@@ -7,3 +7,5 @@ library;
 export 'src/models.dart';
 export 'src/widget.dart';
 export 'src/controller.dart';
+
+export 'src/cross_section_geometry.dart';
