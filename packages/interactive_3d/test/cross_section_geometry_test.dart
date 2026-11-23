@@ -3,7 +3,7 @@ import 'package:interactive_3d/src/cross_section_geometry.dart';
 
 void main() {
   group('AnatomyCrossSectionGeometry', () {
-    const clipper = AnatomyCrossSectionGeometry();
+    final clipper = AnatomyCrossSectionGeometry();
 
     test('keeps a fully retained triangle unchanged', () {
       const mesh = SectionTriangleMesh([
