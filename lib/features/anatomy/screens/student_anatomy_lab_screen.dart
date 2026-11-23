@@ -9,7 +9,7 @@ import '../data/detailed_skeleton_catalog.dart';
 
 const _maleModelUrl = 'https://cdn.jsdelivr.net/npm/open-anatomy-3d@0.1.0/models/anatomy-male.glb';
 const _femaleModelUrl = 'https://cdn.jsdelivr.net/npm/open-anatomy-3d@0.1.0/models/anatomy-female.glb';
-const _skeletonModelUrl = 'https://raw.githubusercontent.com/organui/skeleton-3d/main/public/models/skeleton.glb';
+const _skeletonModelUrl = 'https://raw.githubusercontent.com/organui/skeleton-3d/120fc17278559057b37aff516eee89d263b604c6/public/models/skeleton.glb';
 const _systems = <String, String>{
   'skeleton': 'Skeletal', 'organs': 'Organs', 'muscles': 'Muscles',
   'vessels': 'Vessels', 'nerves': 'Nerves', 'skin': 'Skin', 'joints': 'Joints',
