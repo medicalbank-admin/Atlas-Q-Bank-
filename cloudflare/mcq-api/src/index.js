@@ -717,7 +717,7 @@ async function createInboxUploadSignature(env, claims, body) {
   const { cloudName, apiKey, apiSecret } = getCloudinaryCredentials(env);
   const timestamp = Math.floor(Date.now() / 1000);
   const folder = "atlas-inbox/" + studentUid;
-  const publicId = folder + "/" + crypto.randomUUID();
+  const publicId = "atlas-inbox_" + studentUid + "_" + crypto.randomUUID();
   const params = { folder, overwrite: "false", public_id: publicId, timestamp: String(timestamp) };
   const payload = Object.keys(params).sort().map((key) => key + "=" + params[key]).join("&") + apiSecret;
   return { success: true, cloudName, apiKey, timestamp, folder, publicId,
@@ -734,9 +734,9 @@ async function createInboxImageUrl(env, claims, body) {
   const parts = imagePath.split("|");
   if (parts.length !== 3) throw new Error("The stored image reference is invalid.");
   const [publicId, format, versionText] = parts;
-  const idParts = publicId.split("/");
-  if (idParts.length !== 3 || idParts[0] !== "atlas-inbox" || idParts[1] !== studentUid ||
-      !/^[A-Za-z0-9-]{20,80}$/.test(idParts[2]) ||
+  const expectedPrefix = "atlas-inbox_" + studentUid + "_";
+  if (!publicId.startsWith(expectedPrefix) ||
+      !/^[A-Za-z0-9-]{20,80}$/.test(publicId.slice(expectedPrefix.length)) ||
       !/^[a-z0-9]{2,5}$/i.test(format) || !/^\d{1,16}$/.test(versionText)) {
     throw new Error("The stored image reference is invalid.");
   }
