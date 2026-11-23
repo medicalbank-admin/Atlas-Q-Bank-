@@ -186,7 +186,9 @@
     "pubchem_name": "Azithromycin",
     "target": "23S rRNA in the 50S ribosomal subunit",
     "uniprot": null,
-    "organism": "Bacterial, species-dependent"
+    "organism": "Haloarcula marismortui ribosome reference complex",
+    "experimental_complex_only": true,
+    "scientific_note": "The experimental structure is an archaeal 50S ribosomal-subunit homolog, used to visualize the conserved macrolide-binding site in 23S rRNA."
   },
   {
     "drug": "Ciprofloxacin",
@@ -200,11 +202,12 @@
     "drug": "Gentamicin",
     "slug": "gentamicin",
     "pubchem_name": "Gentamicin C1a",
-    "target": "16S rRNA in the 30S ribosomal subunit",
+    "target": "16S rRNA decoding A-site in the 30S ribosomal subunit",
     "uniprot": null,
-    "organism": "Bacterial, species-dependent",
+    "organism": "Experimental 16S rRNA A-site oligonucleotide complex",
     "pubchem_cid": 72396,
-    "scientific_note": "Gentamicin is a multi-component antibiotic complex; C1a is displayed as a representative major component."
+    "scientific_note": "Gentamicin is a multi-component antibiotic complex. The experimental structure displays the gentamicin C1a component bound to an isolated 16S rRNA decoding-site oligonucleotide, not the entire 30S ribosome.",
+    "experimental_complex_only": true
   },
   {
     "drug": "Acyclovir",
