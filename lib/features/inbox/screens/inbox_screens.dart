@@ -45,6 +45,7 @@ class _StudentInboxScreenState extends State<StudentInboxScreen> {
   final _service = InboxService();
   bool _loading = true;
   String? _error;
+  StreamSubscription? _conversationSubscription;
 
   @override
   void initState() {
@@ -58,11 +59,18 @@ class _StudentInboxScreenState extends State<StudentInboxScreen> {
       if (user == null) throw Exception('Please sign in again.');
       final profile = await _service.loadStudentProfile(user.uid);
       await _service.ensureStudentConversation(studentUid: user.uid, profile: profile);
+      _conversationSubscription = _service.studentConversation(user.uid).listen((snapshot) {
+        final unread = (snapshot.data()?['unreadForStudent'] as num?)?.toInt() ?? 0;
+        if (unread > 0) _service.markIncomingAsDelivered(studentUid: user.uid);
+      });
     } catch (e) {
       _error = e.toString().replaceFirst('Exception: ', '');
     }
     if (mounted) setState(() => _loading = false);
   }
+
+  @override
+  void dispose() { _conversationSubscription?.cancel(); super.dispose(); }
 
   @override
   Widget build(BuildContext context) {
@@ -163,6 +171,7 @@ class _AdminInboxScreenState extends State<AdminInboxScreen> {
   String _query = '';
   bool _authorized = false;
   bool _checking = true;
+  StreamSubscription? _conversationSubscription;
 
   @override
   void initState() {
@@ -177,10 +186,18 @@ class _AdminInboxScreenState extends State<AdminInboxScreen> {
       try { allowed = (await user.getIdTokenResult(true)).claims?['admin'] == true; } catch (_) {}
     }
     if (mounted) setState(() { _authorized = allowed; _checking = false; });
+    if (allowed) {
+      _conversationSubscription = _service.adminConversations().listen((snapshot) {
+        for (final doc in snapshot.docs) {
+          final unread = (doc.data()['unreadForAdmin'] as num?)?.toInt() ?? 0;
+          if (unread > 0) _service.markIncomingAsDelivered(studentUid: doc.id);
+        }
+      });
+    }
   }
 
   @override
-  void dispose() { _search.dispose(); super.dispose(); }
+  void dispose() { _conversationSubscription?.cancel(); _search.dispose(); super.dispose(); }
 
   @override
   Widget build(BuildContext context) {
