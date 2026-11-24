@@ -306,7 +306,7 @@ class PushNotificationService {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null && user.uid == uid) {
-        isAdmin = (await user.getIdTokenResult()).claims?['admin'] == true;
+        isAdmin = (await user.getIdTokenResult(true)).claims?['admin'] == true;
       }
     } catch (_) {}
     await FirebaseFirestore.instance
