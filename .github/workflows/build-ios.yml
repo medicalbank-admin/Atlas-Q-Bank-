@@ -1,0 +1,77 @@
+name: Build Atlas Academy iOS
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'lib/**'
+      - 'assets/**'
+      - 'ios/**'
+      - 'packages/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - '.github/workflows/build-ios.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: atlas-ios-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-ios:
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Prepare launcher artwork
+        run: |
+          python3 -m pip install --quiet Pillow CairoSVG
+          python3 scripts/prepare_launcher_icons.py
+
+      - name: Generate molecular model assets
+        run: python3 scripts/build_pharmacology_molecular_models.py
+
+      - name: Generate drug conformers
+        run: |
+          python3 -m pip install --quiet rdkit
+          python3 scripts/build_pharmacology_drug_conformers.py
+
+      - name: Install Flutter dependencies
+        run: flutter pub get
+
+      - name: Generate iOS launcher icons
+        run: dart run flutter_launcher_icons
+
+      - name: Verify Firebase iOS configuration
+        run: |
+          test -s ios/Runner/GoogleService-Info.plist
+          grep -q 'com.atlasacademy.app' ios/Runner/GoogleService-Info.plist
+          echo "Firebase iOS configuration found."
+
+      - name: Build iOS device app without signing
+        run: flutter build ios --release --no-codesign --build-number=${{ github.run_number }} --dart-define=MCQ_API_URL=https://atlas-academy-mcq-api.medicalbankadmin.workers.dev --dart-define=PUSH_API_URL=https://atlas-academy-push-api.medicalbankadmin.workers.dev
+
+      - name: Package unsigned iOS build for inspection
+        run: |
+          cd build/ios/iphoneos
+          /usr/bin/zip -r "$GITHUB_WORKSPACE/atlas-academy-ios-unsigned.zip" Runner.app
+
+      - name: Upload unsigned iOS build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: atlas-academy-ios-unsigned
+          path: atlas-academy-ios-unsigned.zip
+          if-no-files-found: error
+          retention-days: 14
