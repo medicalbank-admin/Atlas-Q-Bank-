@@ -165,8 +165,7 @@ class StudentExamCentreScreen extends StatelessWidget {
               : bestScore < 60
                   ? const Color(0xFFE5B83F)
                   : const Color(0xFF2EAA70);
-      final configuredCount = (data['questionCount'] as num?)?.toInt() ??
-          (data['questionTarget'] as num?)?.toInt();
+      final configuredCount = (data['questionCount'] as num?)?.toInt();
       return Container(
         margin: const EdgeInsets.fromLTRB(12, 3, 12, 8),
         decoration: BoxDecoration(
@@ -243,7 +242,7 @@ class StudentExamCentreScreen extends StatelessWidget {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(20),
                   child: LinearProgressIndicator(
-                    value: hasAttempt ? (bestScore.clamp(0, 100) / 100) : 0,
+                    value: hasAttempt ? (bestScore.clamp(0, 100) / 100).clamp(0.035, 1.0) : 0,
                     minHeight: 7,
                     backgroundColor: const Color(0xFFE9EEF5),
                     valueColor: AlwaysStoppedAnimation<Color>(progressColor),
