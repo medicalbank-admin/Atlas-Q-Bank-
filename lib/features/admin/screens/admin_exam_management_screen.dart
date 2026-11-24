@@ -190,7 +190,7 @@ class _AdminExamManagementScreenState extends State<AdminExamManagementScreen> {
       }
       await batch.commit();
     }
-    await db.collection('mcq_exam_sets').doc(id).update({'isPublished': !published, 'questionCount': questions.length, 'updatedAt': FieldValue.serverTimestamp()});
+    await db.collection('mcq_exam_sets').doc(id).update({'isPublished': !published, 'questionCount': questions.docs.length, 'updatedAt': FieldValue.serverTimestamp()});
   }
 
   Widget _categoryPanel(String type, String title, IconData icon) => Container(
