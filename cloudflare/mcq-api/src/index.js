@@ -895,7 +895,24 @@ function githubHeaders(env, extra = {}) {
   };
 }
 
-async function githubApi(env, path, options = {}) {
+function githubFailureDetail(data, textBody, result, stage) {
+  const message = typeof data.message === "string" && data.message
+    ? data.message
+    : (textBody || "No error details were returned by GitHub.");
+  const errors = Array.isArray(data.errors)
+    ? data.errors.map((item) => typeof item === "string" ? item :
+      [item.resource, item.field, item.code, item.message].filter(Boolean).join(" ")).filter(Boolean).join("; ")
+    : "";
+  const permissions = result.headers.get("X-Accepted-GitHub-Permissions");
+  const requestId = result.headers.get("X-GitHub-Request-Id");
+  return "GitHub " + stage + " failed (HTTP " + result.status + "): " +
+    message.slice(0, 500) +
+    (errors ? " Details: " + errors.slice(0, 300) : "") +
+    (permissions ? " Required permissions: " + permissions : "") +
+    (requestId ? " Request ID: " + requestId : "");
+}
+
+async function githubApi(env, path, options = {}, stage = "API request") {
   const result = await fetch("https://api.github.com/repos/" + GITHUB_RELEASE_REPO + path, {
     ...options,
     headers: githubHeaders(env, options.headers || {}),
@@ -904,8 +921,9 @@ async function githubApi(env, path, options = {}) {
   let data = {};
   try { data = textBody ? JSON.parse(textBody) : {}; } catch (_) {}
   if (!result.ok) {
-    const detail = data.message || ("GitHub API returned HTTP " + result.status + ".");
-    throw new Error(detail);
+    const error = new Error(githubFailureDetail(data, textBody, result, stage));
+    error.status = result.status;
+    throw error;
   }
   return data;
 }
@@ -917,7 +935,7 @@ function releaseTag(version) {
 async function findOrCreateGithubRelease(env, version, notes) {
   const tag = releaseTag(version);
   try {
-    return await githubApi(env, "/releases/tags/" + encodeURIComponent(tag));
+    return await githubApi(env, "/releases/tags/" + encodeURIComponent(tag), {}, "look up release tag");
   } catch (error) {
     if (!String(error.message).includes("Not Found")) throw error;
   }
@@ -932,11 +950,11 @@ async function findOrCreateGithubRelease(env, version, notes) {
       draft: false,
       prerelease: false,
     }),
-  });
+  }, "create release");
 }
 
 async function getGithubRelease(env, version) {
-  return githubApi(env, "/releases/tags/" + encodeURIComponent(releaseTag(version)));
+  return githubApi(env, "/releases/tags/" + encodeURIComponent(releaseTag(version)), {}, "look up published release");
 }
 
 async function getLatestAppRelease(env, request) {
@@ -1014,10 +1032,17 @@ async function uploadAndPublishAppRelease(request, env, url) {
   const safeVersion = version.replace("+", "-");
   const fileName = "The-Atlas-Academy-" + safeVersion + ".apk";
   const notes = (url.searchParams.get("notes") || "").slice(0, 2000);
+  // Check repository access and effective write permission before handling the APK stream.
+  const repository = await githubApi(env, "", {}, "verify repository access");
+  if (repository.permissions && repository.permissions.push === false) {
+    const error = new Error("The GitHub token can read this repository but does not have write access. Grant Contents: Read and write to the fine-grained token, then update ATLAS_RELEASES_GITHUB_TOKEN.");
+    error.status = 403;
+    throw error;
+  }
   const release = await findOrCreateGithubRelease(env, version, notes);
   const existingAsset = (release.assets || []).find((item) => item.name === fileName);
   if (existingAsset) {
-    await githubApi(env, "/releases/assets/" + existingAsset.id, { method: "DELETE" });
+    await githubApi(env, "/releases/assets/" + existingAsset.id, { method: "DELETE" }, "replace existing APK asset");
   }
   const uploadBase = String(release.upload_url || "").split("{")[0];
   if (!uploadBase) throw new Error("GitHub did not provide an asset upload address.");
@@ -1034,7 +1059,9 @@ async function uploadAndPublishAppRelease(request, env, url) {
   let asset = {};
   try { asset = uploadText ? JSON.parse(uploadText) : {}; } catch (_) {}
   if (!upload.ok || !asset.id) {
-    throw new Error(asset.message || ("GitHub could not store the APK (HTTP " + upload.status + ")."));
+    const error = new Error(githubFailureDetail(asset, uploadText, upload, "upload APK asset"));
+    error.status = upload.status;
+    throw error;
   }
   const publishedAt = new Date().toISOString();
   const record = {
@@ -1095,8 +1122,8 @@ export default {
       try { return await uploadAndPublishAppRelease(request, env, url); }
       catch (error) {
         const message = error?.message || "The APK could not be published.";
-        const status = /sign-in|sign in first|expired/i.test(message) ? 401 :
-          /administrator/i.test(message) ? 403 : 400;
+        const status = error?.status || (/sign-in|sign in first|expired/i.test(message) ? 401 :
+          /administrator/i.test(message) ? 403 : 400);
         return fail(message, status);
       }
     }
