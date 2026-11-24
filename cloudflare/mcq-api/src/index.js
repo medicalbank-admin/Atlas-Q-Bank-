@@ -890,6 +890,7 @@ async function getLatestAppRelease(env, request) {
   }
   const data = record.data;
   const version = String(data.version || "");
+  const safeVersion = version.replace("+", "-");
   return response({
     success: true,
     release: {
@@ -901,7 +902,7 @@ async function getLatestAppRelease(env, request) {
       releaseNotes: data.releaseNotes || "",
       publishedAt: data.publishedAt || null,
       downloadUrl: new URL(request.url).origin +
-        "/releases/download?version=" + encodeURIComponent(version),
+        "/releases/download?version=" + encodeURIComponent(safeVersion),
     },
   });
 }
