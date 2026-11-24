@@ -1,7 +1,9 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:http/http.dart' as http;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
@@ -45,8 +47,8 @@ class _AdminAppReleasesScreenState extends State<AdminAppReleasesScreen> {
         setState(() => _error = 'The selected APK could not be read. Please choose it again.');
         return;
       }
-      if (file.size > 250 * 1024 * 1024) {
-        setState(() => _error = 'The APK exceeds the 250 MB upload limit.');
+      if (file.size > 90 * 1024 * 1024) {
+        setState(() => _error = 'The APK exceeds the 90 MB upload limit.');
         return;
       }
       setState(() { _bytes = file.bytes; _fileName = file.name; });
@@ -58,7 +60,7 @@ class _AdminAppReleasesScreenState extends State<AdminAppReleasesScreen> {
   Future<void> _publish() async {
     final version = _version.text.trim();
     final bytes = _bytes;
-    if (!RegExp(r'^\d+\.\d+\.\d+(?:\+\d+)?$').hasMatch(version)) {
+    if (!RegExp(r'^\\d+\\.\\d+\\.\\d+(?:\\+\\d+)?$').hasMatch(version)) {
       setState(() => _error = 'Enter a version such as 1.2.0 or 1.2.0+15.');
       return;
     }
@@ -66,41 +68,44 @@ class _AdminAppReleasesScreenState extends State<AdminAppReleasesScreen> {
       setState(() => _error = 'Choose the signed Android APK before publishing.');
       return;
     }
-    final safeVersion = version.replaceAll('+', '-');
-    final path = 'app_releases/android/' + safeVersion + '.apk';
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      setState(() => _error = 'Please sign in again before publishing.');
+      return;
+    }
     setState(() { _busy = true; _progress = 0; _error = null; _success = null; });
     try {
-      final ref = FirebaseStorage.instance.ref(path);
-      final task = ref.putData(bytes, SettableMetadata(
-        contentType: 'application/vnd.android.package-archive',
-        cacheControl: 'public,max-age=31536000,immutable',
-        customMetadata: {'academy': 'The Atlas Academy', 'version': version},
-      ));
-      task.snapshotEvents.listen((snapshot) {
-        if (!mounted) return;
-        setState(() => _progress = snapshot.totalBytes == 0 ? 0 :
-            snapshot.bytesTransferred / snapshot.totalBytes);
-      });
-      await task;
-      final url = await ref.getDownloadURL();
-      final release = <String, dynamic>{
-        'platform': 'android',
-        'academy': 'The Atlas Academy',
-        'version': version,
-        'fileName': 'The-Atlas-Academy-' + safeVersion + '.apk',
-        'downloadUrl': url,
-        'storagePath': path,
-        'fileSizeBytes': bytes.length,
-        'releaseNotes': _notes.text.trim(),
-        'isPublished': true,
-        'publishedAt': FieldValue.serverTimestamp(),
-      };
-      final db = FirebaseFirestore.instance;
-      await db.collection('app_release_history').doc(safeVersion).set(release);
-      await db.collection('app_releases').doc('android').set(release);
+      final token = await user.getIdToken(true);
+      if (token == null || token.isEmpty) {
+        throw StateError('Your administrator sign-in could not be verified.');
+      }
+      final uri = Uri.parse(
+        'https://atlas-academy-mcq-api.medicalbankadmin.workers.dev/releases/upload',
+      ).replace(queryParameters: {'version': version});
+      final result = await http.post(
+        uri,
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/vnd.android.package-archive',
+          'X-Atlas-Release-Notes': _notes.text.trim(),
+        },
+        body: bytes,
+      ).timeout(const Duration(minutes: 8));
+      Map<String, dynamic> payload = {};
+      try {
+        final decoded = jsonDecode(result.body);
+        if (decoded is Map<String, dynamic>) payload = decoded;
+      } catch (_) {}
+      if (result.statusCode < 200 || result.statusCode >= 300 ||
+          payload['success'] != true) {
+        throw StateError(payload['message']?.toString() ??
+            'The release server rejected the upload (HTTP ' +
+            result.statusCode.toString() + ').');
+      }
       if (!mounted) return;
       setState(() {
-        _success = 'Version ' + version + ' is now published on the official portal.';
+        _success = 'Version ' + version +
+            ' is now published on the official Atlas Academy portal.';
         _bytes = null;
         _fileName = null;
         _notes.clear();
@@ -176,7 +181,7 @@ class _AdminAppReleasesScreenState extends State<AdminAppReleasesScreen> {
           _panel('Publish a new Android APK', Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text('Upload only an APK signed with the same persistent Atlas Academy release key used for previous versions.',
+              const Text('Upload only an APK signed with the same persistent Atlas Academy release key used for previous versions. Files are securely published through the academy's Cloudflare release service.',
                 style: TextStyle(color: AtlasColors.secondaryText, height: 1.5, fontSize: 12)),
               const SizedBox(height: 15),
               TextField(controller: _version, enabled: !_busy,
