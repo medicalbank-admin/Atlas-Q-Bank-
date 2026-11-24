@@ -215,33 +215,35 @@ class AdminDashboardScreen extends StatelessWidget {
                 ]);
               },
             ),
-            PopupMenuButton<String>(
-              padding: compact ? EdgeInsets.zero : const EdgeInsets.all(8),
+            IconButton(
               constraints: compact
-                  ? const BoxConstraints.tightFor(width: 38, height: 42)
+                  ? const BoxConstraints.tightFor(width: 42, height: 42)
                   : null,
-              tooltip: 'Notifications and account',
-              icon: const Icon(Icons.notifications_none_rounded, size: 24),
-              color: Colors.white,
-              onSelected: (value) {
-                if (value == 'notifications') {
-                  Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => const AdminNotificationsScreen(),
-                  ));
-                } else if (value == 'signout') {
-                  _confirmSignOut(context);
-                }
-              },
-              itemBuilder: (context) => const [
-                PopupMenuItem(value: 'notifications', child: ListTile(
-                  dense: true, leading: Icon(Icons.notifications_none_rounded),
-                  title: Text('Notifications'),
-                )),
-                PopupMenuItem(value: 'signout', child: ListTile(
-                  dense: true, leading: Icon(Icons.logout_rounded),
-                  title: Text('Sign Out'),
-                )),
-              ],
+              padding: compact ? EdgeInsets.zero : null,
+              tooltip: 'Notifications',
+              onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => const AdminNotificationsScreen(),
+              )),
+              icon: const Icon(Icons.notifications_active_outlined,
+                  color: AtlasColors.navy, size: 25),
+            ),
+            const SizedBox(width: 4),
+            Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFE9E9),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFF3CACA)),
+              ),
+              child: IconButton(
+                constraints: compact
+                    ? const BoxConstraints.tightFor(width: 42, height: 42)
+                    : null,
+                padding: compact ? EdgeInsets.zero : const EdgeInsets.all(8),
+                tooltip: 'Sign Out',
+                onPressed: () => _confirmSignOut(context),
+                icon: const Icon(Icons.logout_rounded,
+                    color: Color(0xFFB42318), size: 23),
+              ),
             ),
           ],
         );
