@@ -38,8 +38,19 @@ class _AtlasMolecularMechanismDiagramState
     });
   }
   void _toggleAnimation() {
-    setState(() => playing = !playing);
-    if (playing) { _startAnimation(); } else { timer?.cancel(); timer = null; }
+    final next = !playing;
+    setState(() => playing = next);
+    if (next && drugAction) { _startAnimation(); }
+    else { timer?.cancel(); timer = null; }
+  }
+  void _selectMode(bool showDrugAction) {
+    if (drugAction == showDrugAction) return;
+    setState(() { drugAction = showDrugAction; activeStep = 0; expandedNode = null; });
+    if (showDrugAction && playing) { _startAnimation(); }
+    else { timer?.cancel(); timer = null; }
+  }
+  void _toggleStage(int index) {
+    setState(() { expandedNode = expandedNode == index ? null : index; });
   }
 
   List<String> get mechanismSteps => widget.steps.isEmpty
@@ -57,6 +68,30 @@ class _AtlasMolecularMechanismDiagramState
   void dispose() {
     timer?.cancel();
     super.dispose();
+  }
+
+  Widget _modeButton({required String label, required IconData icon,
+    required bool selected, required VoidCallback onTap}) {
+    return Material(
+      color: selected ? const Color(0xFFDCEAF8) : Colors.white,
+      borderRadius: BorderRadius.circular(24),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(24), onTap: onTap,
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 46),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 9),
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: selected ? blue : const Color(0xFFD9E6F0))),
+          child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+            Icon(icon, size: 17, color: selected ? blue : navy),
+            const SizedBox(width: 6),
+            Flexible(child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800,
+                color: selected ? blue : navy))),
+          ]),
+        ),
+      ),
+    );
   }
 
   @override
@@ -93,26 +128,15 @@ class _AtlasMolecularMechanismDiagramState
                 : Icons.play_circle_outline, color: blue, size: 22)),
         ]),
         const SizedBox(height: 10),
-        SegmentedButton<bool>(
-          segments: const [
-            ButtonSegment(value: false, label: Text('Normal physiology'),
-              icon: Icon(Icons.favorite_border_rounded)),
-            ButtonSegment(value: true, label: Text('Drug action'),
-              icon: Icon(Icons.medication_rounded)),
-          ],
-          selected: {drugAction},
-          onSelectionChanged: (value) => setState(() {
-            drugAction = value.first;
-            expandedNode = null;
-            activeStep = 0;
-            if (!drugAction) { timer?.cancel(); timer = null; }
-            else if (playing) { _startAnimation(); }
-          }),
-          showSelectedIcon: false,
-          style: const ButtonStyle(
-            textStyle: WidgetStatePropertyAll(TextStyle(
-              fontSize: 10, fontWeight: FontWeight.w800)),
-            visualDensity: VisualDensity.compact)),
+        Row(children: [
+          Expanded(child: _modeButton(label: 'Normal physiology',
+            icon: Icons.favorite_border_rounded, selected: !drugAction,
+            onTap: () => _selectMode(false))),
+          const SizedBox(width: 8),
+          Expanded(child: _modeButton(label: 'Drug action',
+            icon: Icons.medication_rounded, selected: drugAction,
+            onTap: () => _selectMode(true))),
+        ]),
         const SizedBox(height: 12),
         Container(
           width: double.infinity, padding: const EdgeInsets.all(12),
@@ -173,8 +197,7 @@ class _AtlasMolecularMechanismDiagramState
           return Column(children: [
             InkWell(
               borderRadius: BorderRadius.circular(13),
-              onTap: () => setState(() =>
-                  expandedNode = expanded ? null : index),
+              onTap: () => _toggleStage(index),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
                 width: double.infinity, padding: const EdgeInsets.all(12),
