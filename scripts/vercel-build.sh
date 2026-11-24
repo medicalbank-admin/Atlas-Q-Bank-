@@ -9,8 +9,14 @@ echo "==> Checking required Vercel environment variables"
 : "${PUSH_API_URL:?Missing PUSH_API_URL environment variable}"
 : "${FIREBASE_VAPID_KEY:?Missing FIREBASE_VAPID_KEY environment variable}"
 
+echo "==> Preparing isolated Python environment"
+PYTHON_ENV="${HOME}/atlas-academy-build-venv"
+if [ ! -x "$PYTHON_ENV/bin/python" ]; then
+  python3 -m venv "$PYTHON_ENV"
+fi
+source "$PYTHON_ENV/bin/activate"
 echo "==> Installing Python asset-generation dependencies"
-python3 -m pip install --user --upgrade Pillow CairoSVG rdkit
+python -m pip install --upgrade pip Pillow CairoSVG rdkit
 
 echo "==> Installing Flutter stable SDK"
 FLUTTER_DIR="${HOME}/flutter"
