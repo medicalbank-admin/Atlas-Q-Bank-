@@ -55,11 +55,12 @@ jobs:
 
       - name: Build Flutter Web
         run: |
-          flutter build web --release --dart-define=MCQ_API_URL=https://atlas-academy-mcq-api.medicalbankadmin.workers.dev --dart-define=PUSH_API_URL=https://atlas-academy-push-api.medicalbankadmin.workers.dev
+          flutter build web --release --dart-define=MCQ_API_URL=https://atlas-academy-mcq-api.medicalbankadmin.workers.dev --dart-define=PUSH_API_URL=https://atlas-academy-push-api.medicalbankadmin.workers.dev --dart-define=FIREBASE_VAPID_KEY=${{ vars.FIREBASE_VAPID_KEY }}
 
       - name: Verify Web output
         run: |
           test -s build/web/index.html
+          test -s build/web/firebase-messaging-sw.js
           test -s build/web/download/index.html
           test -s build/web/download/atlas_academy_logo.svg
           echo "Web app and branded download portal generated successfully."
