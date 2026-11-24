@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../app/atlas_academy_app.dart';
 
@@ -21,6 +22,9 @@ class _AdminAppReleasesScreenState extends State<AdminAppReleasesScreen> {
   final _notes = TextEditingController();
   Uint8List? _bytes;
   String? _fileName;
+  String? _apkVersion;
+  String? _apkVersionCode;
+  static const _apkInspector = MethodChannel('com.atlasacademy.app/updater');
   bool _busy = false;
   bool _mandatoryUpdate = false;
   double _progress = 0;
@@ -52,7 +56,30 @@ class _AdminAppReleasesScreenState extends State<AdminAppReleasesScreen> {
         setState(() => _error = 'The APK exceeds the 90 MB upload limit.');
         return;
       }
-      setState(() { _bytes = file.bytes; _fileName = file.name; });
+      setState(() { _bytes = file.bytes; _fileName = file.name; _apkVersion = null; _apkVersionCode = null; _version.clear(); });
+      try {
+        final details = await _apkInspector.invokeMapMethod<String, dynamic>(
+          'inspectApk', {'bytes': file.bytes},
+        );
+        final actualVersion = details?['versionName']?.toString() ?? '';
+        final packageName = details?['packageName']?.toString() ?? '';
+        final code = details?['versionCode']?.toString() ?? '';
+        if (packageName != 'com.atlasacademy.app' || actualVersion.isEmpty) {
+          throw StateError('This APK is not a valid The Atlas Academy app build.');
+        }
+        if (!mounted) return;
+        setState(() {
+          _apkVersion = actualVersion;
+          _apkVersionCode = code;
+          _version.text = actualVersion;
+        });
+      } on PlatformException catch (e) {
+        if (!mounted) return;
+        setState(() => _error = 'Could not read the APK version automatically: ${e.message ?? e.code}. Please use the Android Admin app to inspect this APK.');
+      } catch (e) {
+        if (!mounted) return;
+        setState(() => _error = e.toString().replaceFirst('Bad state: ', ''));
+      }
     } catch (e) {
       setState(() => _error = 'Could not select the APK: ' + e.toString());
     }
@@ -67,6 +94,10 @@ class _AdminAppReleasesScreenState extends State<AdminAppReleasesScreen> {
     }
     if (bytes == null || _fileName == null) {
       setState(() => _error = 'Choose the signed Android APK before publishing.');
+      return;
+    }
+    if (_apkVersion == null || version != _apkVersion) {
+      setState(() => _error = 'The release version must match the selected APK version. Select the APK again to read its embedded version.');
       return;
     }
     final user = FirebaseAuth.instance.currentUser;
@@ -112,6 +143,9 @@ class _AdminAppReleasesScreenState extends State<AdminAppReleasesScreen> {
             ' is now published on the official Atlas Academy portal.';
         _bytes = null;
         _fileName = null;
+        _apkVersion = null;
+        _apkVersionCode = null;
+        _version.clear();
         _notes.clear();
         _mandatoryUpdate = false;
       });
@@ -227,9 +261,23 @@ class _AdminAppReleasesScreenState extends State<AdminAppReleasesScreen> {
               const Text('Upload only an APK signed with the same persistent Atlas Academy release key used for previous versions. Files are stored as release assets and served through the official Atlas Academy download address. Students do not need to visit GitHub.',
                 style: TextStyle(color: AtlasColors.secondaryText, height: 1.5, fontSize: 12)),
               const SizedBox(height: 15),
-              TextField(controller: _version, enabled: !_busy,
-                decoration: const InputDecoration(labelText: 'App version',
-                  hintText: 'Example: 1.2.0+15', border: OutlineInputBorder())),
+              TextField(controller: _version, readOnly: true, enabled: !_busy,
+                decoration: const InputDecoration(labelText: 'Actual APK version (read automatically)',
+                  hintText: 'Select an APK to detect its version', border: OutlineInputBorder(),
+                  helperText: 'The version is extracted from the APK itself; it cannot be typed manually.')),
+              if (_apkVersion != null) ...[
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(color: const Color(0xFFEAF6EE), borderRadius: BorderRadius.circular(12)),
+                  child: Row(children: [
+                    const Icon(Icons.verified_rounded, color: AtlasColors.success),
+                    const SizedBox(width: 9),
+                    Expanded(child: Text('Verified APK version: $_apkVersion · Android build code: $_apkVersionCode',
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AtlasColors.success))),
+                  ]),
+                ),
+              ],
               const SizedBox(height: 12),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
