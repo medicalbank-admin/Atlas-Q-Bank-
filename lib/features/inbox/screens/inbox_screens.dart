@@ -656,6 +656,80 @@ class _SecureInboxImageState extends State<_SecureInboxImage> {
     }
   }
 
+  Future<void> _openFullImage(Uint8List bytes) async {
+    await showDialog<void>(
+      context: context,
+      barrierColor: Colors.black,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) {
+          var saving = false;
+          return Dialog.fullscreen(
+            backgroundColor: Colors.black,
+            child: Scaffold(
+              backgroundColor: Colors.black,
+              appBar: AppBar(
+                backgroundColor: Colors.black,
+                foregroundColor: Colors.white,
+                title: const Text('Image'),
+                actions: [
+                  IconButton(
+                    tooltip: 'Download image',
+                    onPressed: saving
+                        ? null
+                        : () async {
+                            setDialogState(() => saving = true);
+                            try {
+                              await widget.service.saveImageToDevice(
+                                bytes: bytes,
+                                imagePath: widget.path,
+                              );
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(kIsWeb
+                                        ? 'Image download started.'
+                                        : 'Image saved to your photo gallery.'),
+                                  ),
+                                );
+                              }
+                            } catch (error) {
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Could not save image: ${error.toString().replaceFirst('Exception: ', '')}')),
+                                );
+                              }
+                            } finally {
+                              setDialogState(() => saving = false);
+                            }
+                          },
+                    icon: saving
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Icon(Icons.download_rounded),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+              ),
+              body: Center(
+                child: InteractiveViewer(
+                  minScale: 0.8,
+                  maxScale: 5,
+                  child: Image.memory(bytes, fit: BoxFit.contain),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) => FutureBuilder<Uint8List>(
     future: _imageFuture,
@@ -678,17 +752,34 @@ class _SecureInboxImageState extends State<_SecureInboxImage> {
           child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
         );
       }
-      return Image.memory(
-        snapshot.data!,
-        width: 230,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stack) => Container(
-          width: 230,
-          height: 100,
-          color: const Color(0xFFE8EFF6),
-          child: const Center(
-            child: Icon(Icons.broken_image_outlined, color: Color(0xFF8195AA)),
-          ),
+      return GestureDetector(
+        onTap: () => _openFullImage(snapshot.data!),
+        child: Stack(
+          alignment: Alignment.bottomRight,
+          children: [
+            Image.memory(
+              snapshot.data!,
+              width: 230,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stack) => Container(
+                width: 230,
+                height: 100,
+                color: const Color(0xFFE8EFF6),
+                child: const Center(
+                  child: Icon(Icons.broken_image_outlined, color: Color(0xFF8195AA)),
+                ),
+              ),
+            ),
+            Container(
+              margin: const EdgeInsets.all(7),
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: .62),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Icon(Icons.open_in_full_rounded, color: Colors.white, size: 15),
+            ),
+          ],
         ),
       );
     },
