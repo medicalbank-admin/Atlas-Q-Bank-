@@ -219,7 +219,7 @@ class _AdminAppReleasesScreenState extends State<AdminAppReleasesScreen> {
           _panel('Publish a new Android APK', Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text('Upload only an APK signed with the same persistent Atlas Academy release key used for previous versions. Files are securely stored as private-to-the-interface release assets and served through the official Atlas Academy download address. Students never need to visit GitHub.',
+              const Text('Upload only an APK signed with the same persistent Atlas Academy release key used for previous versions. Files are stored as release assets and served through the official Atlas Academy download address. Students do not need to visit GitHub.',
                 style: TextStyle(color: AtlasColors.secondaryText, height: 1.5, fontSize: 12)),
               const SizedBox(height: 15),
               TextField(controller: _version, enabled: !_busy,
