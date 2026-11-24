@@ -937,13 +937,17 @@ async function uploadAndPublishAppRelease(request, env, url) {
   if (contentType !== "application/vnd.android.package-archive") {
     return fail("Only an Android APK file can be uploaded.", 415);
   }
-  const size = Number(request.headers.get("Content-Length") || 0);
-  if (!Number.isSafeInteger(size) || size <= 0 || size > 90 * 1024 * 1024) {
-    return fail("The APK must be between 1 byte and 90 MB for this upload service.", 413);
+  const contentLength = request.headers.get("Content-Length");
+  const declaredSize = contentLength === null ? 0 : Number(contentLength);
+  if (contentLength !== null &&
+      (!Number.isSafeInteger(declaredSize) || declaredSize <= 0 ||
+       declaredSize > 90 * 1024 * 1024)) {
+    return fail("The APK must be no larger than 90 MB.", 413);
   }
+  if (!request.body) return fail("The uploaded APK file is empty.", 400);
   const safeVersion = version.replace("+", "-");
   const key = "android/" + safeVersion + ".apk";
-  await env.ATLAS_RELEASES.put(key, request.body, {
+  const uploadedObject = await env.ATLAS_RELEASES.put(key, request.body, {
     httpMetadata: {
       contentType: "application/vnd.android.package-archive",
       cacheControl: "public, max-age=31536000, immutable",
@@ -954,6 +958,11 @@ async function uploadAndPublishAppRelease(request, env, url) {
       uploadedBy: claims.sub,
     },
   });
+  const actualSize = Number(uploadedObject?.size || declaredSize);
+  if (!actualSize || actualSize > 90 * 1024 * 1024) {
+    await env.ATLAS_RELEASES.delete(key);
+    return fail("The APK must be no larger than 90 MB.", 413);
+  }
   const release = {
     platform: "android",
     academy: "The Atlas Academy",
@@ -962,7 +971,7 @@ async function uploadAndPublishAppRelease(request, env, url) {
     downloadUrl: new URL(request.url).origin +
       "/releases/download?version=" + encodeURIComponent(safeVersion),
     storagePath: key,
-    fileSizeBytes: size,
+    fileSizeBytes: actualSize,
     releaseNotes: (request.headers.get("X-Atlas-Release-Notes") || "").slice(0, 2000),
     isPublished: true,
     publishedAt: new Date().toISOString(),
