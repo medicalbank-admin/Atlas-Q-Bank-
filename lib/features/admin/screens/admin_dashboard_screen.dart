@@ -777,5 +777,5 @@ class _AdminPushRegistrationState extends State<_AdminPushRegistration> {
     });
   }
   @override
-  Widget build(BuildContext context) => const SizedBox.shrink();
+  Widget build(BuildContext context) => const WebPushSetupBanner();
 }
