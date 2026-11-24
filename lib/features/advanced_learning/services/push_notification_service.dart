@@ -174,6 +174,8 @@ class PushNotificationService {
     try {
       final messaging = FirebaseMessaging.instance;
       await _initializeLocalNotifications();
+      final androidPlugin = _local.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+      await androidPlugin?.requestNotificationsPermission();
       final settings = await messaging.requestPermission(
         alert: true,
         badge: true,
@@ -201,8 +203,9 @@ class PushNotificationService {
         await _recordOpen(initialMessage);
         await onNotificationTap?.call(initialMessage);
       }
-    } catch (_) {
-      // Push registration is optional if permission or network is unavailable.
+    } catch (error, stackTrace) {
+      debugPrint('Atlas Academy push registration failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
     }
   }
 
