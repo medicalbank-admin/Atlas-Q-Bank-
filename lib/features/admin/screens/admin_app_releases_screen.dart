@@ -150,7 +150,7 @@ class _AdminAppReleasesScreenState extends State<AdminAppReleasesScreen> {
                 Text('Official App Release Manager', style: TextStyle(
                   color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900)),
                 SizedBox(height: 7),
-                Text('Publish a new signed Android APK. The public portal automatically displays the latest release.',
+                Text('Publish a new signed Android APK. The public Atlas Academy portal automatically displays the latest release.',
                   style: TextStyle(color: Color(0xFFD4E1EF), height: 1.5)),
               ],
             ),
@@ -219,7 +219,7 @@ class _AdminAppReleasesScreenState extends State<AdminAppReleasesScreen> {
           _panel('Publish a new Android APK', Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text('Upload only an APK signed with the same persistent Atlas Academy release key used for previous versions. Files are securely published through the academy's Cloudflare release service.',
+              const Text('Upload only an APK signed with the same persistent Atlas Academy release key used for previous versions. Files are securely stored as private-to-the-interface release assets and served through the official Atlas Academy download address. Students never need to visit GitHub.',
                 style: TextStyle(color: AtlasColors.secondaryText, height: 1.5, fontSize: 12)),
               const SizedBox(height: 15),
               TextField(controller: _version, enabled: !_busy,
