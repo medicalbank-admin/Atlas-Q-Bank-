@@ -878,7 +878,7 @@ async function setFirestoreDocument(env, collection, id, fields) {
 
 function bearerToken(request) {
   const value = request.headers.get("Authorization") || "";
-  const match = value.match(/^Bearer\\s+(.+)$/i);
+  const match = value.match(/^Bearer\s+(.+)$/i);
   if (!match) throw new Error("Please sign in first.");
   return match[1];
 }
@@ -908,7 +908,7 @@ async function getLatestAppRelease(env, request) {
 
 async function downloadAppRelease(env, url) {
   const version = url.searchParams.get("version") || "";
-  if (!/^\\d+\\.\\d+\\.\\d+(?:-\\d+)?$/.test(version)) {
+  if (!/^\d+\.\d+\.\d+(?:-\d+)?$/.test(version)) {
     return fail("The requested app version is invalid.", 400);
   }
   if (!env.ATLAS_RELEASES) return fail("App release storage is not configured.", 503);
@@ -929,7 +929,7 @@ async function uploadAndPublishAppRelease(request, env, url) {
   const claims = await verifyFirebaseToken(bearerToken(request));
   if (claims.admin !== true) return fail("Administrator access is required.", 403);
   const version = url.searchParams.get("version") || "";
-  if (!/^\\d+\\.\\d+\\.\\d+(?:\\+\\d+)?$/.test(version)) {
+  if (!/^\d+\.\d+\.\d+(?:\+\d+)?$/.test(version)) {
     return fail("Enter a valid app version such as 1.2.0 or 1.2.0+15.", 400);
   }
   const contentType = (request.headers.get("Content-Type") || "").split(";")[0].trim();
