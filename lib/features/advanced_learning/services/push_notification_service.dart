@@ -61,6 +61,7 @@ class PushNotificationService {
   }
 
   static const String _apiUrl = String.fromEnvironment('PUSH_API_URL', defaultValue: 'https://atlas-academy-push-api.medicalbankadmin.workers.dev');
+  static const String _webVapidKey = String.fromEnvironment('FIREBASE_VAPID_KEY');
   StreamSubscription<String>? _refresh;
   StreamSubscription<RemoteMessage>? _foreground;
   StreamSubscription<RemoteMessage>? _opened;
@@ -211,45 +212,96 @@ class PushNotificationService {
   Future<void> registerDevice(BuildContext context, {Future<void> Function(RemoteMessage message)? onNotificationTap}) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
+    if (kIsWeb) {
+      await _registerWebDevice(user.uid, requestPermission: false, onNotificationTap: onNotificationTap);
+      return;
+    }
     try {
       final messaging = FirebaseMessaging.instance;
       await _initializeLocalNotifications();
       final androidPlugin = _local.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
       await androidPlugin?.requestNotificationsPermission();
-      final settings = await messaging.requestPermission(
-        alert: true,
-        badge: true,
-        sound: true,
-      );
+      final settings = await messaging.requestPermission(alert: true, badge: true, sound: true);
       if (settings.authorizationStatus == AuthorizationStatus.denied) return;
       final token = await messaging.getToken();
       if (token != null && token.isNotEmpty) await _save(user.uid, token);
-      _refresh ??= messaging.onTokenRefresh.listen(
-        (value) => _save(user.uid, value),
-      );
-      _foreground ??= FirebaseMessaging.onMessage.listen((message) async {
-        try {
-          await _showForegroundNotification(message);
-        } catch (error) {
-          debugPrint('Unable to display foreground push notification: $error');
-        }
-      });
-      _opened ??= FirebaseMessaging.onMessageOpenedApp.listen((message) {
-        _recordOpen(message);
-        onNotificationTap?.call(message);
-      });
-      final initialMessage = await messaging.getInitialMessage();
-      if (initialMessage != null) {
-        await _recordOpen(initialMessage);
-        await onNotificationTap?.call(initialMessage);
-      }
+      _attachMessageListeners(messaging, onNotificationTap);
     } catch (error, stackTrace) {
       debugPrint('Atlas Academy push registration failed: $error');
       debugPrintStack(stackTrace: stackTrace);
     }
   }
 
-  Future<void> _save(String uid, String token) async {
+  /// Must be called directly from a user tap on web, especially for iOS Home Screen apps.
+  Future<bool> enableWebNotifications(BuildContext context) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) throw Exception('Please sign in again.');
+    if (!kIsWeb) return false;
+    if (_webVapidKey.trim().isEmpty) {
+      throw Exception('Web notifications are not configured yet. Please try again after the academy completes notification setup.');
+    }
+    return _registerWebDevice(user.uid, requestPermission: true);
+  }
+
+  Future<bool> _registerWebDevice(
+    String uid, {
+    required bool requestPermission,
+    Future<void> Function(RemoteMessage message)? onNotificationTap,
+  }) async {
+    try {
+      final messaging = FirebaseMessaging.instance;
+      final settings = requestPermission
+          ? await messaging.requestPermission(alert: true, badge: true, sound: true)
+          : await messaging.getNotificationSettings();
+      if (settings.authorizationStatus != AuthorizationStatus.authorized &&
+          settings.authorizationStatus != AuthorizationStatus.provisional) {
+        return false;
+      }
+      if (_webVapidKey.trim().isEmpty) {
+        debugPrint('Atlas Academy Web Push is waiting for its Firebase VAPID public key.');
+        return false;
+      }
+      final token = await messaging.getToken(vapidKey: _webVapidKey.trim());
+      if (token == null || token.isEmpty) throw Exception('The browser did not provide a push registration token.');
+      await _save(uid, token, platform: 'web');
+      _attachMessageListeners(messaging, onNotificationTap);
+      return true;
+    } catch (error, stackTrace) {
+      debugPrint('Atlas Academy Web Push registration failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      if (requestPermission) rethrow;
+      return false;
+    }
+  }
+
+  void _attachMessageListeners(
+    FirebaseMessaging messaging,
+    Future<void> Function(RemoteMessage message)? onNotificationTap,
+  ) {
+    _refresh ??= messaging.onTokenRefresh.listen((value) {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid != null) _save(uid, value, platform: kIsWeb ? 'web' : null);
+    });
+    _foreground ??= FirebaseMessaging.onMessage.listen((message) async {
+      try {
+        await _showForegroundNotification(message);
+      } catch (error) {
+        debugPrint('Unable to display foreground push notification: $error');
+      }
+    });
+    _opened ??= FirebaseMessaging.onMessageOpenedApp.listen((message) {
+      _recordOpen(message);
+      onNotificationTap?.call(message);
+    });
+    messaging.getInitialMessage().then((initialMessage) async {
+      if (initialMessage != null) {
+        await _recordOpen(initialMessage);
+        await onNotificationTap?.call(initialMessage);
+      }
+    });
+  }
+
+  Future<void> _save(String uid, String token, {String? platform}) async {
     var isAdmin = false;
     try {
       final user = FirebaseAuth.instance.currentUser;
@@ -264,7 +316,7 @@ class PushNotificationService {
       'userId': uid,
       'token': token,
       'isAdmin': isAdmin,
-      'platform': 'flutter',
+      'platform': platform ?? (kIsWeb ? 'web' : defaultTargetPlatform == TargetPlatform.iOS ? 'ios' : 'android'),
       'updatedAt': FieldValue.serverTimestamp(),
       'active': true,
     }, SetOptions(merge: true));
@@ -272,7 +324,7 @@ class PushNotificationService {
 
   Future<void> unregisterCurrentDevice() async {
     try {
-      final token = await FirebaseMessaging.instance.getToken();
+      final token = await FirebaseMessaging.instance.getToken(vapidKey: kIsWeb && _webVapidKey.isNotEmpty ? _webVapidKey : null);
       if (token != null) {
         await FirebaseFirestore.instance
             .collection('user_device_tokens')
