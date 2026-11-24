@@ -148,6 +148,46 @@ class PushNotificationService {
     ).timeout(const Duration(seconds: 30));
   }
 
+  Future<Map<String, dynamic>> _sendAutomaticEvent(Map<String, dynamic> event) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) throw Exception('Please sign in again.');
+    final token = await user.getIdToken();
+    if (token == null || token.isEmpty) throw Exception('Your sign-in could not be verified.');
+    final endpoint = _apiUrl.endsWith('/') ? '${_apiUrl}event' : '$_apiUrl/event';
+    final response = await http.post(
+      Uri.parse(endpoint),
+      headers: {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'},
+      body: jsonEncode(event),
+    ).timeout(const Duration(seconds: 30));
+    final dynamic decoded = jsonDecode(response.body);
+    if (response.statusCode < 200 || response.statusCode >= 300 ||
+        decoded is! Map || decoded['success'] != true) {
+      throw Exception(decoded is Map
+          ? (decoded['message'] ?? 'Automatic notification failed.').toString()
+          : 'Invalid automatic notification response.');
+    }
+    return Map<String, dynamic>.from(decoded);
+  }
+
+  Future<void> sendSubscriptionRequestEvent({required String requestId}) async {
+    await _sendAutomaticEvent({'type': 'subscription_request', 'requestId': requestId});
+  }
+
+  Future<void> sendSubscriptionDecisionEvent({required String requestId}) async {
+    await _sendAutomaticEvent({'type': 'subscription_decision', 'requestId': requestId});
+  }
+
+  Future<void> sendInboxMessageEvent({
+    required String studentUid,
+    required String messageId,
+  }) async {
+    await _sendAutomaticEvent({
+      'type': 'inbox_message',
+      'studentUid': studentUid,
+      'messageId': messageId,
+    });
+  }
+
   Future<void> _recordOpen(RemoteMessage message) async {
     final user = FirebaseAuth.instance.currentUser;
     final notificationId = message.data['notificationId']?.toString() ?? '';
@@ -210,12 +250,20 @@ class PushNotificationService {
   }
 
   Future<void> _save(String uid, String token) async {
+    var isAdmin = false;
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null && user.uid == uid) {
+        isAdmin = (await user.getIdTokenResult()).claims?['admin'] == true;
+      }
+    } catch (_) {}
     await FirebaseFirestore.instance
         .collection('user_device_tokens')
         .doc(token)
         .set({
       'userId': uid,
       'token': token,
+      'isAdmin': isAdmin,
       'platform': 'flutter',
       'updatedAt': FieldValue.serverTimestamp(),
       'active': true,
