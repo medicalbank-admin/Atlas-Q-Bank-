@@ -60,7 +60,9 @@ jobs:
       - name: Verify Web output
         run: |
           test -s build/web/index.html
-          echo "Web build generated successfully."
+          test -s build/web/download/index.html
+          test -s build/web/download/atlas_academy_logo.svg
+          echo "Web app and branded download portal generated successfully."
 
       - name: Configure Firebase service account
         env:
