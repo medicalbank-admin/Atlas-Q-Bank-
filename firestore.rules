@@ -839,7 +839,7 @@ service cloud.firestore {
     // Only administrators can publish or change release records.
     // ==================================================
     match /app_releases/{platform} {
-      allow read: if platform == 'android';
+      allow read: if isAdmin();
       allow create, update: if isAdmin() &&
         platform == 'android' &&
         request.resource.data.keys().hasAll([
