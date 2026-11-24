@@ -178,6 +178,44 @@ class _AdminAppReleasesScreenState extends State<AdminAppReleasesScreen> {
             },
           ),
           const SizedBox(height: 18),
+          _panel('Release history', StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+            stream: FirebaseFirestore.instance.collection('app_release_history')
+                .orderBy('publishedAt', descending: true).limit(8).snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: Padding(
+                  padding: EdgeInsets.all(12),
+                  child: CircularProgressIndicator(),
+                ));
+              }
+              final docs = snapshot.data?.docs ?? [];
+              if (docs.isEmpty) {
+                return const Text('Published versions will appear here.',
+                    style: TextStyle(color: AtlasColors.secondaryText, fontSize: 12));
+              }
+              return Column(children: docs.map((doc) {
+                final data = doc.data();
+                final size = data['fileSizeBytes'] is num
+                    ? ((data['fileSizeBytes'] as num) / 1048576).toStringAsFixed(1) + ' MB'
+                    : 'APK';
+                return ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const CircleAvatar(
+                    backgroundColor: Color(0xFFE8F2FC),
+                    child: Icon(Icons.android_rounded, color: AtlasColors.royalBlue),
+                  ),
+                  title: Text('Version ' + (data['version']?.toString() ?? doc.id),
+                      style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
+                  subtitle: Text(size + ' · ' + (data['releaseNotes']?.toString() ?? ''),
+                      maxLines: 2, overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 10)),
+                  trailing: const Icon(Icons.verified_rounded,
+                      color: AtlasColors.success, size: 18),
+                );
+              }).toList());
+            },
+          )),
+          const SizedBox(height: 18),
           _panel('Publish a new Android APK', Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
