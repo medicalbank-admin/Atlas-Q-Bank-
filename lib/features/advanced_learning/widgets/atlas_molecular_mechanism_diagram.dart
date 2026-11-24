@@ -7,9 +7,11 @@ class AtlasMolecularMechanismDiagram extends StatefulWidget {
   final String drugName;
   final String className;
   final List<String> steps;
+  final String explanation;
   const AtlasMolecularMechanismDiagram({
     super.key, required this.drugName, required this.className,
     required this.steps,
+    this.explanation = '',
   });
   @override
   State<AtlasMolecularMechanismDiagram> createState() =>
@@ -27,6 +29,18 @@ class _AtlasMolecularMechanismDiagramState
   int activeStep = 0;
   int? expandedNode;
   Timer? timer;
+  void _startAnimation() {
+    timer?.cancel();
+    if (!playing || !drugAction) return;
+    timer = Timer.periodic(const Duration(milliseconds: 1800), (_) {
+      if (!mounted || !playing || !drugAction) return;
+      setState(() => activeStep = (activeStep + 1) % mechanismSteps.length);
+    });
+  }
+  void _toggleAnimation() {
+    setState(() => playing = !playing);
+    if (playing) { _startAnimation(); } else { timer?.cancel(); timer = null; }
+  }
 
   List<String> get mechanismSteps => widget.steps.isEmpty
       ? ['Molecular target engagement', 'Primary biochemical process',
@@ -36,10 +50,7 @@ class _AtlasMolecularMechanismDiagramState
   @override
   void initState() {
     super.initState();
-    timer = Timer.periodic(const Duration(milliseconds: 1500), (_) {
-      if (!mounted || !playing || !drugAction) return;
-      setState(() => activeStep = (activeStep + 1) % mechanismSteps.length);
-    });
+    _startAnimation();
   }
 
   @override
@@ -77,7 +88,7 @@ class _AtlasMolecularMechanismDiagramState
           IconButton(
             tooltip: playing ? 'Pause animation' : 'Play animation',
             visualDensity: VisualDensity.compact,
-            onPressed: () => setState(() => playing = !playing),
+            onPressed: _toggleAnimation,
             icon: Icon(playing ? Icons.pause_circle_outline
                 : Icons.play_circle_outline, color: blue, size: 22)),
         ]),
@@ -94,6 +105,8 @@ class _AtlasMolecularMechanismDiagramState
             drugAction = value.first;
             expandedNode = null;
             activeStep = 0;
+            if (!drugAction) { timer?.cancel(); timer = null; }
+            else if (playing) { _startAnimation(); }
           }),
           showSelectedIcon: false,
           style: const ButtonStyle(
