@@ -170,6 +170,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen>{
         ),
       ]),
     ),
+    const WebPushSetupBanner(),
     Expanded(child:IndexedStack(index:selected,children:pages)),
    ])),
   ])),
