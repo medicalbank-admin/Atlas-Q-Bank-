@@ -21,6 +21,7 @@ import 'admin_advanced_learning_screens.dart';
 import '../../inbox/screens/inbox_screens.dart';
 import '../../advanced_learning/services/push_notification_service.dart';
 import '../../anatomy/screens/admin_anatomy_management_screen.dart';
+import 'admin_app_releases_screen.dart';
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
   Future<bool> _isAuthorizedAdmin() async {
@@ -430,6 +431,13 @@ class AdminDashboardScreen extends StatelessWidget {
   }
   Widget _buildManagementGrid(BuildContext context) {
     final items = [
+      _AdminItem(
+        icon: Icons.system_update_alt_rounded,
+        title: 'App Release Manager',
+        subtitle: 'Upload and publish the latest Android APK',
+        color: AtlasColors.success,
+        page: const AdminAppReleasesScreen(),
+      ),
       _AdminItem(
         icon: Icons.security_rounded,
         title: 'Device Security',
