@@ -35,18 +35,21 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Prepare launcher artwork
+      - name: Prepare isolated Python tooling
         run: |
-          python3 -m pip install --quiet Pillow CairoSVG
-          python3 scripts/prepare_launcher_icons.py
+          python3 -m venv "$RUNNER_TEMP/atlas-python"
+          "$RUNNER_TEMP/atlas-python/bin/python" -m pip install --upgrade pip
+          "$RUNNER_TEMP/atlas-python/bin/python" -m pip install --quiet Pillow CairoSVG rdkit
+          echo "$RUNNER_TEMP/atlas-python/bin" >> "$GITHUB_PATH"
+
+      - name: Prepare launcher artwork
+        run: python scripts/prepare_launcher_icons.py
 
       - name: Generate molecular model assets
-        run: python3 scripts/build_pharmacology_molecular_models.py
+        run: python scripts/build_pharmacology_molecular_models.py
 
       - name: Generate drug conformers
-        run: |
-          python3 -m pip install --quiet rdkit
-          python3 scripts/build_pharmacology_drug_conformers.py
+        run: python scripts/build_pharmacology_drug_conformers.py
 
       - name: Install Flutter dependencies
         run: flutter pub get
