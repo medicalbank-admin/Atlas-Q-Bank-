@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../features/auth/screens/auth_gate.dart';
+import '../features/updates/app_update_gate.dart';
 
 /// The single source of truth for The Atlas Academy visual identity.
 class AtlasColors {
@@ -372,7 +373,7 @@ class AtlasAcademyApp extends StatelessWidget {
       theme: _lightTheme(),
       darkTheme: _darkTheme(),
       themeMode: ThemeMode.light,
-      home: const AuthGate(),
+      home: const AppUpdateGate(child: AuthGate()),
     );
   }
 }
