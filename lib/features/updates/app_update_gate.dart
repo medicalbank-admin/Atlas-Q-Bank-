@@ -27,6 +27,7 @@ class _AppUpdateGateState extends State<AppUpdateGate> with WidgetsBindingObserv
   double _progress = 0;
   String? _pendingApkPath;
   bool _waitingForInstallPermission = false;
+  bool _installerWasOpened = false;
 
   @override
   void initState() {
@@ -47,6 +48,10 @@ class _AppUpdateGateState extends State<AppUpdateGate> with WidgetsBindingObserv
       if (_waitingForInstallPermission && _pendingApkPath != null) {
         _waitingForInstallPermission = false;
         _installDownloadedApk();
+      } else if (_installerWasOpened && !_checking) {
+        _installerWasOpened = false;
+        _release = null;
+        _checkForUpdate();
       } else if (!_promptOpen && !_checking && _release == null) {
         _checkForUpdate();
       }
@@ -152,7 +157,7 @@ class _AppUpdateGateState extends State<AppUpdateGate> with WidgetsBindingObserv
                     await _downloadAndInstall((value) {
                       if (mounted) refreshDialog(() => _progress = value);
                     });
-                    if (mounted) refreshDialog(() => _downloading = false);
+                    if (mounted && _promptOpen) refreshDialog(() => _downloading = false);
                   },
                   icon: const Icon(Icons.download_rounded),
                   label: Text(_downloading ? 'Downloading…' : 'Update Now'),
@@ -228,7 +233,10 @@ class _AppUpdateGateState extends State<AppUpdateGate> with WidgetsBindingObserv
       final result = await _installer.invokeMethod<String>('installApk', {'path': path});
       if (result == 'permission_required') {
         _waitingForInstallPermission = true;
-        if (_promptOpen && Navigator.of(context).canPop()) Navigator.of(context).pop();
+        if (_promptOpen && Navigator.of(context).canPop()) {
+          _promptOpen = false;
+          Navigator.of(context).pop();
+        }
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             duration: Duration(seconds: 8),
@@ -236,7 +244,11 @@ class _AppUpdateGateState extends State<AppUpdateGate> with WidgetsBindingObserv
           ));
         }
       } else if (result == 'installer_opened') {
-        if (_promptOpen && Navigator.of(context).canPop()) Navigator.of(context).pop();
+        _installerWasOpened = true;
+        if (_promptOpen && Navigator.of(context).canPop()) {
+          _promptOpen = false;
+          Navigator.of(context).pop();
+        }
       }
     } on PlatformException catch (error) {
       if (mounted) {
