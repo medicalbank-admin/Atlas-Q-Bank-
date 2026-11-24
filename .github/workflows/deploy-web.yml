@@ -55,7 +55,7 @@ jobs:
 
       - name: Build Flutter Web
         run: |
-          flutter build web --release --dart-define=MCQ_API_URL=https://atlas-academy-mcq-api.medicalbankadmin.workers.dev --dart-define=PUSH_API_URL=https://atlas-academy-push-api.medicalbankadmin.workers.dev --dart-define=FIREBASE_VAPID_KEY=${{ vars.FIREBASE_VAPID_KEY }}
+          flutter build web --release --dart-define=MCQ_API_URL=https://atlas-academy-mcq-api.medicalbankadmin.workers.dev --dart-define=PUSH_API_URL=https://atlas-academy-push-api.medicalbankadmin.workers.dev --dart-define=FIREBASE_VAPID_KEY=BOoFFO0-TteycK6b_0qITMNpqdLC-sryMQMqmeCtBrzUxQ71_qBhgnwzEhOaEf1zg6VEz65d0JzSEtdavyht67g
 
       - name: Verify Web output
         run: |
