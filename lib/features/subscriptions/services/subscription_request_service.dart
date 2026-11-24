@@ -95,6 +95,16 @@ class SubscriptionRequestService {
 
     await _requests.doc(requestId).set(request.toFirestore());
 
+    // Trigger an admin push after the request is safely saved. Notification
+    // failure must never undo or block the student's subscription request.
+    try {
+      await PushNotificationService().sendSubscriptionRequestEvent(
+        requestId: requestId,
+      );
+    } catch (error) {
+      debugPrint('Subscription request notification failed: $error');
+    }
+
     return requestId;
   }
 
