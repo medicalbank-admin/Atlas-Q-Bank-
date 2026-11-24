@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
+import 'package:file_saver/file_saver.dart';
 
 import '../../advanced_learning/services/push_notification_service.dart';
 
@@ -326,6 +327,37 @@ class InboxService {
       );
     }
     return Uint8List.fromList(response.bodyBytes);
+  }
+
+  Future<void> saveImageToDevice({
+    required Uint8List bytes,
+    required String imagePath,
+  }) async {
+    if (bytes.isEmpty) throw Exception('This image is empty.');
+
+    final parts = imagePath.split('|');
+    final rawFormat = parts.length > 1 ? parts[1].toLowerCase() : 'jpg';
+    final extension = rawFormat.replaceAll(RegExp(r'[^a-z0-9]'), '');
+    final safeExtension = extension.isEmpty ? 'jpg' : extension;
+    final mimeType = MimeType.get(safeExtension);
+    final fileName = 'atlas_inbox_${DateTime.now().millisecondsSinceEpoch}';
+
+    if (kIsWeb) {
+      await FileSaver.instance.saveFile(
+        name: fileName,
+        bytes: bytes,
+        fileExtension: safeExtension,
+        mimeType: mimeType,
+      );
+    } else {
+      await FileSaver.instance.saveToGallery(
+        name: fileName,
+        bytes: bytes,
+        fileExtension: safeExtension,
+        mimeType: mimeType,
+        album: 'Atlas Academy Inbox',
+      );
+    }
   }
 
   Future<void> sendMessage({
