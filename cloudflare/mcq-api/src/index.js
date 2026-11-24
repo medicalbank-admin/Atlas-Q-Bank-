@@ -956,6 +956,7 @@ async function getLatestAppRelease(env, request) {
       fileName: data.fileName || "The-Atlas-Academy.apk",
       fileSizeBytes: Number(data.fileSizeBytes || 0),
       releaseNotes: data.releaseNotes || "",
+      isMandatory: data.isMandatory === true,
       publishedAt: data.publishedAt || null,
       downloadUrl: new URL(request.url).origin +
         "/releases/download?version=" + encodeURIComponent(safeVersion),
@@ -1043,6 +1044,7 @@ async function uploadAndPublishAppRelease(request, env, url) {
     fileName,
     fileSizeBytes: Number(asset.size || declaredSize),
     releaseNotes: notes,
+    isMandatory: url.searchParams.get("mandatory") === "true",
     releaseTag: release.tag_name,
     githubAssetId: asset.id,
     isPublished: true,
