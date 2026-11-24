@@ -889,6 +889,7 @@ function githubHeaders(env, extra = {}) {
   if (!env.GITHUB_RELEASES_TOKEN) throw new Error("GitHub release storage is not configured.");
   return {
     Authorization: "Bearer " + env.GITHUB_RELEASES_TOKEN,
+    "User-Agent": "The-Atlas-Academy-Release-Manager",
     Accept: "application/vnd.github+json",
     "X-GitHub-Api-Version": "2022-11-28",
     ...extra,
