@@ -340,3 +340,80 @@ class PushNotificationService {
     _opened = null;
   }
 }
+
+
+/// A user-gesture notification opt-in for web and iOS Home Screen installs.
+class WebPushSetupBanner extends StatefulWidget {
+  const WebPushSetupBanner({super.key});
+
+  @override
+  State<WebPushSetupBanner> createState() => _WebPushSetupBannerState();
+}
+
+class _WebPushSetupBannerState extends State<WebPushSetupBanner> {
+  bool _busy = false;
+  bool _enabled = false;
+
+  Future<void> _enable() async {
+    if (_busy || _enabled) return;
+    setState(() => _busy = true);
+    try {
+      final enabled = await PushNotificationService().enableWebNotifications(context);
+      if (!mounted) return;
+      setState(() => _enabled = enabled);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(enabled
+            ? 'Notifications are enabled on this device.'
+            : 'Permission was not granted. On iPhone, open The Atlas Academy from its Home Screen icon on iOS 16.4 or later, then allow notifications.'),
+      ));
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(error.toString().replaceFirst('Exception: ', '')),
+      ));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!kIsWeb) return const SizedBox.shrink();
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.fromLTRB(14, 10, 14, 8),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEAF3FF),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFD3E5FA)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.notifications_active_outlined,
+              color: Color(0xFF174B80), size: 27),
+          const SizedBox(width: 11),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Stay updated',
+                    style: TextStyle(fontWeight: FontWeight.w800,
+                        color: Color(0xFF123B68))),
+                SizedBox(height: 3),
+                Text('Receive membership and new-message alerts.',
+                    style: TextStyle(fontSize: 11,
+                        color: Color(0xFF45627F))),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          FilledButton(
+            onPressed: _busy || _enabled ? null : _enable,
+            child: Text(_busy ? 'Please wait' : _enabled ? 'Enabled' : 'Enable'),
+          ),
+        ],
+      ),
+    );
+  }
+}
