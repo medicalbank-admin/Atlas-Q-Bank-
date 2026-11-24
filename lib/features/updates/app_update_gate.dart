@@ -233,6 +233,7 @@ class _AppUpdateGateState extends State<AppUpdateGate> with WidgetsBindingObserv
       final result = await _installer.invokeMethod<String>('installApk', {'path': path});
       if (result == 'permission_required') {
         _waitingForInstallPermission = true;
+        _downloading = false;
         if (_promptOpen && Navigator.of(context).canPop()) {
           _promptOpen = false;
           Navigator.of(context).pop();
@@ -244,6 +245,7 @@ class _AppUpdateGateState extends State<AppUpdateGate> with WidgetsBindingObserv
           ));
         }
       } else if (result == 'installer_opened') {
+        _downloading = false;
         _installerWasOpened = true;
         if (_promptOpen && Navigator.of(context).canPop()) {
           _promptOpen = false;
