@@ -112,22 +112,6 @@ service firebase.storage {
     }
 
     // -----------------------------------------
-    // PUBLIC ATLAS ACADEMY ANDROID APP RELEASES
-    // Only administrators may upload or replace release APKs.
-    // Each version is stored under its own immutable filename.
-    // -----------------------------------------
-    match /app_releases/android/{fileName} {
-      allow read: if true;
-      allow create, update: if isAdmin() &&
-        fileName.matches('[0-9]+[.][0-9]+[.][0-9]+(-[0-9]+)?[.]apk') &&
-        request.resource != null &&
-        request.resource.contentType == 'application/vnd.android.package-archive' &&
-        request.resource.size > 0 &&
-        request.resource.size <= 262144000;
-      allow delete: if isAdmin();
-    }
-
-    // -----------------------------------------
     // DEFAULT DENY
     // -----------------------------------------
 
