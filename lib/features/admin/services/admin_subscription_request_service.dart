@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../subscriptions/models/subscription_request_model.dart';
 import '../../advanced_learning/services/push_notification_service.dart';
@@ -183,11 +184,10 @@ class AdminSubscriptionRequestService {
       });
     });
     try {
-      final approved = await getRequest(id);
-      if (approved != null) {
-        await PushNotificationService().sendCampaign(notificationId: 'membership_approved_' + id, title: 'Membership approved', body: 'Your ' + approved.planName + ' membership is now active. Enjoy your academy access.', destination: 'membership', audience: 'selected', userIds: [approved.studentUid]);
-      }
-    } catch (_) {}
+      await PushNotificationService().sendSubscriptionDecisionEvent(requestId: id);
+    } catch (error) {
+      debugPrint('Membership approval notification failed: $error');
+    }
   }
 
   Future<void> rejectRequest({
@@ -219,5 +219,10 @@ class AdminSubscriptionRequestService {
         'updatedAt': FieldValue.serverTimestamp(),
       });
     });
+    try {
+      await PushNotificationService().sendSubscriptionDecisionEvent(requestId: id);
+    } catch (error) {
+      debugPrint('Subscription rejection notification failed: $error');
+    }
   }
 }
