@@ -7,8 +7,3 @@ keep_vars = true
 [vars]
 FIREBASE_PROJECT_ID = "the-atlas-academy-3fae0"
 CLOUDINARY_CLOUD_NAME = "ufteavlh"
-
-
-[[r2_buckets]]
-binding = "ATLAS_RELEASES"
-bucket_name = "atlas-academy-releases"
