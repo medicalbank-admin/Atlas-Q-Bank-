@@ -339,7 +339,7 @@ class InboxService {
     final rawFormat = parts.length > 1 ? parts[1].toLowerCase() : 'jpg';
     final extension = rawFormat.replaceAll(RegExp(r'[^a-z0-9]'), '');
     final safeExtension = extension.isEmpty ? 'jpg' : extension;
-    final mimeType = MimeType.get(safeExtension);
+    final mimeType = MimeType.get(safeExtension) ?? MimeType.jpeg;
     final fileName = 'atlas_inbox_${DateTime.now().millisecondsSinceEpoch}';
 
     if (kIsWeb) {
