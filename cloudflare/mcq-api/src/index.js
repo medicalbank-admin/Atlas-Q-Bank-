@@ -6,7 +6,7 @@ const FIRESTORE = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/da
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Authorization, Content-Type, X-Atlas-Release-Notes",
+  "Access-Control-Allow-Headers": "Authorization, Content-Type",
   "Access-Control-Max-Age": "86400",
 };
 
@@ -1012,7 +1012,7 @@ async function uploadAndPublishAppRelease(request, env, url) {
   }
   const safeVersion = version.replace("+", "-");
   const fileName = "The-Atlas-Academy-" + safeVersion + ".apk";
-  const notes = (request.headers.get("X-Atlas-Release-Notes") || "").slice(0, 2000);
+  const notes = (url.searchParams.get("notes") || "").slice(0, 2000);
   const release = await findOrCreateGithubRelease(env, version, notes);
   const existingAsset = (release.assets || []).find((item) => item.name === fileName);
   if (existingAsset) {
