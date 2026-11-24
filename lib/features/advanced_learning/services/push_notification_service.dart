@@ -65,6 +65,7 @@ class PushNotificationService {
   StreamSubscription<String>? _refresh;
   StreamSubscription<RemoteMessage>? _foreground;
   StreamSubscription<RemoteMessage>? _opened;
+  Future<void> Function(RemoteMessage message)? _notificationTapHandler;
 
   Future<int> sendAnnouncement({
     required String title,
@@ -329,6 +330,7 @@ class PushNotificationService {
     FirebaseMessaging messaging,
     Future<void> Function(RemoteMessage message)? onNotificationTap,
   ) {
+    _notificationTapHandler = onNotificationTap;
     _refresh ??= messaging.onTokenRefresh.listen((value) {
       final uid = FirebaseAuth.instance.currentUser?.uid;
       if (uid != null) _save(uid, value, platform: kIsWeb ? 'web' : null);
@@ -342,12 +344,12 @@ class PushNotificationService {
     });
     _opened ??= FirebaseMessaging.onMessageOpenedApp.listen((message) {
       _recordOpen(message);
-      onNotificationTap?.call(message);
+      _notificationTapHandler?.call(message);
     });
     messaging.getInitialMessage().then((initialMessage) async {
       if (initialMessage != null) {
         await _recordOpen(initialMessage);
-        await onNotificationTap?.call(initialMessage);
+        await _notificationTapHandler?.call(initialMessage);
       }
     });
   }
