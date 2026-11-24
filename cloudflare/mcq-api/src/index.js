@@ -5,8 +5,8 @@ const TOKEN_URL = "https://oauth2.googleapis.com/token";
 const FIRESTORE = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents`;
 const CORS = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Authorization, Content-Type",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Authorization, Content-Type, X-Atlas-Release-Notes",
   "Access-Control-Max-Age": "86400",
 };
 
@@ -166,7 +166,7 @@ function encodeFields(fields) {
   const result = {};
   const timestampFields = new Set([
     "startedAt", "expiresAt", "createdAt", "completedAt", "lastMessageAt",
-    "submittedAt", "updatedAt", "reviewedAt",
+    "submittedAt", "updatedAt", "reviewedAt", "publishedAt",
   ]);
   for (const [key, value] of Object.entries(fields)) {
     result[key] = timestampFields.has(key) && typeof value === "string"
@@ -861,6 +861,116 @@ async function proxyInboxImage(env, claims, body) {
     },
   });
 }
+
+async function setFirestoreDocument(env, collection, id, fields) {
+  const name = "projects/" + PROJECT_ID + "/databases/(default)/documents/" +
+    collection + "/" + encodeURIComponent(id);
+  await firestoreRequest(env, ":commit", {
+    method: "POST",
+    body: JSON.stringify({
+      writes: [{
+        update: { name, fields: encodeFields(fields) },
+        updateMask: { fieldPaths: Object.keys(fields) },
+      }],
+    }),
+  });
+}
+
+function bearerToken(request) {
+  const value = request.headers.get("Authorization") || "";
+  const match = value.match(/^Bearer\\s+(.+)$/i);
+  if (!match) throw new Error("Please sign in first.");
+  return match[1];
+}
+
+async function getLatestAppRelease(env, request) {
+  const record = await getDocument(env, "app_releases", "android");
+  if (!record || record.data.isPublished !== true) {
+    return fail("No Android app release has been published yet.", 404);
+  }
+  const data = record.data;
+  const version = String(data.version || "");
+  return response({
+    success: true,
+    release: {
+      platform: "android",
+      academy: "The Atlas Academy",
+      version,
+      fileName: data.fileName || "The-Atlas-Academy.apk",
+      fileSizeBytes: Number(data.fileSizeBytes || 0),
+      releaseNotes: data.releaseNotes || "",
+      publishedAt: data.publishedAt || null,
+      downloadUrl: new URL(request.url).origin +
+        "/releases/download?version=" + encodeURIComponent(version),
+    },
+  });
+}
+
+async function downloadAppRelease(env, url) {
+  const version = url.searchParams.get("version") || "";
+  if (!/^\\d+\\.\\d+\\.\\d+(?:-\\d+)?$/.test(version)) {
+    return fail("The requested app version is invalid.", 400);
+  }
+  if (!env.ATLAS_RELEASES) return fail("App release storage is not configured.", 503);
+  const object = await env.ATLAS_RELEASES.get("android/" + version + ".apk");
+  if (!object) return fail("This app release is no longer available.", 404);
+  const headers = new Headers(CORS);
+  headers.set("Content-Type", "application/vnd.android.package-archive");
+  headers.set("Content-Disposition", 'attachment; filename="The-Atlas-Academy-' + version + '.apk"');
+  headers.set("Content-Length", String(object.size));
+  headers.set("Cache-Control", "public, max-age=31536000, immutable");
+  headers.set("X-Content-Type-Options", "nosniff");
+  if (object.httpEtag) headers.set("ETag", object.httpEtag);
+  return new Response(object.body, { status: 200, headers });
+}
+
+async function uploadAndPublishAppRelease(request, env, url) {
+  if (!env.ATLAS_RELEASES) return fail("App release storage is not configured.", 503);
+  const claims = await verifyFirebaseToken(bearerToken(request));
+  if (claims.admin !== true) return fail("Administrator access is required.", 403);
+  const version = url.searchParams.get("version") || "";
+  if (!/^\\d+\\.\\d+\\.\\d+(?:\\+\\d+)?$/.test(version)) {
+    return fail("Enter a valid app version such as 1.2.0 or 1.2.0+15.", 400);
+  }
+  const contentType = (request.headers.get("Content-Type") || "").split(";")[0].trim();
+  if (contentType !== "application/vnd.android.package-archive") {
+    return fail("Only an Android APK file can be uploaded.", 415);
+  }
+  const size = Number(request.headers.get("Content-Length") || 0);
+  if (!Number.isSafeInteger(size) || size <= 0 || size > 90 * 1024 * 1024) {
+    return fail("The APK must be between 1 byte and 90 MB for this upload service.", 413);
+  }
+  const safeVersion = version.replace("+", "-");
+  const key = "android/" + safeVersion + ".apk";
+  await env.ATLAS_RELEASES.put(key, request.body, {
+    httpMetadata: {
+      contentType: "application/vnd.android.package-archive",
+      cacheControl: "public, max-age=31536000, immutable",
+    },
+    customMetadata: {
+      academy: "The Atlas Academy",
+      version,
+      uploadedBy: claims.sub,
+    },
+  });
+  const release = {
+    platform: "android",
+    academy: "The Atlas Academy",
+    version,
+    fileName: "The-Atlas-Academy-" + safeVersion + ".apk",
+    downloadUrl: new URL(request.url).origin +
+      "/releases/download?version=" + encodeURIComponent(safeVersion),
+    storagePath: key,
+    fileSizeBytes: size,
+    releaseNotes: (request.headers.get("X-Atlas-Release-Notes") || "").slice(0, 2000),
+    isPublished: true,
+    publishedAt: new Date().toISOString(),
+  };
+  await setFirestoreDocument(env, "app_release_history", safeVersion, release);
+  await setFirestoreDocument(env, "app_releases", "android", release);
+  return response({ success: true, release });
+}
+
 async function checkBackendReady(env) {
   await getServiceAccessToken(env);
   // A no-result/one-result query confirms the service account can reach Firestore.
@@ -885,6 +995,23 @@ export default {
       }
     }
     const url = new URL(request.url);
+    if (request.method === "GET" && url.pathname === "/releases/latest") {
+      try { return await getLatestAppRelease(env, request); }
+      catch (error) { return fail(error?.message || "Release information is unavailable.", 503); }
+    }
+    if (request.method === "GET" && url.pathname === "/releases/download") {
+      try { return await downloadAppRelease(env, url); }
+      catch (error) { return fail(error?.message || "The APK could not be downloaded.", 500); }
+    }
+    if (request.method === "POST" && url.pathname === "/releases/upload") {
+      try { return await uploadAndPublishAppRelease(request, env, url); }
+      catch (error) {
+        const message = error?.message || "The APK could not be published.";
+        const status = /sign-in|sign in first|expired/i.test(message) ? 401 :
+          /administrator/i.test(message) ? 403 : 400;
+        return fail(message, status);
+      }
+    }
     const allowedPaths = ["/start", "/submit", "/daily/start", "/daily/status", "/daily/submit",
       "/inbox/upload-signature", "/inbox/image", "/inbox/send"];
     if (request.method !== "POST" || !allowedPaths.includes(url.pathname)) {
