@@ -3,6 +3,7 @@ package com.atlasacademy.app
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import android.content.pm.PackageInfo
 import android.provider.Settings
 import androidx.core.content.FileProvider
 import io.flutter.embedding.android.FlutterActivity
@@ -17,6 +18,37 @@ class MainActivity : FlutterActivity() {
         super.configureFlutterEngine(flutterEngine)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, updateChannel)
             .setMethodCallHandler { call, result ->
+                if (call.method == "inspectApk") {
+                    try {
+                        val bytes = call.argument<ByteArray>("bytes")
+                        if (bytes == null || bytes.isEmpty() || bytes.size > 90 * 1024 * 1024) {
+                            result.error("INVALID_APK", "The selected APK data is missing or too large.", null)
+                            return@setMethodCallHandler
+                        }
+                        val apk = File(cacheDir, "atlas-release-inspection.apk")
+                        apk.writeBytes(bytes)
+                        val info = packageManager.getPackageArchiveInfo(apk.absolutePath, 0)
+                        apk.delete()
+                        if (info == null) {
+                            result.error("INVALID_APK", "Android could not read this APK's package information.", null)
+                            return@setMethodCallHandler
+                        }
+                        val versionCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                            info.longVersionCode
+                        } else {
+                            @Suppress("DEPRECATION")
+                            info.versionCode.toLong()
+                        }
+                        result.success(mapOf(
+                            "packageName" to info.packageName,
+                            "versionName" to (info.versionName ?: ""),
+                            "versionCode" to versionCode.toString()
+                        ))
+                    } catch (error: Exception) {
+                        result.error("APK_INSPECTION_FAILED", error.message ?: "Unable to inspect the selected APK.", null)
+                    }
+                    return@setMethodCallHandler
+                }
                 if (call.method != "installApk") {
                     result.notImplemented()
                     return@setMethodCallHandler
