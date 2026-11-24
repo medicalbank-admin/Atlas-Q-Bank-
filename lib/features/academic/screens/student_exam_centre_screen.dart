@@ -242,7 +242,7 @@ class StudentExamCentreScreen extends StatelessWidget {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(20),
                   child: LinearProgressIndicator(
-                    value: hasAttempt ? (bestScore.clamp(0, 100) / 100).clamp(0.035, 1.0) : 0,
+                    value: hasAttempt ? (bestScore.clamp(0, 100) / 100).clamp(0.035, 1.0).toDouble() : 0,
                     minHeight: 7,
                     backgroundColor: const Color(0xFFE9EEF5),
                     valueColor: AlwaysStoppedAnimation<Color>(progressColor),
