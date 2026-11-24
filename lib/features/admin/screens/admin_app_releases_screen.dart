@@ -81,13 +81,15 @@ class _AdminAppReleasesScreenState extends State<AdminAppReleasesScreen> {
       }
       final uri = Uri.parse(
         'https://atlas-academy-mcq-api.medicalbankadmin.workers.dev/releases/upload',
-      ).replace(queryParameters: {'version': version});
+      ).replace(queryParameters: {
+          'version': version,
+          'notes': _notes.text.trim(),
+        });
       final result = await http.post(
         uri,
         headers: {
           'Authorization': 'Bearer ' + token,
           'Content-Type': 'application/vnd.android.package-archive',
-          'X-Atlas-Release-Notes': _notes.text.trim(),
         },
         body: bytes,
       ).timeout(const Duration(minutes: 8));
