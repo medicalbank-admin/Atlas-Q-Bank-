@@ -74,29 +74,52 @@ class McqBulkImportService {
       uniqueQuestions.add(question);
     }
     final questionsToSave = <McqModel>[];
-    // Check for existing questions in Firestore.
-    for (final question in uniqueQuestions) {
-      final existing = await collection
-          .where('trackType', isEqualTo: question.trackType)
-          .where('examSetId', isEqualTo: question.examSetId.trim())
-          .where('yearId', isEqualTo: question.yearId.trim())
-          .where('subject', isEqualTo: question.subject.trim())
-          .where('topic', isEqualTo: question.topic.trim())
-          .where('question', isEqualTo: question.question.trim())
-          .limit(1)
-          .get();
-      if (existing.docs.isNotEmpty) {
-        duplicateDetails.add(
-          'Already exists: ${question.question}',
-        );
-        continue;
-      }
-      questionsToSave.add(
-        question.copyWith(
-          createdBy: adminUid,
-          isPublished: false,
-        ),
+    // Check for existing questions concurrently in small groups.
+    // This avoids one sequential network round trip per MCQ while
+    // keeping the number of simultaneous Firestore reads controlled.
+    const duplicateCheckConcurrency = 20;
+    for (
+      int start = 0;
+      start < uniqueQuestions.length;
+      start += duplicateCheckConcurrency
+    ) {
+      final end = (start + duplicateCheckConcurrency <
+              uniqueQuestions.length)
+          ? start + duplicateCheckConcurrency
+          : uniqueQuestions.length;
+      final questionGroup = uniqueQuestions.sublist(start, end);
+      final existingResults = await Future.wait(
+        questionGroup.map((question) async {
+          final existing = await collection
+              .where('trackType', isEqualTo: question.trackType)
+              .where('examSetId', isEqualTo: question.examSetId.trim())
+              .where('yearId', isEqualTo: question.yearId.trim())
+              .where('subject', isEqualTo: question.subject.trim())
+              .where('topic', isEqualTo: question.topic.trim())
+              .where('question', isEqualTo: question.question.trim())
+              .limit(1)
+              .get();
+          return existing.docs.isNotEmpty;
+        }),
       );
+
+      // Future.wait preserves input order, so import order and duplicate
+      // reporting remain consistent with the uploaded file.
+      for (int i = 0; i < questionGroup.length; i++) {
+        final question = questionGroup[i];
+        if (existingResults[i]) {
+          duplicateDetails.add(
+            'Already exists: ${question.question}',
+          );
+          continue;
+        }
+        questionsToSave.add(
+          question.copyWith(
+            createdBy: adminUid,
+            isPublished: false,
+          ),
+        );
+      }
     }
     int importedCount = 0;
     for (
