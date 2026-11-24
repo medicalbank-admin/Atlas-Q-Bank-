@@ -22,6 +22,7 @@ class _AdminAppReleasesScreenState extends State<AdminAppReleasesScreen> {
   Uint8List? _bytes;
   String? _fileName;
   bool _busy = false;
+  bool _mandatoryUpdate = false;
   double _progress = 0;
   String? _error;
   String? _success;
@@ -84,6 +85,7 @@ class _AdminAppReleasesScreenState extends State<AdminAppReleasesScreen> {
       ).replace(queryParameters: {
           'version': version,
           'notes': _notes.text.trim(),
+          'mandatory': _mandatoryUpdate.toString(),
         });
       final result = await http.post(
         uri,
@@ -111,6 +113,7 @@ class _AdminAppReleasesScreenState extends State<AdminAppReleasesScreen> {
         _bytes = null;
         _fileName = null;
         _notes.clear();
+        _mandatoryUpdate = false;
       });
     } catch (e) {
       if (!mounted) return;
@@ -228,6 +231,14 @@ class _AdminAppReleasesScreenState extends State<AdminAppReleasesScreen> {
                 decoration: const InputDecoration(labelText: 'App version',
                   hintText: 'Example: 1.2.0+15', border: OutlineInputBorder())),
               const SizedBox(height: 12),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                value: _mandatoryUpdate,
+                onChanged: _busy ? null : (value) => setState(() => _mandatoryUpdate = value),
+                title: const Text('Mandatory update', style: TextStyle(fontWeight: FontWeight.w800)),
+                subtitle: const Text('Students must install this version before continuing.', style: TextStyle(fontSize: 11)),
+                activeColor: AtlasColors.navy,
+              ),
               TextField(controller: _notes, enabled: !_busy, minLines: 2, maxLines: 4,
                 decoration: const InputDecoration(labelText: 'Release notes (optional)',
                   hintText: 'Bug fixes, improvements and new features…',
