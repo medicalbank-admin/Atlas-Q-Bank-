@@ -120,12 +120,17 @@ class _AtlasMolecularMechanismDiagramState
               Text('Follow the drug from molecular target to clinical effect',
                 style: TextStyle(fontSize: 9, color: muted)),
             ])),
-          IconButton(
-            tooltip: playing ? 'Pause animation' : 'Play animation',
-            visualDensity: VisualDensity.compact,
-            onPressed: _toggleAnimation,
-            icon: Icon(playing ? Icons.pause_circle_outline
-                : Icons.play_circle_outline, color: blue, size: 22)),
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: _toggleAnimation,
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: Icon(playing ? Icons.pause_circle_outline
+                  : Icons.play_circle_outline,
+                semanticLabel: playing ? 'Pause animation' : 'Play animation',
+                color: blue, size: 26),
+            ),
+          ),
         ]),
         const SizedBox(height: 10),
         Row(children: [
@@ -195,8 +200,8 @@ class _AtlasMolecularMechanismDiagramState
           final expanded = expandedNode == index;
           final last = index == steps.length - 1;
           return Column(children: [
-            InkWell(
-              borderRadius: BorderRadius.circular(13),
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
               onTap: () => _toggleStage(index),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
