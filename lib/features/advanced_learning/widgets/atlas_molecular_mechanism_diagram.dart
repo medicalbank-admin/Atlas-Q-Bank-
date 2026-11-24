@@ -209,11 +209,18 @@ class _AtlasMolecularMechanismDiagramState
                             fontWeight: FontWeight.w900)),
                         const SizedBox(height: 4),
                         Text(steps[index],
-                          maxLines: expanded ? 12 : 3,
-                          overflow: expanded ? TextOverflow.visible
-                              : TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 11, height: 1.45,
-                            color: navy, fontWeight: FontWeight.w700)),
+                          maxLines: expanded ? null : 3,
+                          overflow: expanded ? TextOverflow.visible : TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 11, height: 1.45, color: navy, fontWeight: FontWeight.w700)),
+                        if (expanded && widget.explanation.trim().isNotEmpty) ...[
+                          const SizedBox(height: 10),
+                          Container(
+                            width: double.infinity, padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(color: const Color(0xFFF0F7FC), borderRadius: BorderRadius.circular(10)),
+                            child: Text('MECHANISTIC EXPLANATION: ${widget.explanation}',
+                              style: const TextStyle(fontSize: 10, height: 1.5, color: navy, fontWeight: FontWeight.w500)),
+                          ),
+                        ],
                       ])),
                     Icon(expanded ? Icons.expand_less_rounded
                         : Icons.expand_more_rounded,
