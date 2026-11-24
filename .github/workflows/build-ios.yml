@@ -1,4 +1,4 @@
-name: Build Atlas Academy iOS
+name: Build Atlas Academy iOS Device App
 
 on:
   workflow_dispatch:
