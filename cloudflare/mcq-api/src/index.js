@@ -883,6 +883,62 @@ function bearerToken(request) {
   return match[1];
 }
 
+const GITHUB_RELEASE_REPO = "medicalbank-admin/Atlas-Q-Bank-";
+
+function githubHeaders(env, extra = {}) {
+  if (!env.GITHUB_RELEASES_TOKEN) throw new Error("GitHub release storage is not configured.");
+  return {
+    Authorization: "Bearer " + env.GITHUB_RELEASES_TOKEN,
+    Accept: "application/vnd.github+json",
+    "X-GitHub-Api-Version": "2022-11-28",
+    ...extra,
+  };
+}
+
+async function githubApi(env, path, options = {}) {
+  const result = await fetch("https://api.github.com/repos/" + GITHUB_RELEASE_REPO + path, {
+    ...options,
+    headers: githubHeaders(env, options.headers || {}),
+  });
+  const textBody = await result.text();
+  let data = {};
+  try { data = textBody ? JSON.parse(textBody) : {}; } catch (_) {}
+  if (!result.ok) {
+    const detail = data.message || ("GitHub API returned HTTP " + result.status + ".");
+    throw new Error(detail);
+  }
+  return data;
+}
+
+function releaseTag(version) {
+  return "atlas-app-v" + version.replace("+", "-");
+}
+
+async function findOrCreateGithubRelease(env, version, notes) {
+  const tag = releaseTag(version);
+  try {
+    return await githubApi(env, "/releases/tags/" + encodeURIComponent(tag));
+  } catch (error) {
+    if (!String(error.message).includes("Not Found")) throw error;
+  }
+  return githubApi(env, "/releases", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      tag_name: tag,
+      target_commitish: "main",
+      name: "The Atlas Academy Android " + version,
+      body: notes || "Official Android app release for The Atlas Academy.",
+      draft: false,
+      prerelease: false,
+    }),
+  });
+}
+
+async function getGithubRelease(env, version) {
+  return githubApi(env, "/releases/tags/" + encodeURIComponent(releaseTag(version)));
+}
+
 async function getLatestAppRelease(env, request) {
   const record = await getDocument(env, "app_releases", "android");
   if (!record || record.data.isPublished !== true) {
@@ -912,21 +968,28 @@ async function downloadAppRelease(env, url) {
   if (!/^\d+\.\d+\.\d+(?:-\d+)?$/.test(version)) {
     return fail("The requested app version is invalid.", 400);
   }
-  if (!env.ATLAS_RELEASES) return fail("App release storage is not configured.", 503);
-  const object = await env.ATLAS_RELEASES.get("android/" + version + ".apk");
-  if (!object) return fail("This app release is no longer available.", 404);
+  const release = await getGithubRelease(env, version);
+  const asset = (release.assets || []).find((item) =>
+    item.name === "The-Atlas-Academy-" + version + ".apk"
+  );
+  if (!asset || !asset.browser_download_url) {
+    return fail("This app release is no longer available.", 404);
+  }
+  const upstream = await fetch(asset.browser_download_url, { redirect: "follow" });
+  if (!upstream.ok || !upstream.body) {
+    return fail("The official APK could not be retrieved. Please try again shortly.", 502);
+  }
   const headers = new Headers(CORS);
   headers.set("Content-Type", "application/vnd.android.package-archive");
   headers.set("Content-Disposition", 'attachment; filename="The-Atlas-Academy-' + version + '.apk"');
-  headers.set("Content-Length", String(object.size));
-  headers.set("Cache-Control", "public, max-age=31536000, immutable");
+  headers.set("Cache-Control", "public, max-age=300");
   headers.set("X-Content-Type-Options", "nosniff");
-  if (object.httpEtag) headers.set("ETag", object.httpEtag);
-  return new Response(object.body, { status: 200, headers });
+  const size = upstream.headers.get("Content-Length");
+  if (size) headers.set("Content-Length", size);
+  return new Response(upstream.body, { status: 200, headers });
 }
 
 async function uploadAndPublishAppRelease(request, env, url) {
-  if (!env.ATLAS_RELEASES) return fail("App release storage is not configured.", 503);
   const claims = await verifyFirebaseToken(bearerToken(request));
   if (claims.admin !== true) return fail("Administrator access is required.", 403);
   const version = url.searchParams.get("version") || "";
@@ -944,41 +1007,54 @@ async function uploadAndPublishAppRelease(request, env, url) {
        declaredSize > 90 * 1024 * 1024)) {
     return fail("The APK must be no larger than 90 MB.", 413);
   }
-  if (!request.body) return fail("The uploaded APK file is empty.", 400);
-  const safeVersion = version.replace("+", "-");
-  const key = "android/" + safeVersion + ".apk";
-  const uploadedObject = await env.ATLAS_RELEASES.put(key, request.body, {
-    httpMetadata: {
-      contentType: "application/vnd.android.package-archive",
-      cacheControl: "public, max-age=31536000, immutable",
-    },
-    customMetadata: {
-      academy: "The Atlas Academy",
-      version,
-      uploadedBy: claims.sub,
-    },
-  });
-  const actualSize = Number(uploadedObject?.size || declaredSize);
-  if (!actualSize || actualSize > 90 * 1024 * 1024) {
-    await env.ATLAS_RELEASES.delete(key);
-    return fail("The APK must be no larger than 90 MB.", 413);
+  if (!request.body || !declaredSize) {
+    return fail("The APK upload must include a non-empty file and its size.", 400);
   }
-  const release = {
+  const safeVersion = version.replace("+", "-");
+  const fileName = "The-Atlas-Academy-" + safeVersion + ".apk";
+  const notes = (request.headers.get("X-Atlas-Release-Notes") || "").slice(0, 2000);
+  const release = await findOrCreateGithubRelease(env, version, notes);
+  const existingAsset = (release.assets || []).find((item) => item.name === fileName);
+  if (existingAsset) {
+    await githubApi(env, "/releases/assets/" + existingAsset.id, { method: "DELETE" });
+  }
+  const uploadBase = String(release.upload_url || "").split("{")[0];
+  if (!uploadBase) throw new Error("GitHub did not provide an asset upload address.");
+  const uploadUrl = uploadBase + "?name=" + encodeURIComponent(fileName);
+  const upload = await fetch(uploadUrl, {
+    method: "POST",
+    headers: githubHeaders(env, {
+      "Content-Type": "application/vnd.android.package-archive",
+      "Content-Length": String(declaredSize),
+    }),
+    body: request.body,
+  });
+  const uploadText = await upload.text();
+  let asset = {};
+  try { asset = uploadText ? JSON.parse(uploadText) : {}; } catch (_) {}
+  if (!upload.ok || !asset.id) {
+    throw new Error(asset.message || ("GitHub could not store the APK (HTTP " + upload.status + ")."));
+  }
+  const publishedAt = new Date().toISOString();
+  const record = {
     platform: "android",
     academy: "The Atlas Academy",
     version,
-    fileName: "The-Atlas-Academy-" + safeVersion + ".apk",
+    fileName,
+    fileSizeBytes: Number(asset.size || declaredSize),
+    releaseNotes: notes,
+    releaseTag: release.tag_name,
+    githubAssetId: asset.id,
+    isPublished: true,
+    publishedAt,
+  };
+  await setFirestoreDocument(env, "app_release_history", safeVersion, record);
+  await setFirestoreDocument(env, "app_releases", "android", record);
+  return response({ success: true, release: {
+    ...record,
     downloadUrl: new URL(request.url).origin +
       "/releases/download?version=" + encodeURIComponent(safeVersion),
-    storagePath: key,
-    fileSizeBytes: actualSize,
-    releaseNotes: (request.headers.get("X-Atlas-Release-Notes") || "").slice(0, 2000),
-    isPublished: true,
-    publishedAt: new Date().toISOString(),
-  };
-  await setFirestoreDocument(env, "app_release_history", safeVersion, release);
-  await setFirestoreDocument(env, "app_releases", "android", release);
-  return response({ success: true, release });
+  } });
 }
 
 async function checkBackendReady(env) {
