@@ -2,7 +2,7 @@ name: atlas_academy
 description: The Atlas Academy - Prepare Smarter, Perform Better. 
 publish_to: 'none'
 
-version: 1.0.0+1
+version: 1.2.7+1
 
 environment:
   sdk: '>=3.13.0 <4.0.0'
