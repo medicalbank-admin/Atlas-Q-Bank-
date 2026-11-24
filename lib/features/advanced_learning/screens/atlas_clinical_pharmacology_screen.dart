@@ -1976,6 +1976,7 @@ class _DrugDetailScreen extends StatelessWidget {
             drugName: drug.name,
             className: drug.className,
             steps: drug.steps,
+            explanation: drug.moa,
           ),
           const SizedBox(height: 14),
           const Text('DETAILED MECHANISM SEQUENCE',
