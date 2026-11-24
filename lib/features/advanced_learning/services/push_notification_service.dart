@@ -232,6 +232,57 @@ class PushNotificationService {
     }
   }
 
+  /// Checks the OS/browser permission and registers this device without prompting.
+  /// Returns true only after an FCM token is successfully saved.
+  Future<bool> checkAndRegisterNotifications() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return false;
+    try {
+      if (kIsWeb) {
+        return _registerWebDevice(user.uid, requestPermission: false);
+      }
+      final messaging = FirebaseMessaging.instance;
+      final settings = await messaging.getNotificationSettings();
+      if (settings.authorizationStatus != AuthorizationStatus.authorized &&
+          settings.authorizationStatus != AuthorizationStatus.provisional) {
+        return false;
+      }
+      await _initializeLocalNotifications();
+      final token = await messaging.getToken();
+      if (token == null || token.isEmpty) return false;
+      await _save(user.uid, token);
+      _attachMessageListeners(messaging, null);
+      return true;
+    } catch (error, stackTrace) {
+      debugPrint('Atlas Academy notification status check failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      return false;
+    }
+  }
+
+  /// Requests permission after an explicit student action, then registers FCM.
+  Future<bool> requestAndRegisterNotifications(BuildContext context) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) throw Exception('Please sign in again.');
+    if (kIsWeb) return enableWebNotifications(context);
+    final messaging = FirebaseMessaging.instance;
+    await _initializeLocalNotifications();
+    final androidPlugin = _local.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    await androidPlugin?.requestNotificationsPermission();
+    final settings = await messaging.requestPermission(alert: true, badge: true, sound: true);
+    if (settings.authorizationStatus != AuthorizationStatus.authorized &&
+        settings.authorizationStatus != AuthorizationStatus.provisional) {
+      return false;
+    }
+    final token = await messaging.getToken();
+    if (token == null || token.isEmpty) {
+      throw Exception('The device did not provide a notification registration token.');
+    }
+    await _save(user.uid, token);
+    _attachMessageListeners(messaging, null);
+    return true;
+  }
+
   /// Must be called directly from a user tap on web, especially for iOS Home Screen apps.
   Future<bool> enableWebNotifications(BuildContext context) async {
     final user = FirebaseAuth.instance.currentUser;
