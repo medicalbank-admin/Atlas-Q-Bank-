@@ -7,7 +7,6 @@ on:
       - main
     paths:
       - 'firestore.rules'
-      - 'storage.rules'
       - '.github/workflows/deploy-firestore-rules.yml'
 
 permissions:
@@ -43,9 +42,6 @@ jobs:
 
       - name: Deploy Firestore security rules
         run: firebase deploy --only firestore:rules --project the-atlas-academy-3fae0 --non-interactive
-
-      - name: Deploy Firebase Storage security rules
-        run: firebase deploy --only storage --project the-atlas-academy-3fae0 --non-interactive
 
       - name: Remove temporary credentials
         if: always()
