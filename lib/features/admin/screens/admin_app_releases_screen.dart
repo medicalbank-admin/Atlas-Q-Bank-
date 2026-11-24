@@ -60,7 +60,7 @@ class _AdminAppReleasesScreenState extends State<AdminAppReleasesScreen> {
   Future<void> _publish() async {
     final version = _version.text.trim();
     final bytes = _bytes;
-    if (!RegExp(r'^\\d+\\.\\d+\\.\\d+(?:\\+\\d+)?$').hasMatch(version)) {
+    if (!RegExp(r'^\d+\.\d+\.\d+(?:\+\d+)?$').hasMatch(version)) {
       setState(() => _error = 'Enter a version such as 1.2.0 or 1.2.0+15.');
       return;
     }
