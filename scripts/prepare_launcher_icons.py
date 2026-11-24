@@ -51,14 +51,14 @@ if not icon_path.exists() or not foreground_path.exists():
 
 print("Launcher artwork ready; custom uploaded PNGs are preserved.")
 
-# Reuse the exact same square artwork for the website favicon and installed PWA.
-# This keeps the browser tab, iPhone Home Screen, Android PWA, and Android APK
-# launcher identity consistent.
+# The Android app's actual launcher artwork is the source of truth.
+# Copy that exact image into the web/PWA icon set (only resize to required dimensions).
+android_launcher = ROOT / "android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png"
 web_dir = ROOT / "web"
 web_icons = web_dir / "icons"
 web_icons.mkdir(parents=True, exist_ok=True)
 
-launcher_icon = Image.open(icon_path).convert("RGB")
+launcher_icon = Image.open(android_launcher).convert("RGBA")
 for size, filename in [
     (192, "Icon-192.png"),
     (512, "Icon-512.png"),
@@ -72,5 +72,4 @@ for size, filename in [
 launcher_icon.resize((64, 64), Image.Resampling.LANCZOS).save(
     web_dir / "favicon.png", format="PNG", optimize=True
 )
-print("Website favicon and PWA icons now match the Android launcher icon.")
-
+print("Website and PWA icons now use the exact Android mipmap launcher artwork.")
