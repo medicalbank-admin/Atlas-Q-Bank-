@@ -4,6 +4,9 @@ import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart';
+
+import '../../advanced_learning/services/push_notification_service.dart';
 
 class InboxService {
   InboxService({
@@ -341,11 +344,22 @@ class InboxService {
       return;
     }
 
-    await _workerRequest('/inbox/send', {
+    final result = await _workerRequest('/inbox/send', {
       'studentUid': studentUid,
       'body': text,
       'imagePath': imagePath ?? '',
     });
+    final messageId = result['messageId']?.toString() ?? '';
+    if (messageId.isNotEmpty) {
+      try {
+        await PushNotificationService().sendInboxMessageEvent(
+          studentUid: studentUid,
+          messageId: messageId,
+        );
+      } catch (error) {
+        debugPrint('Inbox message notification failed: $error');
+      }
+    }
   }
 
   Future<void> markIncomingAsDelivered({
