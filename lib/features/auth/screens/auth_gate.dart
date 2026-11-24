@@ -8,6 +8,8 @@ import '../../admin/screens/admin_dashboard_screen.dart';
 import '../../dashboard/screens/student_dashboard_screen.dart';
 import 'auth_landing_screen.dart';
 import 'email_verification_screen.dart';
+import 'student_notification_setup_screen.dart';
+import '../../advanced_learning/services/push_notification_service.dart';
 
 class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
@@ -100,8 +102,15 @@ class _AuthGateState extends State<AuthGate> with WidgetsBindingObserver {
 
     // A verified student profile is sufficient for portal entry.
     // Registration approval is not part of the student onboarding flow.
-    // Verified students can enter the dashboard immediately; paid content
-    // remains protected by Firestore's active-membership security rules.
+    // Students must enable Stay Updated before entering the dashboard.
+    // Permission is checked without prompting; the setup screen requests it
+    // only after the student taps its enable button.
+    final notificationsReady = await PushNotificationService()
+        .checkAndRegisterNotifications();
+    if (!notificationsReady) {
+      return StudentNotificationSetupScreen(onEnabled: _retry);
+    }
+
     return const StudentDashboardScreen();
   }
 
