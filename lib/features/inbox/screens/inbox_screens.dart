@@ -633,6 +633,7 @@ class _SecureInboxImage extends StatefulWidget {
 
 class _SecureInboxImageState extends State<_SecureInboxImage> {
   late Future<Uint8List> _imageFuture;
+  bool _savingImage = false;
 
   @override
   void initState() {
@@ -660,10 +661,7 @@ class _SecureInboxImageState extends State<_SecureInboxImage> {
     await showDialog<void>(
       context: context,
       barrierColor: Colors.black,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (dialogContext, setDialogState) {
-          var saving = false;
-          return Dialog.fullscreen(
+      builder: (dialogContext) => Dialog.fullscreen(
             backgroundColor: Colors.black,
             child: Scaffold(
               backgroundColor: Colors.black,
@@ -674,10 +672,10 @@ class _SecureInboxImageState extends State<_SecureInboxImage> {
                 actions: [
                   IconButton(
                     tooltip: 'Download image',
-                    onPressed: saving
+                    onPressed: _savingImage
                         ? null
                         : () async {
-                            setDialogState(() => saving = true);
+                            setState(() => _savingImage = true);
                             try {
                               await widget.service.saveImageToDevice(
                                 bytes: bytes,
@@ -699,10 +697,10 @@ class _SecureInboxImageState extends State<_SecureInboxImage> {
                                 );
                               }
                             } finally {
-                              setDialogState(() => saving = false);
+                              if (mounted) setState(() => _savingImage = false);
                             }
                           },
-                    icon: saving
+                    icon: _savingImage
                         ? const SizedBox(
                             width: 20,
                             height: 20,
@@ -724,9 +722,7 @@ class _SecureInboxImageState extends State<_SecureInboxImage> {
                 ),
               ),
             ),
-          );
-        },
-      ),
+          ),
     );
   }
 
