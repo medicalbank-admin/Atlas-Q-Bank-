@@ -1051,7 +1051,7 @@ async function uploadAndPublishAppRelease(request, env, url) {
   const upload = await fetch(uploadUrl, {
     method: "POST",
     headers: githubHeaders(env, {
-      "Content-Type": "application/vnd.android.package-archive",
+      "Content-Type": "application/octet-stream",
       "Content-Length": String(declaredSize),
     }),
     body: request.body,
