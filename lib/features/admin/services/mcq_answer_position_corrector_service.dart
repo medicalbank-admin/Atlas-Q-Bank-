@@ -97,7 +97,7 @@ class McqAnswerPositionCorrectorService {
       final sourceOptions = originalQuestion is Map
           ? originalQuestion['options']
           : data['options'];
-      if (!'ABCDE'.contains(answer) ||
+      if (!['A', 'B', 'C', 'D', 'E'].contains(answer) ||
           sourceOptions is! List ||
           'ABCDE'.indexOf(answer) >= sourceOptions.length) {
         invalidAnswerKey++;
@@ -164,7 +164,7 @@ class McqAnswerPositionCorrectorService {
           ? originalQuestion['options']
           : questionDoc.data()['options'];
       final answer = (rawAnswer ?? '').toString().trim().toUpperCase();
-      if (!'ABCDE'.contains(answer) ||
+      if (!['A', 'B', 'C', 'D', 'E'].contains(answer) ||
           sourceOptions is! List ||
           'ABCDE'.indexOf(answer) >= sourceOptions.length ||
           sourceOptions.length < 4 ||
