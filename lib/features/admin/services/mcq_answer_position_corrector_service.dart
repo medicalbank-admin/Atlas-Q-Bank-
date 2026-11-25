@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import '../../admin/services/admin_access_service.dart';
+import 'admin_access_service.dart';
 
 class McqAnswerPositionAudit {
   final int totalQuestions;
