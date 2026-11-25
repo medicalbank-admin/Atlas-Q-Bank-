@@ -203,6 +203,10 @@ class McqAnswerPositionCorrectorService {
         batch.update(questionRef, {
           'options': originalOptions,
           'updatedAt': FieldValue.serverTimestamp(),
+          if (originalQuestion.containsKey('correctAnswer'))
+            'correctAnswer': FieldValue.delete(),
+          if (originalQuestion.containsKey('explanation'))
+            'explanation': FieldValue.delete(),
         });
 
         batch.set(answerRef, {
