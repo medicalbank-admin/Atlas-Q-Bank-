@@ -85,6 +85,48 @@ class _AdminAppReleasesScreenState extends State<AdminAppReleasesScreen> {
     }
   }
 
+  Stream<List<int>> _apkUploadChunks(Uint8List bytes) async* {
+    const chunkSize = 64 * 1024;
+    var sent = 0;
+    while (sent < bytes.length) {
+      final end = (sent + chunkSize < bytes.length)
+          ? sent + chunkSize : bytes.length;
+      yield Uint8List.sublistView(bytes, sent, end);
+      sent = end;
+      if (mounted) {
+        setState(() => _progress = 0.05 + 0.80 * sent / bytes.length);
+      }
+    }
+  }
+
+  Future<http.Response> _sendApkUpload(
+      Uri uri, String token, Uint8List bytes) async {
+    final client = http.Client();
+    try {
+      final request = http.StreamedRequest('POST', uri)
+        ..headers.addAll({
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/vnd.android.package-archive',
+        })
+        ..contentLength = bytes.length;
+      final responseFuture = client.send(request);
+      await request.sink.addStream(_apkUploadChunks(bytes));
+      await request.sink.close();
+      final streamed = await responseFuture.timeout(
+        const Duration(minutes: 8),
+      );
+      final body = await streamed.stream.bytesToString();
+      if (mounted) setState(() => _progress = 0.95);
+      return http.Response(
+        body, streamed.statusCode,
+        headers: streamed.headers,
+        request: streamed.request,
+      );
+    } finally {
+      client.close();
+    }
+  }
+
   Future<void> _publish() async {
     final version = _version.text.trim();
     final bytes = _bytes;
@@ -118,14 +160,22 @@ class _AdminAppReleasesScreenState extends State<AdminAppReleasesScreen> {
           'notes': _notes.text.trim(),
           'mandatory': _mandatoryUpdate.toString(),
         });
-      final result = await http.post(
-        uri,
-        headers: {
-          'Authorization': 'Bearer ' + token,
-          'Content-Type': 'application/vnd.android.package-archive',
-        },
-        body: bytes,
-      ).timeout(const Duration(minutes: 8));
+      http.Response? result;
+      for (var attempt = 1; attempt <= 3; attempt++) {
+        result = await _sendApkUpload(uri, token, bytes);
+        final retryable = const [500, 502, 503, 504].contains(result.statusCode);
+        if (!retryable || attempt == 3) break;
+        if (!mounted) return;
+        setState(() {
+          _progress = 0;
+          _error = 'GitHub is temporarily unavailable. Retrying upload '
+              '${attempt + 1} of 3…';
+        });
+        await Future.delayed(Duration(seconds: attempt * 2));
+      }
+      if (result == null) {
+        throw StateError('The APK upload did not return a server response.');
+      }
       Map<String, dynamic> payload = {};
       try {
         final decoded = jsonDecode(result.body);
@@ -139,7 +189,7 @@ class _AdminAppReleasesScreenState extends State<AdminAppReleasesScreen> {
       }
       if (!mounted) return;
       setState(() {
-        _success = 'Version ' + version +
+        _progress = 1;\n        _success = 'Version ' + version +
             ' is now published on the official Atlas Academy portal.';
         _bytes = null;
         _fileName = null;
