@@ -516,6 +516,13 @@ service cloud.firestore {
       allow read, create, update, delete: if isAdmin();
     }
 
+    // Immutable private backups created by the MCQ answer-position corrector.
+    // They contain original question options and private answer-key data.
+    match /mcq_answer_position_backups/{backupId} {
+      allow read, create: if isAdmin();
+      allow update, delete: if false;
+    }
+
     // Server-owned timed MCQ sessions. Clients cannot read or modify them.
     match /mcq_practice_sessions/{sessionId} {
       allow read, write: if false;
