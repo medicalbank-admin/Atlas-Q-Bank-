@@ -65,7 +65,9 @@ class McqAnswerPositionCorrectorService {
     final answerDocs = {
       for (final doc in answerSnapshot.docs) doc.id: doc.data(),
     };
-    final backupIds = backupSnapshot.docs.map((doc) => doc.id).toSet();
+    final backupDocs = {
+      for (final doc in backupSnapshot.docs) doc.id: doc.data(),
+    };
     final distribution = <String, int>{
       'A': 0, 'B': 0, 'C': 0, 'D': 0, 'E': 0,
     };
@@ -78,30 +80,42 @@ class McqAnswerPositionCorrectorService {
 
     for (final questionDoc in questionSnapshot.docs) {
       final data = questionDoc.data();
-      final key = answerDocs[questionDoc.id];
-      final rawAnswer = key?['correctAnswer'] ?? data['correctAnswer'];
+      final backup = backupDocs['$_backupVersion${questionDoc.id}'];
+      final originalQuestion = backup?['originalQuestion'];
+      final originalKey = backup?['originalAnswerKey'];
+      final currentKey = answerDocs[questionDoc.id];
+      final rawAnswer = backup?['originalCorrectAnswer'] ??
+          (originalKey is Map ? originalKey['correctAnswer'] : null) ??
+          (originalQuestion is Map ? originalQuestion['correctAnswer'] : null) ??
+          currentKey?['correctAnswer'] ??
+          data['correctAnswer'];
       if (rawAnswer == null || rawAnswer.toString().trim().isEmpty) {
         missingAnswerKey++;
         continue;
       }
       final answer = rawAnswer.toString().trim().toUpperCase();
-      final options = data['options'];
-      if (!['A', 'B', 'C', 'D', 'E'].contains(answer) ||
-          options is! List ||
-          'ABCDE'.indexOf(answer) >= options.length) {
+      final sourceOptions = originalQuestion is Map
+          ? originalQuestion['options']
+          : data['options'];
+      if (!'ABCDE'.contains(answer) ||
+          sourceOptions is! List ||
+          'ABCDE'.indexOf(answer) >= sourceOptions.length) {
         invalidAnswerKey++;
         continue;
       }
       distribution[answer] = (distribution[answer] ?? 0) + 1;
-      if (answer == 'A') {
-        correctAtA++;
-        final hasBackup = backupIds.contains('$_backupVersion${questionDoc.id}');
-        if (hasBackup) alreadyBackedUp++;
-        final supported = options.length >= 4 && options.length <= 5 &&
-            !options.any((value) => value == null || value.toString().trim().isEmpty);
-        if (!supported) unsupportedOptions++;
-        if (!hasBackup && supported) eligible++;
+      if (answer == 'A') correctAtA++;
+      final supported = sourceOptions.length >= 4 &&
+          sourceOptions.length <= 5 &&
+          !sourceOptions.any(
+            (value) => value == null || value.toString().trim().isEmpty,
+          );
+      if (!supported) {
+        unsupportedOptions++;
+        continue;
       }
+      eligible++;
+      if (backup != null) alreadyBackedUp++;
     }
 
     return McqAnswerPositionAudit(
@@ -116,7 +130,10 @@ class McqAnswerPositionCorrectorService {
     );
   }
 
-  Future<McqAnswerPositionCorrectionResult> correctAllA({
+  /// Rebalances every supported MCQ across A-D. Existing v1 backups are used
+  /// as the source of truth so questions corrected by the earlier A-to-B/C/D
+  /// version can safely be redistributed without losing their original text.
+  Future<McqAnswerPositionCorrectionResult> rebalanceAll({
     void Function(int completed, int total)? onProgress,
   }) async {
     await _verifyAdmin();
@@ -128,21 +145,33 @@ class McqAnswerPositionCorrectorService {
     final answerDocs = {
       for (final doc in answerSnapshot.docs) doc.id: doc.data(),
     };
-    final backupIds = backupSnapshot.docs.map((doc) => doc.id).toSet();
-    final candidates = <QueryDocumentSnapshot<Map<String, dynamic>>>[];
+    final backupDocs = {
+      for (final doc in backupSnapshot.docs) doc.id: doc.data(),
+    };
 
+    final candidates = <QueryDocumentSnapshot<Map<String, dynamic>>>[];
     for (final questionDoc in questionSnapshot.docs) {
-      final data = questionDoc.data();
-      final key = answerDocs[questionDoc.id];
-      final answer = (key?['correctAnswer'] ?? data['correctAnswer'] ?? '')
-          .toString().trim().toUpperCase();
-      final options = data['options'];
-      if (answer != 'A' ||
-          backupIds.contains('$_backupVersion${questionDoc.id}') ||
-          options is! List ||
-          options.length < 4 ||
-          options.length > 5 ||
-          options.any((value) => value == null || value.toString().trim().isEmpty)) {
+      final backup = backupDocs['$_backupVersion${questionDoc.id}'];
+      final originalQuestion = backup?['originalQuestion'];
+      final originalKey = backup?['originalAnswerKey'];
+      final currentKey = answerDocs[questionDoc.id];
+      final rawAnswer = backup?['originalCorrectAnswer'] ??
+          (originalKey is Map ? originalKey['correctAnswer'] : null) ??
+          (originalQuestion is Map ? originalQuestion['correctAnswer'] : null) ??
+          currentKey?['correctAnswer'] ??
+          questionDoc.data()['correctAnswer'];
+      final sourceOptions = originalQuestion is Map
+          ? originalQuestion['options']
+          : questionDoc.data()['options'];
+      final answer = (rawAnswer ?? '').toString().trim().toUpperCase();
+      if (!'ABCDE'.contains(answer) ||
+          sourceOptions is! List ||
+          'ABCDE'.indexOf(answer) >= sourceOptions.length ||
+          sourceOptions.length < 4 ||
+          sourceOptions.length > 5 ||
+          sourceOptions.any(
+            (value) => value == null || value.toString().trim().isEmpty,
+          )) {
         continue;
       }
       candidates.add(questionDoc);
@@ -163,55 +192,74 @@ class McqAnswerPositionCorrectorService {
       final batch = _firestore.batch();
 
       for (final questionDoc in group) {
-        final originalQuestion = questionDoc.data();
-        final originalKey = answerDocs[questionDoc.id];
-        final originalOptions = List<String>.from(
-          (originalQuestion['options'] as List).map((value) => value.toString()),
+        final currentQuestion = questionDoc.data();
+        final backupId = '$_backupVersion${questionDoc.id}';
+        final existingBackup = backupDocs[backupId];
+        final originalQuestion = existingBackup?['originalQuestion'];
+        final originalKey = existingBackup?['originalAnswerKey'];
+        final originalData = originalQuestion is Map
+            ? Map<String, dynamic>.from(originalQuestion)
+            : currentQuestion;
+        final currentKey = answerDocs[questionDoc.id];
+        final rawAnswer = existingBackup?['originalCorrectAnswer'] ??
+            (originalKey is Map ? originalKey['correctAnswer'] : null) ??
+            originalData['correctAnswer'] ??
+            currentKey?['correctAnswer'] ??
+            currentQuestion['correctAnswer'];
+        final originalAnswer = rawAnswer.toString().trim().toUpperCase();
+        final sourceOptions = List<String>.from(
+          (originalData['options'] as List).map((value) => value.toString()),
+        );
+        final correctText = sourceOptions.removeAt(
+          'ABCDE'.indexOf(originalAnswer),
         );
 
-        // Select the least-used valid destination. This keeps the answer
-        // positions balanced across B-E (or B-D for four-option questions).
-        final lastIndex = originalOptions.length - 1;
-        final possibleTargets = List<int>.generate(lastIndex, (index) => index + 1);
-        possibleTargets.sort((a, b) {
-          final count = finalPositions[String.fromCharCode(65 + a)] ?? 0;
-          final other = finalPositions[String.fromCharCode(65 + b)] ?? 0;
-          final byCount = count.compareTo(other);
-          return byCount != 0 ? byCount : a.compareTo(b);
-        });
-        final targetIndex = possibleTargets.first;
-        final correctText = originalOptions.removeAt(0);
-        originalOptions.insert(targetIndex, correctText);
+        // Select the least-used position among A, B, C and D only.
+        var targetIndex = 0;
+        for (var index = 1; index < 4; index++) {
+          final letter = String.fromCharCode(65 + index);
+          final selectedLetter = String.fromCharCode(65 + targetIndex);
+          if ((finalPositions[letter] ?? 0) <
+              (finalPositions[selectedLetter] ?? 0)) {
+            targetIndex = index;
+          }
+        }
+        sourceOptions.insert(targetIndex, correctText);
         final newLetter = String.fromCharCode(65 + targetIndex);
-        final backupId = '$_backupVersion${questionDoc.id}';
-        final backupRef = _firestore.collection(_backups).doc(backupId);
+
         final questionRef = _firestore.collection(_questions).doc(questionDoc.id);
         final answerRef = _firestore.collection(_answerKeys).doc(questionDoc.id);
-        final explanation = (originalKey?['explanation'] ??
-            originalQuestion['explanation'] ?? '').toString();
+        final backupRef = _firestore.collection(_backups).doc(backupId);
+        final explanation = (originalKey is Map
+                ? originalKey['explanation']
+                : null) ??
+            originalData['explanation'] ??
+            currentKey?['explanation'] ??
+            '';
 
-        batch.set(backupRef, {
-          'questionId': questionDoc.id,
-          'correctionVersion': 1,
-          'originalQuestion': originalQuestion,
-          'originalAnswerKey': originalKey,
-          'correctedAt': FieldValue.serverTimestamp(),
-          'originalCorrectAnswer': 'A',
-          'newCorrectAnswer': newLetter,
-        });
+        if (existingBackup == null) {
+          batch.set(backupRef, {
+            'questionId': questionDoc.id,
+            'correctionVersion': 1,
+            'originalQuestion': currentQuestion,
+            'originalAnswerKey': currentKey,
+            'correctedAt': FieldValue.serverTimestamp(),
+            'originalCorrectAnswer': originalAnswer,
+            'newCorrectAnswer': newLetter,
+          });
+        }
 
         batch.update(questionRef, {
-          'options': originalOptions,
+          'options': sourceOptions,
           'updatedAt': FieldValue.serverTimestamp(),
-          if (originalQuestion.containsKey('correctAnswer'))
+          if (currentQuestion.containsKey('correctAnswer'))
             'correctAnswer': FieldValue.delete(),
-          if (originalQuestion.containsKey('explanation'))
+          if (currentQuestion.containsKey('explanation'))
             'explanation': FieldValue.delete(),
         });
-
         batch.set(answerRef, {
           'correctAnswer': newLetter,
-          'explanation': explanation,
+          'explanation': explanation.toString(),
           'updatedAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
 
