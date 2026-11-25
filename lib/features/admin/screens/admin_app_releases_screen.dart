@@ -88,12 +88,15 @@ class _AdminAppReleasesScreenState extends State<AdminAppReleasesScreen> {
   Stream<List<int>> _apkUploadChunks(Uint8List bytes) async* {
     const chunkSize = 64 * 1024;
     var sent = 0;
+    var lastPercent = -1;
     while (sent < bytes.length) {
       final end = (sent + chunkSize < bytes.length)
           ? sent + chunkSize : bytes.length;
       yield Uint8List.sublistView(bytes, sent, end);
       sent = end;
-      if (mounted) {
+      final percent = (sent * 100 / bytes.length).floor();
+      if (mounted && percent != lastPercent) {
+        lastPercent = percent;
         setState(() => _progress = 0.05 + 0.80 * sent / bytes.length);
       }
     }
