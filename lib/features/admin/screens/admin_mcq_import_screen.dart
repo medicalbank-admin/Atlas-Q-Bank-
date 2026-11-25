@@ -463,14 +463,23 @@ class _AdminMcqImportScreenState
               const SizedBox(height: 12),
               TextField(
                 controller: _inputController,
-                minLines: 12,
-                maxLines: 22,
+                // Keep the editor compact on mobile while allowing large pastes.
+                // iOS Safari zooms focused inputs whose rendered text is below 16px.
+                minLines: 8,
+                maxLines: 14,
                 enabled: !_isImporting,
                 keyboardType: TextInputType.multiline,
+                textInputAction: TextInputAction.newline,
                 textAlignVertical: TextAlignVertical.top,
+                scrollPadding: const EdgeInsets.only(bottom: 140),
+                autocorrect: false,
+                enableSuggestions: false,
+                smartDashesType: SmartDashesType.disabled,
+                smartQuotesType: SmartQuotesType.disabled,
                 style: const TextStyle(
                   fontFamily: 'monospace',
-                  fontSize: 12,
+                  fontSize: 16,
+                  height: 1.35,
                 ),
                 decoration: const InputDecoration(
                   hintText:
