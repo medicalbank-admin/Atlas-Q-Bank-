@@ -192,7 +192,8 @@ class _AdminAppReleasesScreenState extends State<AdminAppReleasesScreen> {
       }
       if (!mounted) return;
       setState(() {
-        _progress = 1;\n        _success = 'Version ' + version +
+        _progress = 1;
+        _success = 'Version ' + version +
             ' is now published on the official Atlas Academy portal.';
         _bytes = null;
         _fileName = null;
