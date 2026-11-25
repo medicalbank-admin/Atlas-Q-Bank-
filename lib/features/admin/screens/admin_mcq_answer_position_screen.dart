@@ -47,13 +47,12 @@ class _AdminMcqAnswerPositionScreenState
       builder: (dialogContext) => AlertDialog(
         title: const Text('Correct answer positions?'),
         content: Text(
-          'This will rearrange the options for up to ${audit.eligible} '
-          'questions whose private answer key is A. The correct answer text '
-          'will be moved, the private answer key will be updated, and an '
-          'administrator-only backup will be created for every changed MCQ. '
-          'Question wording, distractors and explanations will be preserved. '
-          'This operation changes answer positions only; it does not medically '
-          're-verify the original answers.',
+          'This will rebalance all ${audit.eligible} supported MCQs across A, B, C '
+          'and D. Questions corrected by the previous version will be rebuilt '
+          'from their original backups, so A can receive correct answers again. '
+          'The correct answer text, distractors and explanations will be '
+          'preserved, and original backups will not be overwritten. This changes '
+          'answer positions only; it does not medically re-verify answers.',
         ),
         actions: [
           TextButton(
@@ -77,7 +76,7 @@ class _AdminMcqAnswerPositionScreenState
       _result = null;
     });
     try {
-      final result = await _service.correctAllA(
+      final result = await _service.rebalanceAll(
         onProgress: (completed, total) {
           if (!mounted) return;
           setState(() {
@@ -213,9 +212,9 @@ class _AdminMcqAnswerPositionScreenState
                       )),
                   SizedBox(height: 7),
                   Text(
-                    'Scan the complete MCQ bank, then move answers currently '
-                    'keyed as A to balanced alternative positions. Original '
-                    'question and answer-key data are backed up before changes.',
+                    'Scan the complete MCQ bank, then balance correct answers across '
+                    'A, B, C and D. Previously corrected questions are restored '
+                    'from their original backups before being rebalanced.',
                     style: TextStyle(
                       color: AtlasColors.secondaryText,
                       height: 1.5,
@@ -257,7 +256,7 @@ class _AdminMcqAnswerPositionScreenState
               const SizedBox(height: 9),
               Row(
                 children: [
-                  _stat('Ready to correct', '${audit.eligible}',
+                  _stat('Ready to rebalance', '${audit.eligible}',
                       color: AtlasColors.success),
                   const SizedBox(width: 9),
                   _stat('Already backed up', '${audit.alreadyBackedUp}'),
@@ -317,7 +316,7 @@ class _AdminMcqAnswerPositionScreenState
                       Text('${_result!.corrected} MCQs corrected successfully.'),
                       Text('${_result!.skipped} MCQs skipped.'),
                       const SizedBox(height: 10),
-                      Text('New correct-answer positions: ${_result!.finalPositions.entries.where((e) => e.key != 'A' && e.value > 0).map((e) => '${e.key}: ${e.value}').join('  •  ')}'),
+                      Text('Final correct-answer positions: ${_result!.finalPositions.entries.where((e) => ['A', 'B', 'C', 'D'].contains(e.key)).map((e) => '${e.key}: ${e.value}').join('  •  ')}'),
                     ],
                   ),
                 ),
