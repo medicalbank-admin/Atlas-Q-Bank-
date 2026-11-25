@@ -84,27 +84,44 @@ class McqAnswerPositionCorrectorService {
       final originalQuestion = backup?['originalQuestion'];
       final originalKey = backup?['originalAnswerKey'];
       final currentKey = answerDocs[questionDoc.id];
-      final rawAnswer = backup?['originalCorrectAnswer'] ??
-          (originalKey is Map ? originalKey['correctAnswer'] : null) ??
-          (originalQuestion is Map ? originalQuestion['correctAnswer'] : null) ??
-          currentKey?['correctAnswer'] ??
-          data['correctAnswer'];
-      if (rawAnswer == null || rawAnswer.toString().trim().isEmpty) {
+
+      // The distribution shown in the audit must reflect the live answer key,
+      // not the original answer position stored in a backup.
+      final liveRawAnswer =
+          currentKey?['correctAnswer'] ?? data['correctAnswer'];
+      if (liveRawAnswer == null ||
+          liveRawAnswer.toString().trim().isEmpty) {
         missingAnswerKey++;
         continue;
       }
-      final answer = rawAnswer.toString().trim().toUpperCase();
-      final sourceOptions = originalQuestion is Map
-          ? originalQuestion['options']
-          : data['options'];
-      if (!['A', 'B', 'C', 'D', 'E'].contains(answer) ||
-          sourceOptions is! List ||
-          'ABCDE'.indexOf(answer) >= sourceOptions.length) {
+      final liveAnswer = liveRawAnswer.toString().trim().toUpperCase();
+      final liveOptions = data['options'];
+      if (!['A', 'B', 'C', 'D', 'E'].contains(liveAnswer) ||
+          liveOptions is! List ||
+          'ABCDE'.indexOf(liveAnswer) >= liveOptions.length) {
         invalidAnswerKey++;
         continue;
       }
-      distribution[answer] = (distribution[answer] ?? 0) + 1;
-      if (answer == 'A') correctAtA++;
+      distribution[liveAnswer] = (distribution[liveAnswer] ?? 0) + 1;
+      if (liveAnswer == 'A') correctAtA++;
+
+      // Eligibility is checked against the original source for backed-up
+      // questions, so the previous correction can be safely rebuilt.
+      final sourceAnswerRaw = backup?['originalCorrectAnswer'] ??
+          (originalKey is Map ? originalKey['correctAnswer'] : null) ??
+          (originalQuestion is Map ? originalQuestion['correctAnswer'] : null) ??
+          liveRawAnswer;
+      final sourceAnswer =
+          sourceAnswerRaw.toString().trim().toUpperCase();
+      final sourceOptions = originalQuestion is Map
+          ? originalQuestion['options']
+          : liveOptions;
+      if (!['A', 'B', 'C', 'D', 'E'].contains(sourceAnswer) ||
+          sourceOptions is! List ||
+          'ABCDE'.indexOf(sourceAnswer) >= sourceOptions.length) {
+        invalidAnswerKey++;
+        continue;
+      }
       final supported = sourceOptions.length >= 4 &&
           sourceOptions.length <= 5 &&
           !sourceOptions.any(
