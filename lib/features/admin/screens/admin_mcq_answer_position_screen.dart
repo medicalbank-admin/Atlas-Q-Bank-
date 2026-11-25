@@ -26,7 +26,6 @@ class _AdminMcqAnswerPositionScreenState
     setState(() {
       _scanning = true;
       _error = null;
-      _result = null;
     });
     try {
       final report = await _service.audit();
