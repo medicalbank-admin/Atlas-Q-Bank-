@@ -5,6 +5,14 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'lib/**'
+      - 'assets/**'
+      - 'packages/**'
+      - 'android/**'
+      - 'scripts/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
 
 permissions:
   contents: read
