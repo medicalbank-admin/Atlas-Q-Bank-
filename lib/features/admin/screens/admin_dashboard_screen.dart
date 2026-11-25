@@ -8,6 +8,7 @@ import '../../profile/screens/profile_screen.dart';
 import 'admin_academic_screen.dart';
 import '../../academic/screens/admin_learning_resources_screen.dart';
 import 'admin_mcq_bank_screen.dart';
+import 'admin_mcq_answer_position_screen.dart';
 import 'admin_past_papers_screen.dart';
 import 'admin_exam_management_screen.dart';
 import 'admin_students_screen.dart';
@@ -556,6 +557,13 @@ class AdminDashboardScreen extends StatelessWidget {
         subtitle: 'Manage structure notes, Latin names and clinical details',
         color: AtlasColors.royalBlue,
         page: const AdminAnatomyManagementScreen(),
+      ),
+      _AdminItem(
+        icon: Icons.shuffle_rounded,
+        title: 'MCQ Answer Position Corrector',
+        subtitle: 'Audit answer positions, back up and correct A-position bias',
+        color: AtlasColors.success,
+        page: const AdminMcqAnswerPositionScreen(),
       ),
       _AdminItem(
         icon: Icons.quiz_rounded,
