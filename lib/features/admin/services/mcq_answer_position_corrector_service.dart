@@ -6,6 +6,7 @@ class McqAnswerPositionAudit {
   final int totalQuestions;
   final Map<String, int> distribution;
   final int correctAtA;
+  final int eligible;
   final int alreadyBackedUp;
   final int missingAnswerKey;
   final int invalidAnswerKey;
@@ -15,13 +16,12 @@ class McqAnswerPositionAudit {
     required this.totalQuestions,
     required this.distribution,
     required this.correctAtA,
+    required this.eligible,
     required this.alreadyBackedUp,
     required this.missingAnswerKey,
     required this.invalidAnswerKey,
     required this.unsupportedOptions,
   });
-
-  int get eligible => correctAtA - alreadyBackedUp;
 }
 
 class McqAnswerPositionCorrectionResult {
@@ -70,6 +70,7 @@ class McqAnswerPositionCorrectorService {
       'A': 0, 'B': 0, 'C': 0, 'D': 0, 'E': 0,
     };
     var correctAtA = 0;
+    var eligible = 0;
     var alreadyBackedUp = 0;
     var missingAnswerKey = 0;
     var invalidAnswerKey = 0;
@@ -94,13 +95,12 @@ class McqAnswerPositionCorrectorService {
       distribution[answer] = (distribution[answer] ?? 0) + 1;
       if (answer == 'A') {
         correctAtA++;
-        if (options.length < 4 || options.length > 5 ||
-            options.any((value) => value == null || value.toString().trim().isEmpty)) {
-          unsupportedOptions++;
-        }
-        if (backupIds.contains('$_backupVersion${questionDoc.id}')) {
-          alreadyBackedUp++;
-        }
+        final hasBackup = backupIds.contains('$_backupVersion${questionDoc.id}');
+        if (hasBackup) alreadyBackedUp++;
+        final supported = options.length >= 4 && options.length <= 5 &&
+            !options.any((value) => value == null || value.toString().trim().isEmpty);
+        if (!supported) unsupportedOptions++;
+        if (!hasBackup && supported) eligible++;
       }
     }
 
@@ -108,6 +108,7 @@ class McqAnswerPositionCorrectorService {
       totalQuestions: questionSnapshot.size,
       distribution: distribution,
       correctAtA: correctAtA,
+      eligible: eligible,
       alreadyBackedUp: alreadyBackedUp,
       missingAnswerKey: missingAnswerKey,
       invalidAnswerKey: invalidAnswerKey,
@@ -175,7 +176,8 @@ class McqAnswerPositionCorrectorService {
         possibleTargets.sort((a, b) {
           final count = finalPositions[String.fromCharCode(65 + a)] ?? 0;
           final other = finalPositions[String.fromCharCode(65 + b)] ?? 0;
-          return count.compareTo(other);
+          final byCount = count.compareTo(other);
+          return byCount != 0 ? byCount : a.compareTo(b);
         });
         final targetIndex = possibleTargets.first;
         final correctText = originalOptions.removeAt(0);
