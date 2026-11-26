@@ -34,6 +34,18 @@ class _StudentStudyLibraryScreenState extends State<StudentStudyLibraryScreen>
       backgroundColor: const Color(0xFFF4F7FB),
       foregroundColor: AtlasColors.navy,
       elevation: 0,
+      actions: [
+        IconButton(tooltip: 'Bookmarked chapters',
+          icon: const Icon(Icons.bookmarks_outlined),
+          onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+            builder: (_) => _StudentSavedChaptersScreen(
+              offlineOnly: false, onOpen: _open)))),
+        IconButton(tooltip: 'Offline chapters',
+          icon: const Icon(Icons.offline_pin_outlined),
+          onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+            builder: (_) => _StudentSavedChaptersScreen(
+              offlineOnly: true, onOpen: _open)))),
+      ],
       bottom: TabBar(
         controller: _tabs,
         labelColor: AtlasColors.royalBlue,
@@ -131,6 +143,137 @@ class _StudentStudyLibraryScreenState extends State<StudentStudyLibraryScreen>
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(value)));
   }
+}
+
+class _StudentSavedChaptersScreen extends StatelessWidget {
+  final bool offlineOnly;
+  final ValueChanged<LearningResourceModel> onOpen;
+  const _StudentSavedChaptersScreen({
+    required this.offlineOnly, required this.onOpen,
+  });
+
+  LearningResourceModel _offlineModel(Map<String, dynamic> data) {
+    final revision = DateTime.tryParse((data['updatedAt'] ?? data['savedAt'] ?? '').toString())
+        ?? DateTime.now();
+    final blocks = (data['contentBlocks'] as List?)
+        ?.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList() ?? [];
+    return LearningResourceModel(
+      id: (data['id'] ?? '').toString(),
+      yearId: '',
+      subjectId: '',
+      topicId: '',
+      title: (data['title'] ?? 'Saved chapter').toString(),
+      description: (data['description'] ?? '').toString(),
+      type: LearningResourceType.text,
+      resourceUrl: '',
+      textContent: (data['textContent'] ?? '').toString(),
+      contentBlocks: blocks,
+      systemName: (data['systemName'] ?? '').toString(),
+      readingMinutes: (data['readingMinutes'] as num?)?.toInt() ?? 0,
+      isPublished: true,
+      createdAt: revision,
+      updatedAt: revision,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final title = offlineOnly ? 'Offline Chapters' : 'Bookmarked Chapters';
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    return Scaffold(
+      backgroundColor: const Color(0xFFF4F7FB),
+      appBar: AppBar(title: Text(title), backgroundColor: Colors.white,
+        foregroundColor: AtlasColors.navy),
+      body: offlineOnly
+        ? FutureBuilder<List<Map<String, dynamic>>>(
+            future: LearningResourceOfflineService.listSaved(),
+            builder: (context, snapshot) {
+              if (snapshot.hasError) return const Center(
+                child: Text('Unable to read saved chapters on this device.'));
+              if (!snapshot.hasData) return const Center(
+                child: CircularProgressIndicator());
+              final items = snapshot.data!;
+              if (items.isEmpty) return _empty(context,
+                'No offline chapters yet. Open a chapter and tap the download icon.');
+              return ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: items.length,
+                itemBuilder: (context, index) {
+                  final item = _offlineModel(items[index]);
+                  return _tile(context, item, 'Saved on this device');
+                },
+              );
+            },
+          )
+        : uid == null
+          ? _empty(context, 'Sign in to view your bookmarks.')
+          : StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+              stream: FirebaseFirestore.instance.collection('student_resource_progress')
+                  .where('userId', isEqualTo: uid).snapshots(),
+              builder: (context, progressSnapshot) {
+                if (progressSnapshot.hasError) return _empty(context,
+                  'Unable to load bookmarks. Please check your connection and access.');
+                if (!progressSnapshot.hasData) return const Center(
+                  child: CircularProgressIndicator());
+                final ids = progressSnapshot.data!.docs
+                    .where((doc) => doc.data()['isBookmarked'] == true)
+                    .map((doc) => (doc.data()['resourceId'] ?? '').toString())
+                    .where((id) => id.isNotEmpty).toSet();
+                return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                  stream: FirebaseFirestore.instance.collection('learning_resources')
+                      .where('isPublished', isEqualTo: true).snapshots(),
+                  builder: (context, resourceSnapshot) {
+                    if (resourceSnapshot.hasError) return _empty(context,
+                      'Unable to load bookmarked chapters.');
+                    if (!resourceSnapshot.hasData) return const Center(
+                      child: CircularProgressIndicator());
+                    final items = resourceSnapshot.data!.docs
+                        .where((doc) => ids.contains(doc.id))
+                        .map(LearningResourceModel.fromFirestore).toList();
+                    if (items.isEmpty) return _empty(context,
+                      'You have not bookmarked any chapters yet.');
+                    return ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: items.length,
+                      itemBuilder: (context, index) =>
+                          _tile(context, items[index], 'Bookmarked chapter'),
+                    );
+                  },
+                );
+              },
+            ),
+    );
+  }
+
+  Widget _tile(BuildContext context, LearningResourceModel item, String subtitle) =>
+      Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        decoration: BoxDecoration(color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE0E9F2))),
+        child: ListTile(
+          onTap: () => onOpen(item),
+          leading: const CircleAvatar(backgroundColor: Color(0xFFE8F1FB),
+            child: Icon(Icons.menu_book_rounded, color: AtlasColors.royalBlue)),
+          title: Text(item.title, style: const TextStyle(
+            color: AtlasColors.navy, fontWeight: FontWeight.w900)),
+          subtitle: Text(item.systemName.isEmpty ? subtitle : item.systemName),
+          trailing: const Icon(Icons.chevron_right_rounded,
+            color: AtlasColors.royalBlue),
+        ),
+      );
+
+  Widget _empty(BuildContext context, String message) => Center(
+    child: Padding(padding: const EdgeInsets.all(28),
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        Icon(offlineOnly ? Icons.offline_pin_rounded : Icons.bookmarks_outlined,
+          size: 42, color: AtlasColors.royalBlue),
+        const SizedBox(height: 12),
+        Text(message, textAlign: TextAlign.center,
+          style: const TextStyle(color: AtlasColors.secondaryText, height: 1.5)),
+      ]),
+    ),
+  );
 }
 
 class _NotesLibraryShelf extends StatefulWidget {
