@@ -529,7 +529,7 @@ class _NoteReader extends StatelessWidget {
           Text(resource.systemName.isEmpty ? 'STUDY NOTES' : resource.systemName.toUpperCase(),
             style: const TextStyle(color: Color(0xFFD5E7F5), fontSize: 11)),
           if (resource.readingMinutes > 0)
-            Text('\u0024{resource.readingMinutes} min read',
+            Text('${resource.readingMinutes} min read',
               style: const TextStyle(color: Color(0xFFD5E7F5), fontSize: 11)),
         ]),
       ),
