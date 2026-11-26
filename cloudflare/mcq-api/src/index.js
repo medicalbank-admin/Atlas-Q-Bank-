@@ -1045,8 +1045,8 @@ async function uploadAndPublishAppRelease(request, env, url) {
   const declaredSize = contentLength === null ? 0 : Number(contentLength);
   if (contentLength !== null &&
       (!Number.isSafeInteger(declaredSize) || declaredSize <= 0 ||
-       declaredSize > 90 * 1024 * 1024)) {
-    return fail("The APK must be no larger than 90 MB.", 413);
+       declaredSize > 95 * 1024 * 1024)) {
+    return fail("The APK must be no larger than 95 MiB on the current Cloudflare upload route.", 413);
   }
   if (!request.body || !declaredSize) {
     return fail("The APK upload must include a non-empty file and its size.", 400);
