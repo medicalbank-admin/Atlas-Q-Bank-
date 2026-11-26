@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'package:file_picker/file_picker.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import '../services/learning_resource_service.dart';
+import '../services/learning_resource_file_service.dart';
+import '../services/learning_resource_image_service.dart';
 import '../models/learning_resource_model.dart';
 
 class LearningResourceUploadDialog extends StatefulWidget {
@@ -52,8 +53,8 @@ class _LearningResourceUploadDialogState extends State<LearningResourceUploadDia
       _message('Could not read the selected file. Please select it again.');
       return;
     }
-    if (file.size > 200 * 1024 * 1024) {
-      _message('The selected file is larger than 200 MB.');
+    if (file.size > 100 * 1024 * 1024) {
+      _message('The selected file is larger than 100 MB. Please compress it before uploading.');
       return;
     }
     setState(() => _file = file);
@@ -96,34 +97,21 @@ class _LearningResourceUploadDialogState extends State<LearningResourceUploadDia
       var textContent = _text.text.trim();
       if (_type != LearningResourceType.text) {
         final file = _file!;
-        final safeName = file.name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
-        final storageRef = FirebaseStorage.instance.ref().child(
-          'learning_resources/general/general/general/${DateTime.now().millisecondsSinceEpoch}_$safeName',
+        downloadUrl = await LearningResourceFileService.upload(
+          bytes: file.bytes!,
+          fileName: file.name,
+          resourceType: _type == LearningResourceType.pdf ? 'raw' : 'video',
+          onProgress: (value) {
+            if (mounted) setState(() => _progress = value);
+          },
         );
-        final extension = file.extension?.toLowerCase();
-        final contentType = _type == LearningResourceType.pdf ? 'application/pdf'
-          : extension == 'mov' ? 'video/quicktime'
-          : extension == 'webm' ? 'video/webm' : 'video/mp4';
-        final task = storageRef.putData(
-          file.bytes!,
-          SettableMetadata(contentType: contentType, customMetadata: {'originalName': file.name}),
-        );
-        task.snapshotEvents.listen((snapshot) {
-          if (mounted && snapshot.totalBytes > 0) {
-            setState(() => _progress = snapshot.bytesTransferred / snapshot.totalBytes);
-          }
-        });
-        await task;
-        downloadUrl = await storageRef.getDownloadURL();
       }
       if (_coverFile != null) {
         final cover = _coverFile!;
-        final ext = cover.extension?.toLowerCase() ?? 'jpg';
-        final coverRef = FirebaseStorage.instance.ref().child(
-          'learning_resources/covers/${DateTime.now().millisecondsSinceEpoch}_cover.$ext');
-        final mime = ext == 'png' ? 'image/png' : ext == 'webp' ? 'image/webp' : 'image/jpeg';
-        await coverRef.putData(cover.bytes!, SettableMetadata(contentType: mime));
-        thumbnailUrl = await coverRef.getDownloadURL();
+        thumbnailUrl = await LearningResourceImageService.uploadChapterImage(
+          bytes: cover.bytes!,
+          fileName: cover.name,
+        );
       }
       await LearningResourceService.createResource(
         yearId: widget.yearId,
@@ -144,7 +132,7 @@ class _LearningResourceUploadDialogState extends State<LearningResourceUploadDia
       Navigator.of(context).pop(true);
     } catch (error) {
       if (mounted) setState(() => _saving = false);
-      _message('Upload failed: $error');
+      _message('Could not publish this resource: $error');
     }
   }
 
