@@ -4,8 +4,14 @@ import '../models/learning_resource_model.dart';
 import 'learning_resource_offline_store.dart';
 
 class LearningResourceOfflineService {
-  static Future<void> download(LearningResourceModel resource) async {
+  static Future<void> download(LearningResourceModel resource, {
+    void Function(int completed, int total)? onProgress,
+  }) async {
     final blocks = <Map<String, dynamic>>[];
+    final totalImages = resource.contentBlocks.where((block) =>
+        block['type'] == 'image' && (block['imageUrl'] ?? '').toString().isNotEmpty).length;
+    var completedImages = 0;
+    onProgress?.call(0, totalImages);
     for (final original in resource.contentBlocks) {
       final block = Map<String, dynamic>.from(original);
       if (block['type'] == 'image') {
@@ -23,6 +29,8 @@ class LearningResourceOfflineService {
           final mime = response.headers['content-type'] ?? 'image/jpeg';
           block['offlineImageData'] =
               'data:$mime;base64,${base64Encode(response.bodyBytes)}';
+          completedImages++;
+          onProgress?.call(completedImages, totalImages);
         }
       }
       blocks.add(block);
@@ -36,7 +44,9 @@ class LearningResourceOfflineService {
       'textContent': resource.textContent,
       'contentBlocks': blocks,
       'savedAt': DateTime.now().toIso8601String(),
+      'updatedAt': resource.updatedAt.toIso8601String(),
     };
+    onProgress?.call(totalImages, totalImages);
     await saveOfflineChapter(resource.id, jsonEncode(payload));
   }
 
