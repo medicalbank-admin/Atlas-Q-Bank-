@@ -467,6 +467,8 @@ class _NotesLibraryShelfState extends State<_NotesLibraryShelf> {
                   ),
                 ),
               ]),
+              const SizedBox(height: 10),
+              _ContinueReadingShelf(notes: searchableNotes, onOpen: widget.onOpen),
               const SizedBox(height: 15),
               if (sorted.isEmpty)
                 _emptyCategoryState()
@@ -561,6 +563,89 @@ class _NotesLibraryShelfState extends State<_NotesLibraryShelf> {
 
   Widget _sectionLabel(String label) => Text(label, style: const TextStyle(
     color: AtlasColors.navy, fontSize: 15, fontWeight: FontWeight.w900));
+}
+
+class _ContinueReadingShelf extends StatelessWidget {
+  final List<LearningResourceModel> notes;
+  final ValueChanged<LearningResourceModel> onOpen;
+  const _ContinueReadingShelf({required this.notes, required this.onOpen});
+
+  @override
+  Widget build(BuildContext context) {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return const SizedBox.shrink();
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance.collection('student_resource_progress')
+          .where('userId', isEqualTo: uid).snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || snapshot.hasError) return const SizedBox.shrink();
+        final noteById = {for (final note in notes) note.id: note};
+        final recent = snapshot.data!.docs
+            .where((doc) {
+              final data = doc.data();
+              final percent = (data['progressPercent'] as num?)?.toDouble() ?? 0;
+              final id = (data['resourceId'] ?? '').toString();
+              return percent > 0 && percent < 100 && noteById.containsKey(id);
+            }).toList()
+          ..sort((a, b) {
+            final ad = a.data()['lastReadAt'];
+            final bd = b.data()['lastReadAt'];
+            final at = ad is Timestamp ? ad.toDate() : DateTime.fromMillisecondsSinceEpoch(0);
+            final bt = bd is Timestamp ? bd.toDate() : DateTime.fromMillisecondsSinceEpoch(0);
+            return bt.compareTo(at);
+          });
+        if (recent.isEmpty) return const SizedBox.shrink();
+        return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Padding(padding: EdgeInsets.only(bottom: 9),
+            child: Text('Continue reading', style: TextStyle(
+              color: AtlasColors.navy, fontSize: 15, fontWeight: FontWeight.w900))),
+          SizedBox(height: 112, child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: recent.length > 6 ? 6 : recent.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 10),
+            itemBuilder: (context, index) {
+              final data = recent[index].data();
+              final id = (data['resourceId'] ?? '').toString();
+              final note = noteById[id]!;
+              final progress = ((data['progressPercent'] as num?)?.toDouble() ?? 0)
+                  .clamp(0, 100).toDouble();
+              return SizedBox(width: 230, child: Material(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(15),
+                child: InkWell(
+                  onTap: () => onOpen(note),
+                  borderRadius: BorderRadius.circular(15),
+                  child: Container(padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(15),
+                      border: Border.all(color: const Color(0xFFDCE7F1))),
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                        Text(note.title, maxLines: 2, overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(color: AtlasColors.navy,
+                            fontWeight: FontWeight.w900, fontSize: 12)),
+                        Row(children: [
+                          Expanded(child: ClipRRect(
+                            borderRadius: BorderRadius.circular(5),
+                            child: LinearProgressIndicator(value: progress / 100,
+                              minHeight: 5, backgroundColor: const Color(0xFFE8EEF5),
+                              color: AtlasColors.royalBlue))),
+                          const SizedBox(width: 8),
+                          Text('${progress.round()}%',
+                            style: const TextStyle(color: AtlasColors.royalBlue,
+                              fontSize: 10, fontWeight: FontWeight.w900)),
+                        ]),
+                      ]),
+                  ),
+                ),
+              ));
+            },
+          )),
+          const SizedBox(height: 13),
+        ]);
+      },
+    );
+  }
 }
 
 class _MedicalCategoryCard extends StatelessWidget {
