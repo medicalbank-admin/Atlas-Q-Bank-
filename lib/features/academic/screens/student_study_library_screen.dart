@@ -750,7 +750,7 @@ class _NoteReaderState extends State<_NoteReader> {
   void _onScroll() {
     if (!_scroll.hasClients) return;
     final max = _scroll.position.maxScrollExtent;
-    final value = max <= 0 ? 0.0 : (_scroll.offset / max * 100).clamp(0, 100);
+    final value = max <= 0 ? 0.0 : (_scroll.offset / max * 100).clamp(0, 100).toDouble();
     if ((value - _progress).abs() >= 1) setState(() => _progress = value);
     _progressTimer?.cancel();
     _progressTimer = Timer(const Duration(seconds: 4), _saveProgress);
