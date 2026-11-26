@@ -136,7 +136,7 @@ class _StudentPdfReaderScreenState extends State<StudentPdfReaderScreen> {
         .doc('${uid}_${widget.resource.id}').get();
       final raw = snap.data()?['pdfBookmarks'];
       if (mounted) setState(() => _bookmarkedPages = raw is List
-        ? raw.whereType<num>().map((v) => v.toInt()).toSet().toList()..sort()
+        ? (raw.whereType<num>().map((v) => v.toInt()).toSet().toList()..sort())
         : <int>[]);
     } catch (_) {}
   }
