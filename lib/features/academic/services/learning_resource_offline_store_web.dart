@@ -21,3 +21,10 @@ Future<bool> hasOfflineChapter(String id) async {
   final prefs = await SharedPreferences.getInstance();
   return prefs.containsKey(_key(id));
 }
+
+Future<List<String>> listOfflineChapterIds() async {
+  final prefs = await SharedPreferences.getInstance();
+  const prefix = 'atlas_offline_chapter_';
+  return prefs.getKeys().where((key) => key.startsWith(prefix))
+      .map((key) => key.substring(prefix.length)).toList();
+}
