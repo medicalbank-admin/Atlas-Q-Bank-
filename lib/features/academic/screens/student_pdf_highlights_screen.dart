@@ -5,12 +5,14 @@ import '../services/pdf_highlight_service.dart';
 
 class StudentPdfHighlightsScreen extends StatelessWidget {
   final ValueChanged<Map<String, dynamic>> onOpen;
+  final int initialTab;
 
-  const StudentPdfHighlightsScreen({super.key, required this.onOpen});
+  const StudentPdfHighlightsScreen({super.key, required this.onOpen, this.initialTab = 0});
 
   @override
   Widget build(BuildContext context) => DefaultTabController(
     length: 2,
+    initialIndex: initialTab.clamp(0, 1),
     child: Scaffold(
       backgroundColor: const Color(0xFFF4F7FB),
       appBar: AppBar(
