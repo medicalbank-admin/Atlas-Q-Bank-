@@ -14,6 +14,8 @@ class LearningResourceModel {
   final String yearId;
   final String subjectId;
   final String topicId;
+  final String subjectName;
+  final String topicName;
   final String title;
   final String description;
   final LearningResourceType type;
@@ -36,6 +38,8 @@ class LearningResourceModel {
     required this.yearId,
     required this.subjectId,
     required this.topicId,
+    this.subjectName = '',
+    this.topicName = '',
     required this.title,
     this.description = '',
     required this.type,
@@ -64,6 +68,8 @@ class LearningResourceModel {
       yearId: data['yearId'] as String? ?? '',
       subjectId: data['subjectId'] as String? ?? '',
       topicId: data['topicId'] as String? ?? '',
+      subjectName: data['subjectName'] as String? ?? '',
+      topicName: data['topicName'] as String? ?? '',
       title: data['title'] as String? ?? '',
       description: data['description'] as String? ?? '',
       type: LearningResourceType.values.firstWhere(
@@ -92,6 +98,8 @@ class LearningResourceModel {
       'yearId': yearId,
       'subjectId': subjectId,
       'topicId': topicId,
+      'subjectName': subjectName,
+      'topicName': topicName,
       'title': title.trim(),
       'description': description.trim(),
       'type': type.name,
@@ -112,6 +120,8 @@ class LearningResourceModel {
   }
 
   LearningResourceModel copyWith({
+    String? subjectName,
+    String? topicName,
     String? title,
     String? description,
     LearningResourceType? type,
@@ -133,6 +143,8 @@ class LearningResourceModel {
       yearId: yearId,
       subjectId: subjectId,
       topicId: topicId,
+      subjectName: subjectName ?? this.subjectName,
+      topicName: topicName ?? this.topicName,
       title: title ?? this.title,
       description: description ?? this.description,
       type: type ?? this.type,
