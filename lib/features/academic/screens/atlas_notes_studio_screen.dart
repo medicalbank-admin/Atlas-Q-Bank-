@@ -1,11 +1,11 @@
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../app/atlas_academy_app.dart';
 import '../../admin/services/admin_access_service.dart';
 import '../services/learning_resource_version_service.dart';
+import '../services/learning_resource_image_service.dart';
 import '../../advanced_learning/services/push_notification_service.dart';
 
 class AtlasNotesStudioScreen extends StatefulWidget {
@@ -110,16 +110,13 @@ class _AtlasNotesStudioScreenState extends State<AtlasNotesStudioScreen> {
   }
 
   Future<String> _uploadImage(_NoteBlock block, int index) async {
-    if (block.pendingImage == null) return block.imageUrl;
-    final ref = FirebaseStorage.instance.ref().child(
-      'atlas_notes/${DateTime.now().millisecondsSinceEpoch}_${index}_${block.pendingName.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_')}',
+    final imageBytes = block.pendingImage;
+    if (imageBytes == null) return block.imageUrl;
+    final uploadedUrl = await LearningResourceImageService.uploadChapterImage(
+      bytes: imageBytes,
+      fileName: block.pendingName,
     );
-    final task = ref.putData(
-      block.pendingImage!,
-      SettableMetadata(contentType: 'image/jpeg'),
-    );
-    await task;
-    block.imageUrl = await ref.getDownloadURL();
+    block.imageUrl = uploadedUrl;
     block.pendingImage = null;
     return block.imageUrl;
   }
