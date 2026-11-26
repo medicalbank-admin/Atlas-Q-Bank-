@@ -143,7 +143,6 @@ class _LearningResourceUploadDialogState extends State<LearningResourceUploadDia
               decoration: const InputDecoration(labelText: 'Material type'),
               items: const [
                 DropdownMenuItem(value: LearningResourceType.pdf, child: Text('PDF notes')),
-                DropdownMenuItem(value: LearningResourceType.text, child: Text('Text notes')),
                 DropdownMenuItem(value: LearningResourceType.video, child: Text('Video lesson')),
               ],
               onChanged: _saving ? null : (v) => setState(() { _type = v!; _file = null; }),
