@@ -796,12 +796,25 @@ async function sendInboxMessage(env, claims, body) {
   return { success: true, messageId };
 }
 
-async function createNotesUploadSignature(env, claims) {
+async function createNotesUploadSignature(env, claims, body = {}) {
   if (claims.admin !== true) throw new Error("Administrator access is required.");
   const { cloudName, apiKey, apiSecret } = getCloudinaryCredentials(env);
+  const requestedType = String(body.resourceType || "image").toLowerCase();
+  if (!["image", "raw", "video"].includes(requestedType)) {
+    throw new Error("The requested learning file type is not supported.");
+  }
+  const extension = String(body.extension || "").toLowerCase().replace(/^\\./, "");
+  if (requestedType === "raw" && extension !== "pdf") {
+    throw new Error("Only PDF documents can be uploaded as raw learning files.");
+  }
+  if (requestedType === "video" && !["mp4", "mov", "m4v", "webm"].includes(extension)) {
+    throw new Error("This video format is not supported.");
+  }
   const timestamp = Math.floor(Date.now() / 1000);
   const folder = "atlas-notes";
-  const publicId = "atlas_notes_" + crypto.randomUUID();
+  const baseId = "atlas_notes_" + crypto.randomUUID();
+  // Cloudinary raw assets require the original extension in their public ID.
+  const publicId = requestedType === "raw" ? baseId + ".pdf" : baseId;
   const params = {
     folder,
     overwrite: "false",
@@ -812,6 +825,7 @@ async function createNotesUploadSignature(env, claims) {
     .map((key) => key + "=" + params[key]).join("&") + apiSecret;
   return {
     success: true, cloudName, apiKey, timestamp, folder, publicId,
+    resourceType: requestedType,
     overwrite: "false",
     signature: await cloudinarySha1Hex(payload),
   };
@@ -1172,7 +1186,7 @@ export default {
               : url.pathname === "/daily/submit"
                 ? await dailyChallengeSubmit(env, claims.sub, body)
                 : url.pathname === "/notes/upload-signature"
-                  ? await createNotesUploadSignature(env, claims)
+                  ? await createNotesUploadSignature(env, claims, body)
                   : url.pathname === "/inbox/upload-signature"
                     ? await createInboxUploadSignature(env, claims, body)
                   : url.pathname === "/inbox/image-url"
