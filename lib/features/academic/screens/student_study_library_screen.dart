@@ -11,6 +11,7 @@ import '../services/learning_resource_offline_service.dart';
 import 'student_learning_progress_screen.dart';
 import 'student_pdf_reader_screen.dart';
 import 'student_pdf_highlights_screen.dart';
+import 'student_pdf_downloads_screen.dart';
 
 class StudentStudyLibraryScreen extends StatefulWidget {
   const StudentStudyLibraryScreen({super.key});
@@ -41,6 +42,10 @@ class _StudentStudyLibraryScreenState extends State<StudentStudyLibraryScreen>
         IconButton(tooltip: 'My learning progress', icon: const Icon(Icons.insights_rounded),
           onPressed: () => Navigator.of(context).push(MaterialPageRoute(
             builder: (_) => StudentLearningProgressScreen(onOpen: _open)))),
+        IconButton(tooltip: 'My PDF downloads',
+          icon: const Icon(Icons.download_for_offline_rounded),
+          onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+            builder: (_) => const StudentPdfDownloadsScreen()))),
         IconButton(tooltip: 'My PDF highlights',
           icon: const Icon(Icons.highlight_rounded),
           onPressed: () => Navigator.of(context).push(MaterialPageRoute(
