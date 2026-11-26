@@ -8,6 +8,7 @@ import '../../../app/atlas_academy_app.dart';
 import '../../../shared/widgets/medical_category_artwork.dart';
 import '../models/learning_resource_model.dart';
 import '../services/learning_resource_offline_service.dart';
+import 'student_learning_progress_screen.dart';
 
 class StudentStudyLibraryScreen extends StatefulWidget {
   const StudentStudyLibraryScreen({super.key});
@@ -35,6 +36,9 @@ class _StudentStudyLibraryScreenState extends State<StudentStudyLibraryScreen>
       foregroundColor: AtlasColors.navy,
       elevation: 0,
       actions: [
+        IconButton(tooltip: 'My learning progress', icon: const Icon(Icons.insights_rounded),
+          onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+            builder: (_) => const StudentLearningProgressScreen()))),
         IconButton(tooltip: 'Bookmarked chapters',
           icon: const Icon(Icons.bookmarks_outlined),
           onPressed: () => Navigator.of(context).push(MaterialPageRoute(
@@ -908,7 +912,12 @@ class _NoteReaderState extends State<_NoteReader> {
         'progressPercent': _progress,
         'lastPosition': _scroll.hasClients ? _scroll.offset : 0,
         'isBookmarked': _bookmarked,
+        'subjectId': widget.resource.subjectId,
+        'systemName': widget.resource.systemName,
+        'resourceTitle': widget.resource.title,
         'lastReadAt': FieldValue.serverTimestamp(),
+        'completed': _progress >= 99.5,
+        if (_progress >= 99.5) 'completedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     } catch (_) {}
   }
