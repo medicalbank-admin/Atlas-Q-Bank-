@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import '../models/learning_resource_model.dart';
 import 'pdf_offline_store.dart';
