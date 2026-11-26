@@ -9,6 +9,8 @@ import '../../../shared/widgets/medical_category_artwork.dart';
 import '../models/learning_resource_model.dart';
 import '../services/learning_resource_offline_service.dart';
 import 'student_learning_progress_screen.dart';
+import 'student_pdf_reader_screen.dart';
+import 'student_pdf_highlights_screen.dart';
 
 class StudentStudyLibraryScreen extends StatefulWidget {
   const StudentStudyLibraryScreen({super.key});
@@ -39,6 +41,11 @@ class _StudentStudyLibraryScreenState extends State<StudentStudyLibraryScreen>
         IconButton(tooltip: 'My learning progress', icon: const Icon(Icons.insights_rounded),
           onPressed: () => Navigator.of(context).push(MaterialPageRoute(
             builder: (_) => StudentLearningProgressScreen(onOpen: _open)))),
+        IconButton(tooltip: 'My PDF highlights',
+          icon: const Icon(Icons.highlight_rounded),
+          onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+            builder: (_) => StudentPdfHighlightsScreen(
+              onOpen: _openHighlighted)))),
         IconButton(tooltip: 'Bookmarked chapters',
           icon: const Icon(Icons.bookmarks_outlined),
           onPressed: () => Navigator.of(context).push(MaterialPageRoute(
@@ -120,6 +127,11 @@ class _StudentStudyLibraryScreenState extends State<StudentStudyLibraryScreen>
         builder: (_) => _NoteReader(resource: resource)));
       return;
     }
+    if (resource.type == LearningResourceType.pdf) {
+      await Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => StudentPdfReaderScreen(resource: resource)));
+      return;
+    }
     final uri = Uri.tryParse(resource.resourceUrl);
     if (uri == null || !uri.hasScheme ||
         !['http', 'https'].contains(uri.scheme)) {
@@ -141,6 +153,35 @@ class _StudentStudyLibraryScreenState extends State<StudentStudyLibraryScreen>
     } catch (e) {
       _message('Unable to open content: $e');
     }
+  }
+
+  Future<void> _openHighlighted(Map<String, dynamic> data) async {
+    final resource = LearningResourceModel(
+      id: (data['resourceId'] ?? '').toString(),
+      yearId: '',
+      subjectId: (data['subjectId'] ?? '').toString(),
+      topicId: (data['topicId'] ?? '').toString(),
+      subjectName: (data['subjectName'] ?? '').toString(),
+      topicName: (data['topicName'] ?? '').toString(),
+      title: (data['resourceTitle'] ?? 'PDF document').toString(),
+      description: '',
+      type: LearningResourceType.pdf,
+      resourceUrl: (data['resourceUrl'] ?? '').toString(),
+      systemName: (data['systemName'] ?? '').toString(),
+      versionNumber: (data['resourceVersion'] as num?)?.toInt() ?? 0,
+      isPublished: true,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+    if (resource.id.isEmpty || resource.resourceUrl.isEmpty) {
+      _message('This PDF link is no longer available.');
+      return;
+    }
+    await Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => StudentPdfReaderScreen(
+        resource: resource,
+        initialPage: (data['pageNumber'] as num?)?.toInt() ?? 1,
+      )));
   }
 
   void _message(String value) {
