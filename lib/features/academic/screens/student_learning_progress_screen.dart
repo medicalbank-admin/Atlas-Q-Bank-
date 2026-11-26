@@ -81,6 +81,28 @@ class _StudentLearningProgressScreenState extends State<StudentLearningProgressS
           }).length;
           final average = started.isEmpty ? 0.0 : started.fold<double>(0,
             (sum, d) => sum + ((d['progressPercent'] as num?)?.toDouble() ?? 0)) / started.length;
+          final dailyTotals = <String, int>{};
+          for (final row in rows) {
+            final daily = row['dailyReadingSeconds'];
+            if (daily is Map) {
+              for (final entry in daily.entries) {
+                final seconds = (entry.value as num?)?.toInt() ?? 0;
+                dailyTotals[entry.key.toString()] = (dailyTotals[entry.key.toString()] ?? 0) + seconds;
+              }
+            }
+          }
+          String dayKey(DateTime date) =>
+            '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+          final today = DateTime(now.year, now.month, now.day);
+          var streak = 0;
+          var streakDate = dailyTotals[dayKey(today)] != null && dailyTotals[dayKey(today)]! > 0
+            ? today : today.subtract(const Duration(days: 1));
+          while ((dailyTotals[dayKey(streakDate)] ?? 0) > 0 && streak < 366) {
+            streak++;
+            streakDate = streakDate.subtract(const Duration(days: 1));
+          }
+          final totalSeconds = dailyTotals.values.fold<int>(0, (sum, value) => sum + value);
+
           final recent = List<Map<String, dynamic>>.from(rows)..sort((a, b) {
             final da = _date(a['lastReadAt']) ?? DateTime.fromMillisecondsSinceEpoch(0);
             final db = _date(b['lastReadAt']) ?? DateTime.fromMillisecondsSinceEpoch(0);
@@ -99,6 +121,8 @@ class _StudentLearningProgressScreenState extends State<StudentLearningProgressS
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
             children: [
               _weeklyGoalCard(weekly),
+              const SizedBox(height: 14),
+              _studyActivityCard(dailyTotals, streak, totalSeconds),
               const SizedBox(height: 16),
               GridView.count(
                 shrinkWrap: true,
@@ -162,6 +186,103 @@ class _StudentLearningProgressScreenState extends State<StudentLearningProgressS
           );
         },
       ),
+    );
+  }
+
+
+  Widget _studyActivityCard(Map<String, int> daily, int streak, int totalSeconds) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    String key(DateTime d) =>
+      '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+    final lastSeven = List.generate(7, (i) => today.subtract(Duration(days: 6 - i)));
+    final maxDaily = lastSeven.map((d) => daily[key(d)] ?? 0).fold<int>(0, (a, b) => a > b ? a : b);
+    final last28 = List.generate(28, (i) => today.subtract(Duration(days: 27 - i)));
+    final minutes = totalSeconds ~/ 60;
+    final duration = minutes >= 60 ? '${minutes ~/ 60}h ${minutes % 60}m' : '${minutes}m';
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE2EAF3))),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text('Study consistency', style: TextStyle(
+              color: AtlasColors.navy, fontSize: 15, fontWeight: FontWeight.w900)),
+            const SizedBox(height: 3),
+            Text('$duration reading time recorded', style: const TextStyle(
+              color: AtlasColors.secondaryText, fontSize: 11)),
+          ])),
+          Container(padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
+            decoration: BoxDecoration(color: const Color(0xFFFFF3DF), borderRadius: BorderRadius.circular(12)),
+            child: Row(children: [
+              const Icon(Icons.local_fire_department_rounded, color: Color(0xFFE58B26), size: 19),
+              const SizedBox(width: 4),
+              Text('$streak day streak', style: const TextStyle(
+                color: AtlasColors.navy, fontSize: 11, fontWeight: FontWeight.w900)),
+            ])),
+        ]),
+        const SizedBox(height: 18),
+        const Text('Last 7 days', style: TextStyle(
+          color: AtlasColors.navy, fontSize: 12, fontWeight: FontWeight.w800)),
+        const SizedBox(height: 12),
+        SizedBox(height: 94, child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: lastSeven.map((date) {
+            final seconds = daily[key(date)] ?? 0;
+            final fraction = maxDaily == 0 ? 0.0 : seconds / maxDaily;
+            final height = seconds == 0 ? 4.0 : 8.0 + fraction * 48;
+            const labels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+            return Expanded(child: Column(mainAxisAlignment: MainAxisAlignment.end, children: [
+              Text(seconds == 0 ? '' : '${(seconds / 60).ceil()}m',
+                style: const TextStyle(color: AtlasColors.secondaryText, fontSize: 9)),
+              const SizedBox(height: 4),
+              Container(height: height, width: 15,
+                decoration: BoxDecoration(
+                  color: seconds == 0 ? const Color(0xFFE8EEF5) : AtlasColors.royalBlue,
+                  borderRadius: BorderRadius.circular(5))),
+              const SizedBox(height: 5),
+              Text(labels[date.weekday - 1], style: const TextStyle(
+                color: AtlasColors.secondaryText, fontSize: 10, fontWeight: FontWeight.w700)),
+            ]));
+          }).toList(),
+        )),
+        const SizedBox(height: 17),
+        const Text('28-day activity calendar', style: TextStyle(
+          color: AtlasColors.navy, fontSize: 12, fontWeight: FontWeight.w800)),
+        const SizedBox(height: 10),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: last28.length,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 7, crossAxisSpacing: 6, mainAxisSpacing: 6),
+          itemBuilder: (context, index) {
+            final date = last28[index];
+            final seconds = daily[key(date)] ?? 0;
+            final shade = seconds == 0 ? const Color(0xFFEFF3F7) :
+              seconds < 300 ? const Color(0xFFC9DDF4) :
+              seconds < 1200 ? const Color(0xFF7EACDC) : const Color(0xFF245F98);
+            return Tooltip(message: '${date.month}/${date.day}: ${(seconds / 60).floor()} min',
+              child: Container(decoration: BoxDecoration(
+                color: shade, borderRadius: BorderRadius.circular(5))));
+          },
+        ),
+        const SizedBox(height: 9),
+        const Row(children: [
+          Text('Less', style: TextStyle(color: AtlasColors.secondaryText, fontSize: 10)),
+          SizedBox(width: 6),
+          _ActivityLegendDot(color: Color(0xFFEFF3F7)),
+          SizedBox(width: 4),
+          _ActivityLegendDot(color: Color(0xFFC9DDF4)),
+          SizedBox(width: 4),
+          _ActivityLegendDot(color: Color(0xFF7EACDC)),
+          SizedBox(width: 4),
+          _ActivityLegendDot(color: Color(0xFF245F98)),
+          SizedBox(width: 6),
+          Text('More', style: TextStyle(color: AtlasColors.secondaryText, fontSize: 10)),
+        ]),
+      ]),
     );
   }
 
@@ -236,4 +357,13 @@ class _StudentLearningProgressScreenState extends State<StudentLearningProgressS
       border: Border.all(color: const Color(0xFFE2EAF3))),
     child: Text(text, style: const TextStyle(color: AtlasColors.secondaryText)),
   );
+}
+
+class _ActivityLegendDot extends StatelessWidget {
+  final Color color;
+  const _ActivityLegendDot({required this.color});
+  @override
+  Widget build(BuildContext context) => Container(
+    width: 11, height: 11,
+    decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(3)));
 }
