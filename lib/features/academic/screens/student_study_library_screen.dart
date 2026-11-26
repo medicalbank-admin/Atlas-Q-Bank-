@@ -38,7 +38,7 @@ class _StudentStudyLibraryScreenState extends State<StudentStudyLibraryScreen>
       actions: [
         IconButton(tooltip: 'My learning progress', icon: const Icon(Icons.insights_rounded),
           onPressed: () => Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => const StudentLearningProgressScreen()))),
+            builder: (_) => StudentLearningProgressScreen(onOpen: _open))),
         IconButton(tooltip: 'Bookmarked chapters',
           icon: const Icon(Icons.bookmarks_outlined),
           onPressed: () => Navigator.of(context).push(MaterialPageRoute(
