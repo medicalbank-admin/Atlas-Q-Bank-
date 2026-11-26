@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../app/atlas_academy_app.dart';
 import '../../admin/services/admin_access_service.dart';
+import '../services/learning_resource_version_service.dart';
 
 class AtlasNotesStudioScreen extends StatefulWidget {
   final String? resourceId;
@@ -143,7 +144,6 @@ class _AtlasNotesStudioScreenState extends State<AtlasNotesStudioScreen> {
         if (block.type == 'image') await _uploadImage(block, i);
         blocks.add(block.toMap(order: i));
       }
-      final now = FieldValue.serverTimestamp();
       final data = <String, dynamic>{
         'title': _title.text.trim(),
         'description': _description.text.trim(),
@@ -162,15 +162,12 @@ class _AtlasNotesStudioScreenState extends State<AtlasNotesStudioScreen> {
         'isPublished': publish,
         'readingMinutes': _estimateMinutes(),
         'displayOrder': 0,
-        'updatedAt': now,
+        'updatedAt': FieldValue.serverTimestamp(),
       };
-      final collection = FirebaseFirestore.instance.collection('learning_resources');
-      if (_editingId == null) {
-        data['createdAt'] = now;
-        await collection.add(data);
-      } else {
-        await collection.doc(_editingId).set(data, SetOptions(merge: true));
-      }
+      final isNew = _editingId == null;
+      final resourceId = _editingId ?? FirebaseFirestore.instance.collection('learning_resources').doc().id;
+      await LearningResourceVersionService.save(resourceId: resourceId, content: data,
+        publish: publish, isNew: isNew);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(publish ? 'Chapter published successfully.' : 'Draft saved successfully.'),
