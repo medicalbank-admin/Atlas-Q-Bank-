@@ -914,6 +914,11 @@ class _NoteReaderState extends State<_NoteReader> {
         LinearProgressIndicator(value: _progress / 100,
           minHeight: 3, backgroundColor: _dark ? Colors.white12 : const Color(0xFFE3EAF2),
           color: AtlasColors.royalBlue),
+        Padding(padding: const EdgeInsets.fromLTRB(18, 5, 18, 0),
+          child: Align(alignment: Alignment.centerRight,
+            child: Text('${_progress.round()}% read', style: TextStyle(
+              color: _dark ? Colors.white60 : AtlasColors.secondaryText,
+              fontSize: 10, fontWeight: FontWeight.w700)))),
         Expanded(child: MediaQuery(
           data: MediaQuery.of(context).copyWith(
             textScaler: TextScaler.linear(_fontScale)),
@@ -1025,8 +1030,8 @@ class _StudentNoteBlock extends StatelessWidget {
         ),
         if (caption.isNotEmpty) Padding(
           padding: const EdgeInsets.only(top: 8),
-          child: Text(caption, style: const TextStyle(
-            color: AtlasColors.secondaryText, fontSize: 12,
+          child: Text(caption, style: TextStyle(
+            color: dark ? Colors.white60 : AtlasColors.secondaryText, fontSize: 12,
             fontStyle: FontStyle.italic))),
       ]),
     );
@@ -1036,7 +1041,8 @@ class _StudentNoteBlock extends StatelessWidget {
         : type == 'pearl' ? 'Examination pearl'
         : type == 'warning' ? 'Important caution'
         : type == 'definition' ? 'Definition' : 'Important concept';
-      final color = type == 'warning' ? const Color(0xFFFFF0EA)
+      final color = dark ? const Color(0xFF26384B)
+        : type == 'warning' ? const Color(0xFFFFF0EA)
         : type == 'clinical' ? const Color(0xFFEAF5F4)
         : type == 'pearl' ? const Color(0xFFFFF7E5)
         : const Color(0xFFEAF2FC);
