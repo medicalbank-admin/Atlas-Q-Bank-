@@ -64,6 +64,7 @@ flutter:
     - assets/logo/
     - assets/anatomy/
     - assets/pharmacology/molecular/
+    - assets/medical_categories/
     
 flutter_launcher_icons:
   android: true
