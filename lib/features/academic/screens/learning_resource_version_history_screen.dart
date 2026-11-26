@@ -23,6 +23,46 @@ class LearningResourceVersionHistoryScreen extends StatelessWidget {
       SnackBar(content:Text('Restore failed: $e')));}
   }
 
+  Future<void> _compare(BuildContext context, Map<String,dynamic> newer,
+      Map<String,dynamic> older, int newerVersion, int olderVersion) async {
+    final newBlocks = (newer['contentBlocks'] as List? ?? const [])
+      .whereType<Map>().map((e)=>Map<String,dynamic>.from(e)).toList();
+    final oldBlocks = (older['contentBlocks'] as List? ?? const [])
+      .whereType<Map>().map((e)=>Map<String,dynamic>.from(e)).toList();
+    final count = newBlocks.length > oldBlocks.length ? newBlocks.length : oldBlocks.length;
+    final changes = <Widget>[];
+    for (var i=0;i<count;i++) {
+      final before = i<oldBlocks.length ? oldBlocks[i] : null;
+      final after = i<newBlocks.length ? newBlocks[i] : null;
+      final beforeText = before == null ? '' : '${before['type'] ?? 'paragraph'}: ${before['text'] ?? before['caption'] ?? before['imageUrl'] ?? ''}';
+      final afterText = after == null ? '' : '${after['type'] ?? 'paragraph'}: ${after['text'] ?? after['caption'] ?? after['imageUrl'] ?? ''}';
+      if (beforeText == afterText) continue;
+      changes.add(Container(
+        margin: const EdgeInsets.only(bottom:10), padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(color: Colors.white,borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFE2EAF3))),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start,children:[
+          Text('Content block ${i+1}',style:const TextStyle(fontWeight:FontWeight.w900,color:AtlasColors.navy)),
+          if(before!=null) Padding(padding:const EdgeInsets.only(top:7),child:Text('− Previous: $beforeText',
+            style:const TextStyle(color:Color(0xFFB54747),height:1.4))),
+          if(after!=null) Padding(padding:const EdgeInsets.only(top:5),child:Text('+ Updated: $afterText',
+            style:const TextStyle(color:Color(0xFF16734A),height:1.4))),
+        ]),
+      ));
+    }
+    final titleChanged = (newer['title']??'') != (older['title']??'');
+    final descriptionChanged = (newer['description']??'') != (older['description']??'');
+    if(titleChanged) changes.insert(0,Text('Title: "${older['title']??''}" → "${newer['title']??''}"',
+      style:const TextStyle(fontWeight:FontWeight.w800,color:AtlasColors.navy)));
+    if(descriptionChanged) changes.insert(titleChanged?1:0,Text('Description updated',
+      style:const TextStyle(fontWeight:FontWeight.w700,color:AtlasColors.navy)));
+    if(changes.isEmpty) changes.add(const Text('No text or block-level differences detected. Some metadata or image changes may not appear in this comparison.'));
+    await showDialog<void>(context:context,builder:(c)=>AlertDialog(
+      title:Text('Compare v$olderVersion → v$newerVersion'),
+      content:SizedBox(width:520,height:420,child:ListView(children:changes)),
+      actions:[TextButton(onPressed:()=>Navigator.pop(c),child:const Text('Close'))]));
+  }
+
   @override
   Widget build(BuildContext context)=>Scaffold(
     backgroundColor:const Color(0xFFF3F6FA),
@@ -53,7 +93,19 @@ class LearningResourceVersionHistoryScreen extends StatelessWidget {
                 title:Text((d['title']??title).toString(),style:const TextStyle(
                   color:AtlasColors.navy,fontWeight:FontWeight.w800)),
                 subtitle:Text('${d['changeNote']??'Published revision'}\n$date'),
-                isThreeLine:true,trailing:TextButton(onPressed:()=>_restore(context,v),child:const Text('Restore'))));
+                isThreeLine:true,
+                trailing:PopupMenuButton<String>(
+                  onSelected:(action){
+                    if(action=='restore')_restore(context,v);
+                    if(action=='compare'&&i+1<docs.length){
+                      _compare(context,d,docs[i+1].data(),v,
+                        (docs[i+1].data()['versionNumber'] as num?)?.toInt()??v-1);
+                    }
+                  },
+                  itemBuilder:(_)=>[
+                    if(i+1<docs.length)const PopupMenuItem(value:'compare',child:Text('Compare with previous')),
+                    const PopupMenuItem(value:'restore',child:Text('Restore this version')),
+                  ])));
           });
       }),
   );
