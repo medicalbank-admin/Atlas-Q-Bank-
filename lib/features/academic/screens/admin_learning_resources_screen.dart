@@ -54,6 +54,15 @@ class AdminLearningResourcesScreen extends StatelessWidget {
     }
   }
 
+  Future<void> _edit(BuildContext context, String id) async {
+    final result = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => AtlasNotesStudioScreen(resourceId: id)));
+    if (result == true && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Chapter changes saved.')));
+    }
+  }
+
   Future<void> _toggle(BuildContext context, String id, bool current) async {
     try {
       await FirebaseFirestore.instance.collection('learning_resources').doc(id).update({
@@ -151,9 +160,12 @@ class AdminLearningResourcesScreen extends StatelessWidget {
                 trailing: PopupMenuButton<String>(
                   onSelected: (v) {
                     if (v == 'publish') _toggle(context, doc.id, item.isPublished);
+                    if (v == 'edit' && item.type == LearningResourceType.text) _edit(context, doc.id);
                     if (v == 'delete') _delete(context, doc.id);
                   },
                   itemBuilder: (_) => [
+                    if (item.type == LearningResourceType.text)
+                      const PopupMenuItem(value: 'edit', child: Text('Edit chapter')),
                     PopupMenuItem(value: 'publish',
                       child: Text(item.isPublished ? 'Unpublish' : 'Publish')),
                     const PopupMenuItem(value: 'delete', child: Text('Delete')),
