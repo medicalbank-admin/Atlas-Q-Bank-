@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../app/atlas_academy_app.dart';
 import '../../admin/services/admin_access_service.dart';
 import '../services/learning_resource_version_service.dart';
+import '../../advanced_learning/services/push_notification_service.dart';
 
 class AtlasNotesStudioScreen extends StatefulWidget {
   final String? resourceId;
@@ -168,9 +169,19 @@ class _AtlasNotesStudioScreenState extends State<AtlasNotesStudioScreen> {
       final resourceId = _editingId ?? FirebaseFirestore.instance.collection('learning_resources').doc().id;
       await LearningResourceVersionService.save(resourceId: resourceId, content: data,
         publish: publish, isNew: isNew);
+      var notificationNote = '';
+      if (publish) {
+        try {
+          final result = await PushNotificationService().sendChapterPublishedEvent(resourceId: resourceId);
+          notificationNote = ' Student notices: ${result['inAppRecipients'] ?? 0}; push devices: ${result['devices'] ?? 0}.';
+        } catch (notificationError) {
+          notificationNote = ' Chapter saved, but update notifications could not be sent: $notificationError';
+        }
+      }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(publish ? 'Chapter published successfully.' : 'Draft saved successfully.'),
+        content: Text((publish ? 'Chapter published successfully.' : 'Draft saved successfully.') + notificationNote),
+        duration: const Duration(seconds: 6),
       ));
       Navigator.of(context).pop(true);
     } catch (e) {
