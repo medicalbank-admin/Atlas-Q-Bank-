@@ -30,6 +30,14 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // The app is distributed directly as a single APK (not through Play's
+        // ABI-split delivery). Keep only physical Android phone architectures.
+        // This excludes emulator-only x86 libraries while retaining 32-bit and
+        // 64-bit ARM device compatibility.
+        ndk {
+            abiFilters += listOf("armeabi-v7a", "arm64-v8a")
+        }
     }
 
     signingConfigs {
