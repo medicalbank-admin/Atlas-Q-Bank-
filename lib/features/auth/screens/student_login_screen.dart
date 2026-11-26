@@ -54,14 +54,18 @@ class _StudentLoginScreenState extends State<StudentLoginScreen> {
   }
 
   Future<void> _saveRememberedEmail() async {
-    final preferences = await SharedPreferences.getInstance();
-    if (_rememberMe) {
-      await preferences.setString(
-        _rememberedEmailKey,
-        _emailController.text.trim().toLowerCase(),
-      );
-    } else {
-      await preferences.remove(_rememberedEmailKey);
+    try {
+      final preferences = await SharedPreferences.getInstance();
+      if (_rememberMe) {
+        await preferences.setString(
+          _rememberedEmailKey,
+          _emailController.text.trim().toLowerCase(),
+        );
+      } else {
+        await preferences.remove(_rememberedEmailKey);
+      }
+    } catch (_) {
+      // Local preference failures must not block a valid Firebase login.
     }
   }
 
