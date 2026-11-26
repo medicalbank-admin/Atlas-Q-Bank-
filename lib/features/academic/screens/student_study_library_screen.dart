@@ -1082,6 +1082,10 @@ class _NoteReaderState extends State<_NoteReader> {
                   const SizedBox(height: 9),
                   Text(_shown.systemName.isEmpty ? 'STUDY NOTES' : _shown.systemName.toUpperCase(),
                     style: const TextStyle(color: Color(0xFFD5E7F5), fontSize: 11)),
+                  if (_shown.versionNumber > 0)
+                    Text('PUBLISHED REVISION • VERSION ${_shown.versionNumber}',
+                      style: const TextStyle(color: Color(0xFFD5E7F5), fontSize: 10,
+                        fontWeight: FontWeight.w800, letterSpacing: 0.5)),
                   if (_shown.readingMinutes > 0)
                     Text('${_shown.readingMinutes} min read',
                       style: const TextStyle(color: Color(0xFFD5E7F5), fontSize: 11)),
