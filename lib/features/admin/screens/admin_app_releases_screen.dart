@@ -52,8 +52,8 @@ class _AdminAppReleasesScreenState extends State<AdminAppReleasesScreen> {
         setState(() => _error = 'The selected APK could not be read. Please choose it again.');
         return;
       }
-      if (file.size > 90 * 1024 * 1024) {
-        setState(() => _error = 'The APK exceeds the 90 MB upload limit.');
+      if (file.size > 95 * 1024 * 1024) {
+        setState(() => _error = 'The APK exceeds the 95 MiB upload limit (Cloudflare's free-plan safe maximum).');
         return;
       }
       setState(() { _bytes = file.bytes; _fileName = file.name; _apkVersion = null; _apkVersionCode = null; _version.clear(); });
