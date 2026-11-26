@@ -7,7 +7,8 @@ import '../../../app/atlas_academy_app.dart';
 import '../../admin/services/admin_access_service.dart';
 
 class AtlasNotesStudioScreen extends StatefulWidget {
-  const AtlasNotesStudioScreen({super.key});
+  final String? resourceId;
+  const AtlasNotesStudioScreen({super.key, this.resourceId});
 
   @override
   State<AtlasNotesStudioScreen> createState() => _AtlasNotesStudioScreenState();
@@ -28,6 +29,42 @@ class _AtlasNotesStudioScreenState extends State<AtlasNotesStudioScreen> {
   bool _saving = false;
   bool _published = false;
   String? _editingId;
+
+  @override
+  void initState() {
+    super.initState();
+    _editingId = widget.resourceId;
+    if (_editingId != null) _loadExisting();
+  }
+
+  Future<void> _loadExisting() async {
+    try {
+      final doc = await FirebaseFirestore.instance.collection('learning_resources').doc(_editingId).get();
+      if (!doc.exists || !mounted) return;
+      final data = doc.data() ?? {};
+      _title.text = (data['title'] ?? '').toString();
+      _description.text = (data['description'] ?? '').toString();
+      _subjectId = (data['subjectId'] ?? '').toString();
+      _subjectName = (data['subjectName'] ?? '').toString();
+      _selectedSystem = (data['systemName'] ?? '').toString();
+      _system.text = _selectedSystem ?? '';
+      _topic.text = (data['topicName'] ?? '').toString();
+      _free = data['isFree'] == true;
+      final savedBlocks = data['contentBlocks'];
+      if (savedBlocks is List) {
+        for (final raw in savedBlocks.whereType<Map>()) {
+          final block = _NoteBlock(type: (raw['type'] ?? 'paragraph').toString());
+          block.text.text = (raw['text'] ?? '').toString();
+          block.caption.text = (raw['caption'] ?? '').toString();
+          block.imageUrl = (raw['imageUrl'] ?? '').toString();
+          _blocks.add(block);
+        }
+      }
+      setState(() {});
+    } catch (e) {
+      _message('Could not load this chapter for editing: $e');
+    }
+  }
 
   @override
   void dispose() {
