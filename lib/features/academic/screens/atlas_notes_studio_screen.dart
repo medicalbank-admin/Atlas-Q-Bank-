@@ -51,7 +51,7 @@ class _AtlasNotesStudioScreenState extends State<AtlasNotesStudioScreen> {
       _topic.text = (data['topicName'] ?? '').toString();
       _free = data['isFree'] == true;
       final savedBlocks = data['contentBlocks'];
-      if (savedBlocks is List) {
+      if (savedBlocks is List && savedBlocks.isNotEmpty) {
         for (final raw in savedBlocks.whereType<Map>()) {
           final block = _NoteBlock(type: (raw['type'] ?? 'paragraph').toString());
           block.text.text = (raw['text'] ?? '').toString();
@@ -59,6 +59,10 @@ class _AtlasNotesStudioScreenState extends State<AtlasNotesStudioScreen> {
           block.imageUrl = (raw['imageUrl'] ?? '').toString();
           _blocks.add(block);
         }
+      } else if ((data['textContent'] ?? '').toString().trim().isNotEmpty) {
+        final legacyBlock = _NoteBlock(type: 'paragraph');
+        legacyBlock.text.text = (data['textContent'] ?? '').toString();
+        _blocks.add(legacyBlock);
       }
       setState(() {});
     } catch (e) {
