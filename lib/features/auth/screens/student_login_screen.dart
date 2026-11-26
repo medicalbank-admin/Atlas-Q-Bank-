@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../app/atlas_academy_app.dart';
 import '../../../shared/widgets/atlas_feedback.dart';
@@ -21,8 +23,47 @@ class _StudentLoginScreenState extends State<StudentLoginScreen> {
   final StudentAuthService _authService = StudentAuthService();
 
   bool _obscurePassword = true;
-  bool _rememberMe = true;
+  bool _rememberMe = false;
   bool _isLoading = false;
+  String _appVersion = '1.2.9';
+
+  static const String _rememberedEmailKey = 'atlas_remembered_login_email';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLoginPreferences();
+  }
+
+  Future<void> _loadLoginPreferences() async {
+    try {
+      final preferences = await SharedPreferences.getInstance();
+      final savedEmail = preferences.getString(_rememberedEmailKey);
+      final packageInfo = await PackageInfo.fromPlatform();
+      if (!mounted) return;
+      setState(() {
+        _rememberMe = savedEmail != null && savedEmail.isNotEmpty;
+        if (_rememberMe) _emailController.text = savedEmail!;
+        _appVersion = packageInfo.version.isNotEmpty
+            ? packageInfo.version
+            : '1.2.9';
+      });
+    } catch (_) {
+      // Keep login available even if local preferences cannot be read.
+    }
+  }
+
+  Future<void> _saveRememberedEmail() async {
+    final preferences = await SharedPreferences.getInstance();
+    if (_rememberMe) {
+      await preferences.setString(
+        _rememberedEmailKey,
+        _emailController.text.trim().toLowerCase(),
+      );
+    } else {
+      await preferences.remove(_rememberedEmailKey);
+    }
+  }
 
   @override
   void dispose() {
@@ -56,6 +97,8 @@ class _StudentLoginScreenState extends State<StudentLoginScreen> {
         email: _emailController.text,
         password: _passwordController.text,
       );
+
+      await _saveRememberedEmail();
 
       if (!mounted) return;
 
@@ -329,6 +372,18 @@ class _StudentLoginScreenState extends State<StudentLoginScreen> {
                           keyboardType: TextInputType.emailAddress,
                           textInputAction: TextInputAction.next,
                           validator: _validateEmail,
+                          onChanged: (value) {
+                            if (_rememberMe) {
+                              SharedPreferences.getInstance().then((preferences) {
+                                final email = value.trim().toLowerCase();
+                                if (email.isEmpty) {
+                                  preferences.remove(_rememberedEmailKey);
+                                } else {
+                                  preferences.setString(_rememberedEmailKey, email);
+                                }
+                              });
+                            }
+                          },
                           decoration: const InputDecoration(
                             hintText: 'Enter your email address',
                             prefixIcon: Icon(
@@ -392,10 +447,25 @@ class _StudentLoginScreenState extends State<StudentLoginScreen> {
                               child: Checkbox(
                                 value: _rememberMe,
                                 activeColor: AtlasColors.navy,
-                                onChanged: (value) {
+                                onChanged: (value) async {
                                   setState(() {
                                     _rememberMe = value ?? false;
                                   });
+                                  try {
+                                    final preferences = await SharedPreferences.getInstance();
+                                    if (_rememberMe) {
+                                      final email = _emailController.text.trim().toLowerCase();
+                                      if (email.isNotEmpty) {
+                                        await preferences.setString(_rememberedEmailKey, email);
+                                      }
+                                    } else {
+                                      await preferences.remove(_rememberedEmailKey);
+                                    }
+                                  } catch (_) {
+                                    if (mounted) {
+                                      AtlasFeedback.showWarning(context, 'Unable to save this preference on this device.');
+                                    }
+                                  }
                                 },
                               ),
                             ),
@@ -513,6 +583,17 @@ class _StudentLoginScreenState extends State<StudentLoginScreen> {
 
                         const SizedBox(height: 26),
 
+                        Text(
+                          'VERSION $_appVersion',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: AtlasColors.secondaryText,
+                            fontSize: 10,
+                            letterSpacing: 1.1,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 9),
                         const Text(
                           'EXCELLENCE IN MEDICAL EDUCATION',
                           textAlign: TextAlign.center,
