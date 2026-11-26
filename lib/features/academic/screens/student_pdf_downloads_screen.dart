@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../app/atlas_academy_app.dart';
+import '../models/learning_resource_model.dart';
+import 'student_pdf_reader_screen.dart';
 import '../services/pdf_offline_store.dart';
 
 class StudentPdfDownloadsScreen extends StatefulWidget {
@@ -38,6 +40,21 @@ class _StudentPdfDownloadsScreenState extends State<StudentPdfDownloadsScreen> {
             title: Text((item['title'] ?? 'PDF document').toString(),
               style: const TextStyle(fontWeight: FontWeight.w800, color: AtlasColors.navy)),
             subtitle: Text('${_size(item['sizeBytes'])} • Offline available'),
+            onTap: () {
+              final resource = LearningResourceModel(
+                id: id, yearId: '', subjectId: '', topicId: '',
+                subjectName: (item['subjectName'] ?? '').toString(),
+                topicName: (item['topicName'] ?? '').toString(),
+                title: (item['title'] ?? 'PDF document').toString(),
+                description: '', type: LearningResourceType.pdf,
+                resourceUrl: (item['resourceUrl'] ?? '').toString(),
+                systemName: (item['systemName'] ?? '').toString(),
+                versionNumber: (item['versionNumber'] as num?)?.toInt() ?? 0,
+                isPublished: true, createdAt: DateTime.now(), updatedAt: DateTime.now(),
+              );
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => StudentPdfReaderScreen(resource: resource)));
+            },
             trailing: IconButton(tooltip: 'Remove download',
               icon: const Icon(Icons.delete_outline_rounded),
               onPressed: () async {
