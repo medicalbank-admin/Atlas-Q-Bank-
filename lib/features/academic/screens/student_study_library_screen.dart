@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../app/atlas_academy_app.dart';
 import '../../../shared/widgets/medical_category_artwork.dart';
 import '../models/learning_resource_model.dart';
@@ -1000,6 +1001,7 @@ class _NoteReaderState extends State<_NoteReader> with WidgetsBindingObserver {
     _readingCheckpoint = Timer.periodic(const Duration(seconds: 30), (_) => _flushReadingTime());
     _shown = widget.resource;
     _scroll.addListener(_onScroll);
+    _loadReaderPreferences();
     _loadReaderState();
   }
 
@@ -1054,6 +1056,18 @@ class _NoteReaderState extends State<_NoteReader> with WidgetsBindingObserver {
     }
   }
 
+  Future<void> _loadReaderPreferences() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (!mounted) return;
+      setState(() {
+        _fontScale = (prefs.getDouble('atlas_reader_font_scale') ?? 1.0)
+            .clamp(0.85, 1.45).toDouble();
+        _dark = prefs.getBool('atlas_reader_dark_theme') ?? false;
+      });
+    } catch (_) {}
+  }
+
   Future<void> _loadReaderState() async {
     final offline = await LearningResourceOfflineService.read(widget.resource.id);
     if (offline != null && mounted) {
@@ -1102,9 +1116,22 @@ class _NoteReaderState extends State<_NoteReader> with WidgetsBindingObserver {
     try {
       final snapshot = await FirebaseFirestore.instance.collection('learning_resources')
           .where('isPublished', isEqualTo: true).get();
-      final items = snapshot.docs.map(LearningResourceModel.fromFirestore)
-          .where((item) => item.type == LearningResourceType.text).toList()
-        ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+      final all = snapshot.docs.map(LearningResourceModel.fromFirestore)
+          .where((item) => item.type == LearningResourceType.text).toList();
+      var items = all;
+      if (widget.resource.subjectId.isNotEmpty) {
+        final sameSubject = all.where((item) =>
+            item.subjectId == widget.resource.subjectId).toList();
+        if (sameSubject.isNotEmpty) items = sameSubject;
+      } else if (widget.resource.systemName.isNotEmpty) {
+        final sameSystem = all.where((item) =>
+            item.systemName == widget.resource.systemName).toList();
+        if (sameSystem.isNotEmpty) items = sameSystem;
+      }
+      items.sort((a, b) {
+        final dateOrder = a.createdAt.compareTo(b.createdAt);
+        return dateOrder != 0 ? dateOrder : a.title.compareTo(b.title);
+      });
       if (mounted) setState(() => _chapters = items);
     } catch (_) {}
   }
@@ -1225,7 +1252,17 @@ class _NoteReaderState extends State<_NoteReader> with WidgetsBindingObserver {
     );
   }
 
-  void _changeFont(double value) => setState(() => _fontScale = value);
+  void _changeFont(double value) {
+    setState(() => _fontScale = value);
+    SharedPreferences.getInstance().then((prefs) =>
+        prefs.setDouble('atlas_reader_font_scale', value));
+  }
+
+  void _toggleReadingTheme() {
+    setState(() => _dark = !_dark);
+    SharedPreferences.getInstance().then((prefs) =>
+        prefs.setBool('atlas_reader_dark_theme', _dark));
+  }
 
   void _moveChapter(int direction) {
     final index = _chapters.indexWhere((item) => item.id == widget.resource.id);
@@ -1263,7 +1300,7 @@ class _NoteReaderState extends State<_NoteReader> with WidgetsBindingObserver {
             ),
           ), icon: const Icon(Icons.text_fields_rounded)),
           IconButton(tooltip: _dark ? 'Light reading theme' : 'Dark reading theme',
-            onPressed: () => setState(() => _dark = !_dark),
+            onPressed: _toggleReadingTheme,
             icon: Icon(_dark ? Icons.light_mode_rounded : Icons.dark_mode_rounded)),
           IconButton(tooltip: _bookmarked ? 'Remove bookmark' : 'Bookmark chapter',
             onPressed: _toggleBookmark,
