@@ -5,7 +5,7 @@ import '../models/learning_resource_model.dart';
 import 'learning_resource_upload_dialog.dart';
 import 'atlas_notes_studio_screen.dart';
 import 'learning_resource_version_history_screen.dart';
-import 'learning_resource_version_history_screen.dart';
+import 'admin_pdf_replace_screen.dart';
 
 class AdminLearningResourcesScreen extends StatefulWidget {
   const AdminLearningResourcesScreen({super.key});
@@ -265,17 +265,23 @@ class _AdminLearningResourcesScreenState extends State<AdminLearningResourcesScr
                   onSelected: (v) {
                     if (v == 'publish') _toggle(context, doc.id, item.isPublished);
                     if (v == 'edit' && item.type == LearningResourceType.text) _edit(context, doc.id);
-                    if (v == 'history' && item.type == LearningResourceType.text) {
+                    if (v == 'replace' && item.type == LearningResourceType.pdf) {
+                      Navigator.of(context).push(MaterialPageRoute(builder: (_) =>
+                        AdminPdfReplaceScreen(resourceId: doc.id, title: item.title)));
+                    }
+                    if (v == 'history') {
                       Navigator.of(context).push(MaterialPageRoute(builder: (_) =>
                         LearningResourceVersionHistoryScreen(resourceId: doc.id, title: item.title)));
                     }
                     if (v == 'delete') _delete(context, doc.id);
                   },
                   itemBuilder: (_) => [
-                    if (item.type == LearningResourceType.text) ...[
+                    if (item.type == LearningResourceType.text)
                       const PopupMenuItem(value: 'edit', child: Text('Edit chapter')),
+                    if (item.type == LearningResourceType.pdf)
+                      const PopupMenuItem(value: 'replace', child: Text('Replace PDF')),
+                    if (item.type == LearningResourceType.text || item.type == LearningResourceType.pdf)
                       const PopupMenuItem(value: 'history', child: Text('Version history')),
-                    ],
                     PopupMenuItem(value: 'publish',
                       child: Text(item.isPublished ? 'Unpublish' : 'Publish')),
                     const PopupMenuItem(value: 'delete', child: Text('Delete')),
