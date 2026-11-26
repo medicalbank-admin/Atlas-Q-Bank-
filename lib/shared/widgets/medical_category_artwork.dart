@@ -17,12 +17,15 @@ class MedicalCategoryArtwork extends StatelessWidget {
 
   static const Map<String, String> _assets = {
     'cardiovascular': 'assets/medical_categories/cardiovascular.svg',
+    'cardio': 'assets/medical_categories/cardiovascular.svg',
+    'cvs': 'assets/medical_categories/cardiovascular.svg',
     'heart': 'assets/medical_categories/cardiovascular.svg',
     'circulatory': 'assets/medical_categories/cardiovascular.svg',
     'respiratory': 'assets/medical_categories/respiratory.svg',
     'lungs': 'assets/medical_categories/respiratory.svg',
     'pulmonary': 'assets/medical_categories/respiratory.svg',
     'nervous': 'assets/medical_categories/nervous.svg',
+    'cns': 'assets/medical_categories/nervous.svg',
     'neurology': 'assets/medical_categories/nervous.svg',
     'neurological': 'assets/medical_categories/nervous.svg',
     'brain': 'assets/medical_categories/nervous.svg',
@@ -32,6 +35,7 @@ class MedicalCategoryArtwork extends StatelessWidget {
     'gastrointestinal': 'assets/medical_categories/digestive.svg',
     'digestive': 'assets/medical_categories/digestive.svg',
     'gastro': 'assets/medical_categories/digestive.svg',
+    'git': 'assets/medical_categories/digestive.svg',
     'musculoskeletal': 'assets/medical_categories/musculoskeletal.svg',
     'skeletal': 'assets/medical_categories/musculoskeletal.svg',
     'endocrine': 'assets/medical_categories/endocrine.svg',
@@ -42,6 +46,8 @@ class MedicalCategoryArtwork extends StatelessWidget {
     'pathology': 'assets/medical_categories/pathology.svg',
     'pharmacology': 'assets/medical_categories/pharmacology.svg',
     'surgery': 'assets/medical_categories/surgery.svg',
+    'medicine': 'assets/medical_categories/medicine.svg',
+    'clinical medicine': 'assets/medical_categories/medicine.svg',
     'microbiology': 'assets/medical_categories/microbiology.svg',
   };
 
