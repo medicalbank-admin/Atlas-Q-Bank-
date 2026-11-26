@@ -4,7 +4,10 @@ String _key(String id) => 'atlas_offline_chapter_${id.replaceAll(RegExp(r'[^a-zA
 
 Future<void> saveOfflineChapter(String id, String content) async {
   final prefs = await SharedPreferences.getInstance();
-  await prefs.setString(_key(id), content);
+  final saved = await prefs.setString(_key(id), content);
+  if (!saved) {
+    throw Exception('Browser storage is full. Remove unused offline chapters and try again.');
+  }
 }
 
 Future<String?> readOfflineChapter(String id) async {
