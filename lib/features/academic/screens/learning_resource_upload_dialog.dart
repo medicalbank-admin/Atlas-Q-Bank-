@@ -204,7 +204,7 @@ class _LearningResourceUploadDialogState extends State<LearningResourceUploadDia
               const SizedBox(height: 12),
               LinearProgressIndicator(value: _progress > 0 ? _progress : null),
               const SizedBox(height: 4),
-              Text('${(_progress * 100).round()}% uploaded'),
+              Text(_progress >= 1 ? 'Upload complete' : 'Uploading securely to the academy library...'),
             ],
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
