@@ -19,5 +19,5 @@ Future<void> removeOfflineChapter(String id) async {
 
 Future<bool> hasOfflineChapter(String id) async {
   final prefs = await SharedPreferences.getInstance();
-  return (await SharedPreferences.getInstance()).containsKey(_key(id));
+  return prefs.containsKey(_key(id));
 }
