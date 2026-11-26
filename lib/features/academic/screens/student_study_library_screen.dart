@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -5,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../../app/atlas_academy_app.dart';
 import '../../../shared/widgets/medical_category_artwork.dart';
 import '../models/learning_resource_model.dart';
+import '../services/learning_resource_offline_service.dart';
 
 class StudentStudyLibraryScreen extends StatefulWidget {
   const StudentStudyLibraryScreen({super.key});
@@ -503,50 +506,329 @@ class _ResourceShelf extends StatelessWidget {
   );
 }
 
-class _NoteReader extends StatelessWidget {
+class _NoteReader extends StatefulWidget {
   final LearningResourceModel resource;
   const _NoteReader({required this.resource});
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFFF4F7FB),
-    appBar: AppBar(title: Text(resource.title),
-      backgroundColor: Colors.white, foregroundColor: AtlasColors.navy),
-    body: ListView(padding: const EdgeInsets.all(18), children: [
-      Container(
-        padding: const EdgeInsets.all(21),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(colors: [Color(0xFF102B49), Color(0xFF1E5B8B)]),
-          borderRadius: BorderRadius.circular(20)),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('THE ATLAS ACADEMY • LEARNING RESOURCES',
-            style: TextStyle(color: Color(0xFFB9DDF7), fontSize: 9,
-              letterSpacing: 1.1, fontWeight: FontWeight.w900)),
-          const SizedBox(height: 12),
-          Text(resource.title, style: const TextStyle(color: Colors.white,
-            fontSize: 24, height: 1.2, fontWeight: FontWeight.w900)),
-          const SizedBox(height: 9),
-          Text(resource.systemName.isEmpty ? 'STUDY NOTES' : resource.systemName.toUpperCase(),
-            style: const TextStyle(color: Color(0xFFD5E7F5), fontSize: 11)),
-          if (resource.readingMinutes > 0)
-            Text('${resource.readingMinutes} min read',
-              style: const TextStyle(color: Color(0xFFD5E7F5), fontSize: 11)),
-        ]),
+  State<_NoteReader> createState() => _NoteReaderState();
+}
+
+class _NoteReaderState extends State<_NoteReader> {
+  final ScrollController _scroll = ScrollController();
+  final Map<int, GlobalKey> _headingKeys = {};
+  Timer? _progressTimer;
+  late LearningResourceModel _shown;
+  bool _bookmarked = false;
+  bool _offlineSaved = false;
+  bool _busy = false;
+  bool _dark = false;
+  double _fontScale = 1.0;
+  double _progress = 0;
+  List<LearningResourceModel> _chapters = [];
+
+  String? get _uid => FirebaseAuth.instance.currentUser?.uid;
+  String get _progressId => '${_uid}_${widget.resource.id}';
+
+  @override
+  void initState() {
+    super.initState();
+    _shown = widget.resource;
+    _scroll.addListener(_onScroll);
+    _loadReaderState();
+  }
+
+  @override
+  void dispose() {
+    _progressTimer?.cancel();
+    _saveProgress();
+    _scroll.removeListener(_onScroll);
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadReaderState() async {
+    final offline = await LearningResourceOfflineService.read(widget.resource.id);
+    if (offline != null && mounted) {
+      final blocks = (offline['contentBlocks'] as List?)
+          ?.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList() ?? [];
+      setState(() {
+        _offlineSaved = true;
+        _shown = widget.resource.copyWith(
+          contentBlocks: blocks,
+          textContent: offline['textContent']?.toString() ?? widget.resource.textContent,
+        );
+      });
+    }
+    final uid = _uid;
+    if (uid != null) {
+      try {
+        final doc = await FirebaseFirestore.instance
+            .collection('student_resource_progress').doc(_progressId).get();
+        if (doc.exists && mounted) {
+          final data = doc.data() ?? {};
+          setState(() {
+            _bookmarked = data['isBookmarked'] == true;
+            _progress = ((data['progressPercent'] as num?)?.toDouble() ?? 0)
+                .clamp(0, 100);
+          });
+          if (_progress > 0) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted && _scroll.hasClients && _scroll.position.maxScrollExtent > 0) {
+                _scroll.jumpTo(_scroll.position.maxScrollExtent * (_progress / 100));
+              }
+            });
+          }
+        }
+      } catch (_) {}
+    }
+    _loadChapterNavigation();
+  }
+
+  Future<void> _loadChapterNavigation() async {
+    try {
+      final snapshot = await FirebaseFirestore.instance.collection('learning_resources')
+          .where('isPublished', isEqualTo: true).get();
+      final items = snapshot.docs.map(LearningResourceModel.fromFirestore)
+          .where((item) => item.type == LearningResourceType.text).toList()
+        ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+      if (mounted) setState(() => _chapters = items);
+    } catch (_) {}
+  }
+
+  void _onScroll() {
+    if (!_scroll.hasClients) return;
+    final max = _scroll.position.maxScrollExtent;
+    final value = max <= 0 ? 0.0 : (_scroll.offset / max * 100).clamp(0, 100);
+    if ((value - _progress).abs() >= 1) setState(() => _progress = value);
+    _progressTimer?.cancel();
+    _progressTimer = Timer(const Duration(seconds: 4), _saveProgress);
+  }
+
+  Future<void> _saveProgress() async {
+    final uid = _uid;
+    if (uid == null) return;
+    try {
+      await FirebaseFirestore.instance.collection('student_resource_progress')
+          .doc(_progressId).set({
+        'userId': uid,
+        'resourceId': widget.resource.id,
+        'progressPercent': _progress,
+        'lastPosition': _scroll.hasClients ? _scroll.offset : 0,
+        'isBookmarked': _bookmarked,
+        'lastReadAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } catch (_) {}
+  }
+
+  Future<void> _toggleBookmark() async {
+    setState(() => _bookmarked = !_bookmarked);
+    await _saveProgress();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(_bookmarked ? 'Chapter bookmarked.' : 'Bookmark removed.')));
+  }
+
+  Future<void> _toggleOffline() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      if (_offlineSaved) {
+        await LearningResourceOfflineService.remove(widget.resource.id);
+        if (mounted) setState(() => _offlineSaved = false);
+      } else {
+        await LearningResourceOfflineService.download(widget.resource);
+        final saved = await LearningResourceOfflineService.read(widget.resource.id);
+        if (saved != null) {
+          final blocks = (saved['contentBlocks'] as List?)
+              ?.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList() ?? [];
+          if (mounted) setState(() {
+            _offlineSaved = true;
+            _shown = widget.resource.copyWith(contentBlocks: blocks);
+          });
+        }
+      }
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(_offlineSaved
+          ? 'Chapter and its illustrations saved for offline reading.'
+          : 'Offline chapter removed.')));
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Offline save failed: $e')));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  void _showContents() {
+    final headings = <MapEntry<int, String>>[];
+    for (var i = 0; i < _shown.contentBlocks.length; i++) {
+      final block = _shown.contentBlocks[i];
+      final type = (block['type'] ?? '').toString();
+      if (type.startsWith('heading') && (block['text'] ?? '').toString().trim().isNotEmpty) {
+        headings.add(MapEntry(i, block['text'].toString()));
+      }
+    }
+    if (headings.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('This chapter has no section headings yet.')));
+      return;
+    }
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(child: ListView(
+        shrinkWrap: true,
+        children: [
+          const Padding(padding: EdgeInsets.fromLTRB(20, 4, 20, 12),
+            child: Text('Table of contents', style: TextStyle(
+              color: AtlasColors.navy, fontSize: 18, fontWeight: FontWeight.w900))),
+          ...headings.map((entry) => ListTile(
+            leading: const Icon(Icons.format_list_bulleted_rounded,
+              color: AtlasColors.royalBlue),
+            title: Text(entry.value, style: const TextStyle(
+              color: AtlasColors.navy, fontWeight: FontWeight.w700)),
+            onTap: () {
+              Navigator.pop(sheetContext);
+              final key = _headingKeys[entry.key];
+              final target = key?.currentContext;
+              if (target != null) Scrollable.ensureVisible(target,
+                duration: const Duration(milliseconds: 450), curve: Curves.easeInOut,
+                alignment: 0.08);
+            },
+          )),
+        ],
+      )),
+    );
+  }
+
+  void _changeFont(double value) => setState(() => _fontScale = value);
+
+  void _moveChapter(int direction) {
+    final index = _chapters.indexWhere((item) => item.id == widget.resource.id);
+    final next = index + direction;
+    if (index < 0 || next < 0 || next >= _chapters.length) return;
+    Navigator.of(context).pushReplacement(MaterialPageRoute(
+      builder: (_) => _NoteReader(resource: _chapters[next])));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final background = _dark ? const Color(0xFF101B29) : const Color(0xFFF4F7FB);
+    final foreground = _dark ? const Color(0xFFE8F0F8) : AtlasColors.navy;
+    return Scaffold(
+      backgroundColor: background,
+      appBar: AppBar(
+        title: Text(widget.resource.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+        backgroundColor: _dark ? const Color(0xFF17283B) : Colors.white,
+        foregroundColor: _dark ? Colors.white : AtlasColors.navy,
+        actions: [
+          IconButton(tooltip: 'Table of contents', onPressed: _showContents,
+            icon: const Icon(Icons.toc_rounded)),
+          IconButton(tooltip: 'Text size', onPressed: () => showModalBottomSheet<void>(
+            context: context, showDragHandle: true, builder: (c) => StatefulBuilder(
+              builder: (c, update) => Padding(
+                padding: const EdgeInsets.fromLTRB(22, 8, 22, 28),
+                child: Column(mainAxisSize: MainAxisSize.min, children: [
+                  const Text('Reading text size', style: TextStyle(
+                    fontSize: 17, fontWeight: FontWeight.w900)),
+                  Slider(value: _fontScale, min: 0.85, max: 1.45, divisions: 6,
+                    label: '${(_fontScale * 100).round()}%',
+                    onChanged: (v) { _changeFont(v); update(() {}); }),
+                ]),
+              ),
+            ),
+          ), icon: const Icon(Icons.text_fields_rounded)),
+          IconButton(tooltip: _dark ? 'Light reading theme' : 'Dark reading theme',
+            onPressed: () => setState(() => _dark = !_dark),
+            icon: Icon(_dark ? Icons.light_mode_rounded : Icons.dark_mode_rounded)),
+          IconButton(tooltip: _bookmarked ? 'Remove bookmark' : 'Bookmark chapter',
+            onPressed: _toggleBookmark,
+            icon: Icon(_bookmarked ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+              color: _bookmarked ? Colors.amber : null)),
+          IconButton(tooltip: _offlineSaved ? 'Remove offline copy' : 'Download for offline',
+            onPressed: _toggleOffline,
+            icon: _busy ? const SizedBox(width: 20, height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2))
+              : Icon(_offlineSaved ? Icons.offline_pin_rounded : Icons.download_for_offline_rounded)),
+        ],
       ),
-      if (resource.description.isNotEmpty)
-        Padding(padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Text(resource.description, style: const TextStyle(
-            color: AtlasColors.secondaryText, fontSize: 14, height: 1.6))),
-      if (resource.contentBlocks.isNotEmpty)
-        ...resource.contentBlocks.map((block) => _StudentNoteBlock(block: block))
-      else
-        Container(padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(color: Colors.white,
-            borderRadius: BorderRadius.circular(18)),
-          child: SelectableText(resource.textContent, style: const TextStyle(
-            color: AtlasColors.navy, height: 1.75, fontSize: 15))),
-    ]),
-  );
+      body: Column(children: [
+        LinearProgressIndicator(value: _progress / 100,
+          minHeight: 3, backgroundColor: _dark ? Colors.white12 : const Color(0xFFE3EAF2),
+          color: AtlasColors.royalBlue),
+        Expanded(child: MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            textScaler: TextScaler.linear(_fontScale)),
+          child: ListView(
+            controller: _scroll,
+            padding: const EdgeInsets.all(18),
+            children: [
+              Container(
+                padding: const EdgeInsets.all(21),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(colors: [Color(0xFF102B49), Color(0xFF1E5B8B)]),
+                  borderRadius: BorderRadius.circular(20)),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  const Text('THE ATLAS ACADEMY • LEARNING RESOURCES',
+                    style: TextStyle(color: Color(0xFFB9DDF7), fontSize: 9,
+                      letterSpacing: 1.1, fontWeight: FontWeight.w900)),
+                  const SizedBox(height: 12),
+                  Text(_shown.title, style: const TextStyle(color: Colors.white,
+                    fontSize: 24, height: 1.2, fontWeight: FontWeight.w900)),
+                  const SizedBox(height: 9),
+                  Text(_shown.systemName.isEmpty ? 'STUDY NOTES' : _shown.systemName.toUpperCase(),
+                    style: const TextStyle(color: Color(0xFFD5E7F5), fontSize: 11)),
+                  if (_shown.readingMinutes > 0)
+                    Text('${_shown.readingMinutes} min read',
+                      style: const TextStyle(color: Color(0xFFD5E7F5), fontSize: 11)),
+                  if (_offlineSaved) const Padding(padding: EdgeInsets.only(top: 8),
+                    child: Row(children: [
+                      Icon(Icons.offline_pin_rounded, color: Color(0xFFB9E8D0), size: 16),
+                      SizedBox(width: 5),
+                      Text('AVAILABLE OFFLINE', style: TextStyle(
+                        color: Color(0xFFB9E8D0), fontSize: 10, fontWeight: FontWeight.w900)),
+                    ])),
+                ]),
+              ),
+              if (_shown.description.isNotEmpty)
+                Padding(padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Text(_shown.description, style: TextStyle(
+                    color: _dark ? Colors.white70 : AtlasColors.secondaryText,
+                    fontSize: 14, height: 1.6))),
+              if (_shown.contentBlocks.isNotEmpty)
+                ..._shown.contentBlocks.asMap().entries.map((entry) {
+                  final type = (entry.value['type'] ?? '').toString();
+                  final key = type.startsWith('heading')
+                      ? (_headingKeys[entry.key] ??= GlobalKey()) : null;
+                  return KeyedSubtree(
+                    key: key ?? ValueKey('block_${entry.key}'),
+                    child: _StudentNoteBlock(block: entry.value));
+                })
+              else
+                Container(padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: _dark ? const Color(0xFF1B2A3B) : Colors.white,
+                    borderRadius: BorderRadius.circular(18)),
+                  child: SelectableText(_shown.textContent, style: TextStyle(
+                    color: foreground, height: 1.75, fontSize: 15))),
+              const SizedBox(height: 22),
+              Row(children: [
+                Expanded(child: OutlinedButton.icon(
+                  onPressed: _chapters.isEmpty ? null : () => _moveChapter(-1),
+                  icon: const Icon(Icons.chevron_left_rounded), label: const Text('Previous chapter'))),
+                const SizedBox(width: 10),
+                Expanded(child: FilledButton.icon(
+                  onPressed: _chapters.isEmpty ? null : () => _moveChapter(1),
+                  icon: const Icon(Icons.chevron_right_rounded), label: const Text('Next chapter'),
+                  iconAlignment: IconAlignment.end)),
+              ]),
+            ],
+          ),
+        )),
+      ]),
+    );
+  }
 }
 
 class _StudentNoteBlock extends StatelessWidget {
@@ -559,6 +841,7 @@ class _StudentNoteBlock extends StatelessWidget {
     final value = (block['text'] ?? '').toString();
     final caption = (block['caption'] ?? '').toString();
     final url = (block['imageUrl'] ?? '').toString();
+    final offlineData = (block['offlineImageData'] ?? '').toString();
     if (type == 'divider') return const Padding(
       padding: EdgeInsets.symmetric(vertical: 16),
       child: Divider(color: Color(0xFFDCE5EF), thickness: 1.2));
@@ -573,9 +856,14 @@ class _StudentNoteBlock extends StatelessWidget {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         if (url.isNotEmpty) ClipRRect(
           borderRadius: BorderRadius.circular(15),
-          child: Image.network(url, width: double.infinity, fit: BoxFit.contain,
-            errorBuilder: (_, __, ___) => const SizedBox(height: 130,
-              child: Center(child: Icon(Icons.broken_image_outlined)))),
+          child: offlineData.startsWith('data:image/')
+              ? Image.memory(base64Decode(offlineData.split(',').last),
+                  width: double.infinity, fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => const SizedBox(height: 130,
+                    child: Center(child: Icon(Icons.broken_image_outlined))))
+              : Image.network(url, width: double.infinity, fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => const SizedBox(height: 130,
+                    child: Center(child: Icon(Icons.broken_image_outlined)))),
         ),
         if (caption.isNotEmpty) Padding(
           padding: const EdgeInsets.only(top: 8),
