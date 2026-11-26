@@ -21,7 +21,7 @@ class MainActivity : FlutterActivity() {
                 if (call.method == "inspectApk") {
                     try {
                         val bytes = call.argument<ByteArray>("bytes")
-                        if (bytes == null || bytes.isEmpty() || bytes.size > 90 * 1024 * 1024) {
+                        if (bytes == null || bytes.isEmpty() || bytes.size > 95 * 1024 * 1024) {
                             result.error("INVALID_APK", "The selected APK data is missing or too large.", null)
                             return@setMethodCallHandler
                         }
