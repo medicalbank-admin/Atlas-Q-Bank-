@@ -5,8 +5,22 @@ import '../models/learning_resource_model.dart';
 import 'learning_resource_upload_dialog.dart';
 import 'atlas_notes_studio_screen.dart';
 
-class AdminLearningResourcesScreen extends StatelessWidget {
+class AdminLearningResourcesScreen extends StatefulWidget {
   const AdminLearningResourcesScreen({super.key});
+
+  @override
+  State<AdminLearningResourcesScreen> createState() => _AdminLearningResourcesScreenState();
+}
+
+class _AdminLearningResourcesScreenState extends State<AdminLearningResourcesScreen> {
+  final TextEditingController _search = TextEditingController();
+  String _statusFilter = 'All';
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
 
   Future<void> _publish(BuildContext context) async {
     final choice = await showModalBottomSheet<String>(
@@ -128,15 +142,71 @@ class AdminLearningResourcesScreen extends StatelessWidget {
           if (snapshot.hasError) return const Text(
             'Unable to load content. Check Firestore permissions.');
           if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-          final docs = snapshot.data!.docs.toList()..sort((a, b) {
-            final av = a.data()['createdAt']; final bv = b.data()['createdAt'];
+          final allDocs = snapshot.data!.docs;
+          final publishedCount = allDocs.where((doc) => doc.data()['isPublished'] == true).length;
+          final draftCount = allDocs.length - publishedCount;
+          final noteCount = allDocs.where((doc) => doc.data()['type'] == 'text').length;
+          final pdfCount = allDocs.where((doc) => doc.data()['type'] == 'pdf').length;
+          final videoCount = allDocs.where((doc) => doc.data()['type'] == 'video').length;
+          final query = _search.text.trim().toLowerCase();
+          final docs = allDocs.where((doc) {
+            final data = doc.data();
+            final published = data['isPublished'] == true;
+            final statusMatches = _statusFilter == 'All' ||
+              (_statusFilter == 'Published' && published) ||
+              (_statusFilter == 'Drafts' && !published);
+            final searchable = [
+              data['title'], data['description'], data['subjectName'],
+              data['systemName'], data['topicName'],
+            ].map((v) => (v ?? '').toString().toLowerCase()).join(' ');
+            return statusMatches && (query.isEmpty || searchable.contains(query));
+          }).toList()..sort((a, b) {
+            final av = a.data()['updatedAt'] ?? a.data()['createdAt'];
+            final bv = b.data()['updatedAt'] ?? b.data()['createdAt'];
             final ad = av is Timestamp ? av.toDate() : DateTime(2000);
             final bd = bv is Timestamp ? bv.toDate() : DateTime(2000);
             return bd.compareTo(ad);
           });
-          if (docs.isEmpty) return const Padding(
-            padding: EdgeInsets.all(20), child: Text('No content yet. Tap Publish Content.'));
-          return Column(children: docs.map((doc) {
+          return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            Wrap(spacing: 9, runSpacing: 9, children: [
+              _ContentMetric(label: 'Total content', value: allDocs.length, icon: Icons.library_books_rounded),
+              _ContentMetric(label: 'Published', value: publishedCount, icon: Icons.public_rounded),
+              _ContentMetric(label: 'Drafts', value: draftCount, icon: Icons.edit_note_rounded),
+              _ContentMetric(label: 'Notes', value: noteCount, icon: Icons.menu_book_rounded),
+              _ContentMetric(label: 'PDFs', value: pdfCount, icon: Icons.picture_as_pdf_rounded),
+              _ContentMetric(label: 'Videos', value: videoCount, icon: Icons.play_circle_rounded),
+            ]),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _search,
+              onChanged: (_) => setState(() {}),
+              decoration: InputDecoration(
+                hintText: 'Search content by title, subject or system...',
+                prefixIcon: const Icon(Icons.search_rounded),
+                suffixIcon: _search.text.isEmpty ? null : IconButton(
+                  onPressed: () { _search.clear(); setState(() {}); },
+                  icon: const Icon(Icons.close_rounded)),
+                filled: true, fillColor: Colors.white,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+              ),
+            ),
+            const SizedBox(height: 10),
+            SegmentedButton<String>(
+              segments: const [
+                ButtonSegment(value: 'All', label: Text('All')),
+                ButtonSegment(value: 'Published', label: Text('Published')),
+                ButtonSegment(value: 'Drafts', label: Text('Drafts')),
+              ],
+              selected: {_statusFilter},
+              onSelectionChanged: (values) => setState(() => _statusFilter = values.first),
+              showSelectedIcon: false,
+            ),
+            const SizedBox(height: 12),
+            if (docs.isEmpty) Padding(
+              padding: const EdgeInsets.all(20),
+              child: Text(allDocs.isEmpty ? 'No content yet. Tap Create Content.' :
+                'No content matches this search or filter.')),
+            ...docs.map((doc) {
             final item = LearningResourceModel.fromFirestore(doc);
             final label = switch (item.type) {
               LearningResourceType.text => 'NOTE',
@@ -171,9 +241,36 @@ class AdminLearningResourcesScreen extends StatelessWidget {
                     const PopupMenuItem(value: 'delete', child: Text('Delete')),
                   ]),
               ));
-          }).toList());
+          }),
+          ]);
         },
       ),
     ]),
   );
 }
+
+class _ContentMetric extends StatelessWidget {
+  final String label;
+  final int value;
+  final IconData icon;
+  const _ContentMetric({required this.label, required this.value, required this.icon});
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: 142, padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(color: Colors.white,
+      borderRadius: BorderRadius.circular(15),
+      border: Border.all(color: const Color(0xFFDCE7F1))),
+    child: Row(children: [
+      Icon(icon, color: AtlasColors.royalBlue, size: 20),
+      const SizedBox(width: 8),
+      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text('$value', style: const TextStyle(color: AtlasColors.navy,
+          fontSize: 18, fontWeight: FontWeight.w900)),
+        Text(label, maxLines: 1, overflow: TextOverflow.ellipsis,
+          style: const TextStyle(color: AtlasColors.secondaryText, fontSize: 10)),
+      ])),
+    ]),
+  );
+}
+
