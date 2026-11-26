@@ -240,7 +240,7 @@ class PushNotificationService {
     if (user == null) return false;
     try {
       if (kIsWeb) {
-        return _registerWebDevice(user.uid, requestPermission: false);
+        return await _registerWebDevice(user.uid, requestPermission: false);
       }
       final messaging = FirebaseMessaging.instance;
       final settings = await messaging.getNotificationSettings();
