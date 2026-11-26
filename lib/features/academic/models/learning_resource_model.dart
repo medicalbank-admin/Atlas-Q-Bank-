@@ -19,6 +19,9 @@ class LearningResourceModel {
   final LearningResourceType type;
   final String resourceUrl;
   final String textContent;
+  final List<Map<String, dynamic>> contentBlocks;
+  final String systemName;
+  final int readingMinutes;
   final String? thumbnailUrl;
   final int displayOrder;
   final bool isPublished;
@@ -37,6 +40,9 @@ class LearningResourceModel {
     required this.type,
     required this.resourceUrl,
     this.textContent = '',
+    this.contentBlocks = const [],
+    this.systemName = '',
+    this.readingMinutes = 0,
     this.thumbnailUrl,
     this.displayOrder = 0,
     this.isPublished = false,
@@ -64,6 +70,9 @@ class LearningResourceModel {
       ),
       resourceUrl: data['resourceUrl'] as String? ?? '',
       textContent: data['textContent'] as String? ?? '',
+      contentBlocks: (data['contentBlocks'] as List?)?.whereType<Map>().map((item) => Map<String, dynamic>.from(item)).toList() ?? const [],
+      systemName: data['systemName'] as String? ?? '',
+      readingMinutes: (data['readingMinutes'] as num?)?.toInt() ?? 0,
       thumbnailUrl: data['thumbnailUrl'] as String?,
       displayOrder: (data['displayOrder'] as num?)?.toInt() ?? 0,
       isPublished: data['isPublished'] as bool? ?? false,
@@ -85,6 +94,9 @@ class LearningResourceModel {
       'type': type.name,
       'resourceUrl': resourceUrl.trim(),
       'textContent': textContent,
+      'contentBlocks': contentBlocks,
+      'systemName': systemName,
+      'readingMinutes': readingMinutes,
       'thumbnailUrl': thumbnailUrl,
       'displayOrder': displayOrder,
       'isPublished': isPublished,
@@ -101,6 +113,9 @@ class LearningResourceModel {
     LearningResourceType? type,
     String? resourceUrl,
     String? textContent,
+    List<Map<String, dynamic>>? contentBlocks,
+    String? systemName,
+    int? readingMinutes,
     String? thumbnailUrl,
     int? displayOrder,
     bool? isPublished,
@@ -118,6 +133,9 @@ class LearningResourceModel {
       type: type ?? this.type,
       resourceUrl: resourceUrl ?? this.resourceUrl,
       textContent: textContent ?? this.textContent,
+      contentBlocks: contentBlocks ?? this.contentBlocks,
+      systemName: systemName ?? this.systemName,
+      readingMinutes: readingMinutes ?? this.readingMinutes,
       thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
       displayOrder: displayOrder ?? this.displayOrder,
       isPublished: isPublished ?? this.isPublished,
