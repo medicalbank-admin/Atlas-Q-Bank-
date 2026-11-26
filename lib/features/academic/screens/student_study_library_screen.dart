@@ -1000,9 +1000,9 @@ class _StudentNoteBlock extends StatelessWidget {
     final caption = (block['caption'] ?? '').toString();
     final url = (block['imageUrl'] ?? '').toString();
     final offlineData = (block['offlineImageData'] ?? '').toString();
-    if (type == 'divider') return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 16),
-      child: Divider(color: dark ? Colors.white24 : Color(0xFFDCE5EF), thickness: 1.2));
+    if (type == 'divider') return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Divider(color: dark ? Colors.white24 : const Color(0xFFDCE5EF), thickness: 1.2));
     if (type.startsWith('heading')) {
       final size = type == 'heading1' ? 25.0 : type == 'heading2' ? 20.0 : 17.0;
       return Padding(padding: const EdgeInsets.only(top: 19, bottom: 8),
@@ -1045,10 +1045,10 @@ class _StudentNoteBlock extends StatelessWidget {
         decoration: BoxDecoration(color: color,
           borderRadius: BorderRadius.circular(14)),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(title, style: const TextStyle(color: AtlasColors.navy,
+          Text(title, style: TextStyle(color: dark ? const Color(0xFFE8F0F8) : AtlasColors.navy,
             fontWeight: FontWeight.w900)),
           const SizedBox(height: 5),
-          SelectableText(value, style: const TextStyle(
+          SelectableText(value, style: TextStyle(
             color: dark ? const Color(0xFFE8F0F8) : AtlasColors.navy, height: 1.6)),
         ]),
       );
@@ -1060,10 +1060,10 @@ class _StudentNoteBlock extends StatelessWidget {
           children: lines.map((line) => Padding(
             padding: const EdgeInsets.symmetric(vertical: 3),
             child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const SizedBox(width: 24, child: Text('•',
-                style: TextStyle(color: AtlasColors.royalBlue,
+              SizedBox(width: 24, child: Text('•',
+                style: TextStyle(color: dark ? const Color(0xFF8DBCF4) : AtlasColors.royalBlue,
                   fontWeight: FontWeight.w900))),
-              Expanded(child: SelectableText(line, style: const TextStyle(
+              Expanded(child: SelectableText(line, style: TextStyle(
                 color: dark ? const Color(0xFFE8F0F8) : AtlasColors.navy, height: 1.6, fontSize: 15))),
             ]),
           )).toList()),
@@ -1085,7 +1085,7 @@ class _StudentNoteBlock extends StatelessWidget {
         ));
     }
     return Padding(padding: const EdgeInsets.symmetric(vertical: 7),
-      child: SelectableText(value, style: const TextStyle(
+      child: SelectableText(value, style: TextStyle(
         color: dark ? const Color(0xFFE8F0F8) : AtlasColors.navy, fontSize: 15, height: 1.75)));
   }
 }
