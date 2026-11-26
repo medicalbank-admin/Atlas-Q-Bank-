@@ -22,6 +22,7 @@ class LearningResourceModel {
   final List<Map<String, dynamic>> contentBlocks;
   final String systemName;
   final int readingMinutes;
+  final int versionNumber;
   final String? thumbnailUrl;
   final int displayOrder;
   final bool isPublished;
@@ -43,6 +44,7 @@ class LearningResourceModel {
     this.contentBlocks = const [],
     this.systemName = '',
     this.readingMinutes = 0,
+    this.versionNumber = 0,
     this.thumbnailUrl,
     this.displayOrder = 0,
     this.isPublished = false,
@@ -73,6 +75,7 @@ class LearningResourceModel {
       contentBlocks: (data['contentBlocks'] as List?)?.whereType<Map>().map((item) => Map<String, dynamic>.from(item)).toList() ?? const [],
       systemName: data['systemName'] as String? ?? '',
       readingMinutes: (data['readingMinutes'] as num?)?.toInt() ?? 0,
+      versionNumber: (data['versionNumber'] as num?)?.toInt() ?? 0,
       thumbnailUrl: data['thumbnailUrl'] as String?,
       displayOrder: (data['displayOrder'] as num?)?.toInt() ?? 0,
       isPublished: data['isPublished'] as bool? ?? false,
@@ -97,6 +100,7 @@ class LearningResourceModel {
       'contentBlocks': contentBlocks,
       'systemName': systemName,
       'readingMinutes': readingMinutes,
+      'versionNumber': versionNumber,
       'thumbnailUrl': thumbnailUrl,
       'displayOrder': displayOrder,
       'isPublished': isPublished,
@@ -116,6 +120,7 @@ class LearningResourceModel {
     List<Map<String, dynamic>>? contentBlocks,
     String? systemName,
     int? readingMinutes,
+    int? versionNumber,
     String? thumbnailUrl,
     int? displayOrder,
     bool? isPublished,
@@ -136,6 +141,7 @@ class LearningResourceModel {
       contentBlocks: contentBlocks ?? this.contentBlocks,
       systemName: systemName ?? this.systemName,
       readingMinutes: readingMinutes ?? this.readingMinutes,
+      versionNumber: versionNumber ?? this.versionNumber,
       thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
       displayOrder: displayOrder ?? this.displayOrder,
       isPublished: isPublished ?? this.isPublished,
