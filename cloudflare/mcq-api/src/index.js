@@ -796,6 +796,27 @@ async function sendInboxMessage(env, claims, body) {
   return { success: true, messageId };
 }
 
+async function createNotesUploadSignature(env, claims) {
+  if (claims.admin !== true) throw new Error("Administrator access is required.");
+  const { cloudName, apiKey, apiSecret } = getCloudinaryCredentials(env);
+  const timestamp = Math.floor(Date.now() / 1000);
+  const folder = "atlas-notes";
+  const publicId = "atlas_notes_" + crypto.randomUUID();
+  const params = {
+    folder,
+    overwrite: "false",
+    public_id: publicId,
+    timestamp: String(timestamp),
+  };
+  const payload = Object.keys(params).sort()
+    .map((key) => key + "=" + params[key]).join("&") + apiSecret;
+  return {
+    success: true, cloudName, apiKey, timestamp, folder, publicId,
+    overwrite: "false",
+    signature: await cloudinarySha1Hex(payload),
+  };
+}
+
 async function createInboxUploadSignature(env, claims, body) {
   const studentUid = String(body.studentUid || "");
   await verifyInboxParticipant(env, claims, studentUid);
@@ -1129,7 +1150,7 @@ export default {
       }
     }
     const allowedPaths = ["/start", "/submit", "/daily/start", "/daily/status", "/daily/submit",
-      "/inbox/upload-signature", "/inbox/image", "/inbox/send"];
+      "/inbox/upload-signature", "/inbox/image", "/inbox/send", "/notes/upload-signature"];
     if (request.method !== "POST" || !allowedPaths.includes(url.pathname)) {
       return fail("Endpoint not found.", 404);
     }
@@ -1150,8 +1171,10 @@ export default {
               ? await dailyChallengeStatus(env, claims.sub)
               : url.pathname === "/daily/submit"
                 ? await dailyChallengeSubmit(env, claims.sub, body)
-                : url.pathname === "/inbox/upload-signature"
-                  ? await createInboxUploadSignature(env, claims, body)
+                : url.pathname === "/notes/upload-signature"
+                  ? await createNotesUploadSignature(env, claims)
+                  : url.pathname === "/inbox/upload-signature"
+                    ? await createInboxUploadSignature(env, claims, body)
                   : url.pathname === "/inbox/image-url"
                     ? await createInboxImageUrl(env, claims, body)
                     : url.pathname === "/inbox/send"
