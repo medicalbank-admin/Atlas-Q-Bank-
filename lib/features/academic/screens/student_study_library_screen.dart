@@ -960,7 +960,7 @@ class _NoteReaderState extends State<_NoteReader> {
                       ? (_headingKeys[entry.key] ??= GlobalKey()) : null;
                   return KeyedSubtree(
                     key: key ?? ValueKey('block_${entry.key}'),
-                    child: _StudentNoteBlock(block: entry.value));
+                    child: _StudentNoteBlock(block: entry.value, dark: _dark));
                 })
               else
                 Container(padding: const EdgeInsets.all(20),
@@ -990,7 +990,8 @@ class _NoteReaderState extends State<_NoteReader> {
 
 class _StudentNoteBlock extends StatelessWidget {
   final Map<String, dynamic> block;
-  const _StudentNoteBlock({required this.block});
+  final bool dark;
+  const _StudentNoteBlock({required this.block, this.dark = false});
 
   @override
   Widget build(BuildContext context) {
@@ -1001,11 +1002,11 @@ class _StudentNoteBlock extends StatelessWidget {
     final offlineData = (block['offlineImageData'] ?? '').toString();
     if (type == 'divider') return const Padding(
       padding: EdgeInsets.symmetric(vertical: 16),
-      child: Divider(color: Color(0xFFDCE5EF), thickness: 1.2));
+      child: Divider(color: dark ? Colors.white24 : Color(0xFFDCE5EF), thickness: 1.2));
     if (type.startsWith('heading')) {
       final size = type == 'heading1' ? 25.0 : type == 'heading2' ? 20.0 : 17.0;
       return Padding(padding: const EdgeInsets.only(top: 19, bottom: 8),
-        child: Text(value, style: TextStyle(color: AtlasColors.navy,
+        child: Text(value, style: TextStyle(color: dark ? const Color(0xFFE8F0F8) : AtlasColors.navy,
           fontSize: size, fontWeight: FontWeight.w900)));
     }
     if (type == 'image') return Padding(
@@ -1048,7 +1049,7 @@ class _StudentNoteBlock extends StatelessWidget {
             fontWeight: FontWeight.w900)),
           const SizedBox(height: 5),
           SelectableText(value, style: const TextStyle(
-            color: AtlasColors.navy, height: 1.6)),
+            color: dark ? const Color(0xFFE8F0F8) : AtlasColors.navy, height: 1.6)),
         ]),
       );
     }
@@ -1063,7 +1064,7 @@ class _StudentNoteBlock extends StatelessWidget {
                 style: TextStyle(color: AtlasColors.royalBlue,
                   fontWeight: FontWeight.w900))),
               Expanded(child: SelectableText(line, style: const TextStyle(
-                color: AtlasColors.navy, height: 1.6, fontSize: 15))),
+                color: dark ? const Color(0xFFE8F0F8) : AtlasColors.navy, height: 1.6, fontSize: 15))),
             ]),
           )).toList()),
       );
@@ -1074,15 +1075,17 @@ class _StudentNoteBlock extends StatelessWidget {
       if (rows.isEmpty) return const SizedBox.shrink();
       return SingleChildScrollView(scrollDirection: Axis.horizontal,
         child: DataTable(
-          headingRowColor: WidgetStateProperty.all(const Color(0xFFEAF2FC)),
+          headingRowColor: WidgetStateProperty.all(dark ? const Color(0xFF26384B) : const Color(0xFFEAF2FC)),
           columns: rows.first.map((v) => DataColumn(label: Text(v,
-            style: const TextStyle(fontWeight: FontWeight.w900)))).toList(),
+            style: TextStyle(color: dark ? Colors.white : AtlasColors.navy,
+              fontWeight: FontWeight.w900)))).toList(),
           rows: rows.skip(1).map((row) => DataRow(cells: List.generate(
-            rows.first.length, (i) => DataCell(Text(i < row.length ? row[i] : ''))))).toList(),
+            rows.first.length, (i) => DataCell(Text(i < row.length ? row[i] : '',
+              style: TextStyle(color: dark ? const Color(0xFFE8F0F8) : AtlasColors.navy)))))).toList(),
         ));
     }
     return Padding(padding: const EdgeInsets.symmetric(vertical: 7),
       child: SelectableText(value, style: const TextStyle(
-        color: AtlasColors.navy, fontSize: 15, height: 1.75)));
+        color: dark ? const Color(0xFFE8F0F8) : AtlasColors.navy, fontSize: 15, height: 1.75)));
   }
 }
