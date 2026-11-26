@@ -130,6 +130,27 @@ export default {
  async fetch(request,env){if(request.method==="OPTIONS")return new Response(null,{headers:CORS});const url=new URL(request.url);if(url.pathname==="/health")return json({success:true,service:"atlas-academy-push-api"});if(request.method!=="POST"||!["/send","/event","/device/register","/device/validate"].includes(url.pathname))return json({success:false,message:"Not found."},404);
  try{const auth=request.headers.get("Authorization")||"";if(!auth.startsWith("Bearer "))return json({success:false,message:"Sign-in required."},401);const claims=await verify(auth.slice(7),url.pathname==="/send");if(url.pathname==="/device/register"||url.pathname==="/device/validate")return await deviceEndpoint(request,env,claims,url.pathname.endsWith("validate")?"validate":"register");const b=await request.json();
  if(url.pathname==="/event"){
+ if(b.type==="chapter_published"&&typeof b.resourceId==="string"){
+  if(claims.admin!==true)return json({success:false,message:"Administrator permission is required."},403);
+  const resourceId=b.resourceId.trim();
+  const resource=decode((await firestore(env,"/learning_resources/"+encodeURIComponent(resourceId))).fields||{});
+  if(resource.isPublished!==true)return json({success:false,message:"This chapter is not published."},403);
+  const version=Number(resource.versionNumber||0);
+  if(!Number.isInteger(version)||version<1)return json({success:false,message:"Published chapter version is invalid."},400);
+  const notificationId="chapter_update_"+resourceId+"_v"+version;
+  try{await firestore(env,"/push_notifications/"+encodeURIComponent(notificationId));return json({success:true,duplicate:true,sent:0,failed:0,devices:0});}catch(_){}
+  const title="Chapter updated: "+String(resource.title||"Medical chapter");
+  const body="A new version (v"+version+") is available in Learning Resources. Download the chapter again to refresh your offline copy.";
+  const payload={notificationId,title,body,destination:"study_library",audience:"all"};
+  const users=await listCollection(env,"users",5000);
+  const students=users.filter(row=>row.data.isAdmin!==true&&String(row.data.role||"").toLowerCase()!=="admin"&&String(row.data.accountType||"").toLowerCase()!=="admin");
+  for(let i=0;i<students.length;i+=25){
+   await Promise.all(students.slice(i,i+25).map(row=>createInboxNotice(env,notificationId,row.id,payload).catch(()=>false)));
+  }
+  const result=await sendCampaign(env,payload);
+  await createLog(env,notificationId,{title,body,audience:"all",status:"sent",sentCount:result.sent,failedCount:result.failed,deviceCount:result.devices,createdAt:new Date().toISOString(),automaticType:"chapter_published",resourceId,versionNumber:version});
+  return json({success:true,...result,inAppRecipients:students.length});
+ }
  if(b.type==="forum_reply"&&typeof b.postId==="string"){const post=decode((await firestore(env,"/forum_posts/"+encodeURIComponent(b.postId))).fields||{});const recipient=String(post.userId||"");if(!recipient||recipient===claims.sub)return json({success:true,sent:0,failed:0,devices:0});const payload={notificationId:"forum_reply_"+b.postId+"_"+Date.now(),title:"New discussion reply",body:"Someone has replied to your discussion: "+String(post.title||"Student discussion"),destination:"forum_thread:"+b.postId,audience:"selected",userIds:[recipient]};const eventResult=await sendCampaign(env,payload);if(eventResult.devices>0)await createLog(env,payload.notificationId,{title:payload.title,body:payload.body,audience:"selected",status:"sent",sentCount:eventResult.sent,failedCount:eventResult.failed,deviceCount:eventResult.devices,createdAt:new Date().toISOString(),automaticType:"forum_reply"});return json({success:true,...eventResult});}
  if(b.type==="subscription_request"&&typeof b.requestId==="string"){
   if(claims.admin===true)return json({success:false,message:"A student account must submit this event."},403);
