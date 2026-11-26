@@ -817,17 +817,32 @@ class _ResourceShelf extends StatelessWidget {
             child: ListTile(
               onTap: () => onOpen(item),
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-              leading: Container(width: 46, height: 46,
-                decoration: BoxDecoration(color: const Color(0xFFE5F1FF),
-                  borderRadius: BorderRadius.circular(14)),
-                child: Icon(type == LearningResourceType.pdf
-                  ? Icons.picture_as_pdf_rounded : Icons.play_circle_fill_rounded,
-                  color: AtlasColors.royalBlue)),
+              leading: ClipRRect(
+                borderRadius: BorderRadius.circular(14),
+                child: SizedBox(width: 52, height: 52,
+                  child: (item.thumbnailUrl ?? '').isNotEmpty
+                    ? Image.network(item.thumbnailUrl!, fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(
+                          color: const Color(0xFFE5F1FF),
+                          child: Icon(type == LearningResourceType.pdf
+                            ? Icons.picture_as_pdf_rounded : Icons.play_circle_fill_rounded,
+                            color: AtlasColors.royalBlue)))
+                    : Container(color: const Color(0xFFE5F1FF),
+                        child: Icon(type == LearningResourceType.pdf
+                          ? Icons.picture_as_pdf_rounded : Icons.play_circle_fill_rounded,
+                          color: AtlasColors.royalBlue)),
+                ),
+              ),
               title: Text(item.title, style: const TextStyle(
                 color: AtlasColors.navy, fontWeight: FontWeight.w900)),
-              subtitle: Text(item.description.isEmpty
-                ? (type == LearningResourceType.pdf ? 'PDF document' : 'Video lesson')
-                : item.description,
+              subtitle: Text([
+                if (item.subjectName.isNotEmpty) item.subjectName,
+                if (item.systemName.isNotEmpty) item.systemName,
+                if (item.topicName.isNotEmpty) item.topicName,
+                if (item.description.isNotEmpty) item.description,
+                if (item.subjectName.isEmpty && item.systemName.isEmpty && item.topicName.isEmpty && item.description.isEmpty)
+                  (type == LearningResourceType.pdf ? 'PDF document' : 'Video lesson'),
+              ].join(' • '),
                 maxLines: 2, overflow: TextOverflow.ellipsis,
                 style: const TextStyle(color: AtlasColors.secondaryText)),
               trailing: const Icon(Icons.arrow_forward_rounded,
