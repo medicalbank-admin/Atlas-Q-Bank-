@@ -511,18 +511,133 @@ class _NoteReader extends StatelessWidget {
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: const Color(0xFFF4F7FB),
     appBar: AppBar(title: Text(resource.title),
-      backgroundColor: const Color(0xFFF4F7FB), foregroundColor: AtlasColors.navy),
+      backgroundColor: Colors.white, foregroundColor: AtlasColors.navy),
     body: ListView(padding: const EdgeInsets.all(18), children: [
-      if (resource.description.isNotEmpty) ...[
-        Text(resource.description, style: const TextStyle(
-          color: AtlasColors.secondaryText, fontSize: 14, height: 1.5)),
-        const SizedBox(height: 18),
-      ],
-      Container(padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(color: Colors.white,
+      Container(
+        padding: const EdgeInsets.all(21),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(colors: [Color(0xFF102B49), Color(0xFF1E5B8B)]),
           borderRadius: BorderRadius.circular(20)),
-        child: SelectableText(resource.textContent, style: const TextStyle(
-          color: AtlasColors.navy, height: 1.75, fontSize: 15))),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Text('THE ATLAS ACADEMY • LEARNING RESOURCES',
+            style: TextStyle(color: Color(0xFFB9DDF7), fontSize: 9,
+              letterSpacing: 1.1, fontWeight: FontWeight.w900)),
+          const SizedBox(height: 12),
+          Text(resource.title, style: const TextStyle(color: Colors.white,
+            fontSize: 24, height: 1.2, fontWeight: FontWeight.w900)),
+          const SizedBox(height: 9),
+          Text(resource.systemName.isEmpty ? 'STUDY NOTES' : resource.systemName.toUpperCase(),
+            style: const TextStyle(color: Color(0xFFD5E7F5), fontSize: 11)),
+          if (resource.readingMinutes > 0)
+            Text('\u0024{resource.readingMinutes} min read',
+              style: const TextStyle(color: Color(0xFFD5E7F5), fontSize: 11)),
+        ]),
+      ),
+      if (resource.description.isNotEmpty)
+        Padding(padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Text(resource.description, style: const TextStyle(
+            color: AtlasColors.secondaryText, fontSize: 14, height: 1.6))),
+      if (resource.contentBlocks.isNotEmpty)
+        ...resource.contentBlocks.map((block) => _StudentNoteBlock(block: block))
+      else
+        Container(padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(color: Colors.white,
+            borderRadius: BorderRadius.circular(18)),
+          child: SelectableText(resource.textContent, style: const TextStyle(
+            color: AtlasColors.navy, height: 1.75, fontSize: 15))),
     ]),
   );
+}
+
+class _StudentNoteBlock extends StatelessWidget {
+  final Map<String, dynamic> block;
+  const _StudentNoteBlock({required this.block});
+
+  @override
+  Widget build(BuildContext context) {
+    final type = (block['type'] ?? 'paragraph').toString();
+    final value = (block['text'] ?? '').toString();
+    final caption = (block['caption'] ?? '').toString();
+    final url = (block['imageUrl'] ?? '').toString();
+    if (type == 'divider') return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 16),
+      child: Divider(color: Color(0xFFDCE5EF), thickness: 1.2));
+    if (type.startsWith('heading')) {
+      final size = type == 'heading1' ? 25.0 : type == 'heading2' ? 20.0 : 17.0;
+      return Padding(padding: const EdgeInsets.only(top: 19, bottom: 8),
+        child: Text(value, style: TextStyle(color: AtlasColors.navy,
+          fontSize: size, fontWeight: FontWeight.w900)));
+    }
+    if (type == 'image') return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 9),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        if (url.isNotEmpty) ClipRRect(
+          borderRadius: BorderRadius.circular(15),
+          child: Image.network(url, width: double.infinity, fit: BoxFit.contain,
+            errorBuilder: (_, __, ___) => const SizedBox(height: 130,
+              child: Center(child: Icon(Icons.broken_image_outlined)))),
+        ),
+        if (caption.isNotEmpty) Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Text(caption, style: const TextStyle(
+            color: AtlasColors.secondaryText, fontSize: 12,
+            fontStyle: FontStyle.italic))),
+      ]),
+    );
+    if (type == 'highlight' || type == 'clinical' || type == 'pearl' ||
+        type == 'definition' || type == 'warning') {
+      final title = type == 'clinical' ? 'Clinical correlation'
+        : type == 'pearl' ? 'Examination pearl'
+        : type == 'warning' ? 'Important caution'
+        : type == 'definition' ? 'Definition' : 'Important concept';
+      final color = type == 'warning' ? const Color(0xFFFFF0EA)
+        : type == 'clinical' ? const Color(0xFFEAF5F4)
+        : type == 'pearl' ? const Color(0xFFFFF7E5)
+        : const Color(0xFFEAF2FC);
+      return Container(margin: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.all(15),
+        decoration: BoxDecoration(color: color,
+          borderRadius: BorderRadius.circular(14)),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(title, style: const TextStyle(color: AtlasColors.navy,
+            fontWeight: FontWeight.w900)),
+          const SizedBox(height: 5),
+          SelectableText(value, style: const TextStyle(
+            color: AtlasColors.navy, height: 1.6)),
+        ]),
+      );
+    }
+    if (type == 'bullet' || type == 'numbered') {
+      final lines = value.split('\\n').where((v) => v.trim().isNotEmpty).toList();
+      return Padding(padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start,
+          children: lines.map((line) => Padding(
+            padding: const EdgeInsets.symmetric(vertical: 3),
+            child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const SizedBox(width: 24, child: Text('•',
+                style: TextStyle(color: AtlasColors.royalBlue,
+                  fontWeight: FontWeight.w900))),
+              Expanded(child: SelectableText(line, style: const TextStyle(
+                color: AtlasColors.navy, height: 1.6, fontSize: 15))),
+            ]),
+          )).toList()),
+      );
+    }
+    if (type == 'table') {
+      final rows = value.split('\\n').where((v) => v.trim().isNotEmpty)
+        .map((row) => row.split('|').map((v) => v.trim()).toList()).toList();
+      if (rows.isEmpty) return const SizedBox.shrink();
+      return SingleChildScrollView(scrollDirection: Axis.horizontal,
+        child: DataTable(
+          headingRowColor: WidgetStateProperty.all(const Color(0xFFEAF2FC)),
+          columns: rows.first.map((v) => DataColumn(label: Text(v,
+            style: const TextStyle(fontWeight: FontWeight.w900)))).toList(),
+          rows: rows.skip(1).map((row) => DataRow(cells: List.generate(
+            rows.first.length, (i) => DataCell(Text(i < row.length ? row[i] : ''))))).toList(),
+        ));
+    }
+    return Padding(padding: const EdgeInsets.symmetric(vertical: 7),
+      child: SelectableText(value, style: const TextStyle(
+        color: AtlasColors.navy, fontSize: 15, height: 1.75)));
+  }
 }
