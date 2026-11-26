@@ -287,6 +287,8 @@ class _NotesLibraryShelf extends StatefulWidget {
 class _NotesLibraryShelfState extends State<_NotesLibraryShelf> {
   final TextEditingController _search = TextEditingController();
   String _browseMode = 'Subjects';
+  String _accessFilter = 'All';
+  String _sortMode = 'Newest';
   String? _selectedCategory;
 
   @override
@@ -333,21 +335,41 @@ class _NotesLibraryShelfState extends State<_NotesLibraryShelf> {
           };
           final query = _search.text.trim().toLowerCase();
           final categories = <String, List<LearningResourceModel>>{};
-          final categoryArt = <String, String>{};
+          final searchableNotes = allNotes.where((note) {
+            final raw = rawById[note.id] ?? {};
+            final subjectName = (subjectData[note.subjectId]?['name'] ?? '').toString();
+            final systemName = _systemName(raw);
+            final topicName = (raw['topicName'] ?? raw['topic'] ?? '').toString();
+            final blocks = note.contentBlocks.map((block) =>
+              (block['text'] ?? block['caption'] ?? '').toString()).join(' ');
+            final matchesQuery = query.isEmpty || [
+              note.title, note.description, subjectName, systemName, topicName, blocks,
+            ].any((value) => value.toLowerCase().contains(query));
+            final matchesAccess = _accessFilter == 'All' ||
+              (_accessFilter == 'Free' && note.isFree) ||
+              (_accessFilter == 'Premium' && !note.isFree);
+            return matchesQuery && matchesAccess;
+          }).toList();
+          searchableNotes.sort((a, b) {
+            switch (_sortMode) {
+              case 'Title A–Z':
+                return a.title.toLowerCase().compareTo(b.title.toLowerCase());
+              case 'Oldest':
+                return a.createdAt.compareTo(b.createdAt);
+              case 'Recently updated':
+                return b.updatedAt.compareTo(a.updatedAt);
+              default:
+                return b.createdAt.compareTo(a.createdAt);
+            }
+          });
 
-          for (final note in allNotes) {
+          for (final note in searchableNotes) {
             final raw = rawById[note.id] ?? {};
             final category = _browseMode == 'Subjects'
               ? ((subjectData[note.subjectId]?['name'] ?? 'General Notes').toString().trim())
               : _systemName(raw);
             if (category.isEmpty) continue;
-            final matches = query.isEmpty ||
-              note.title.toLowerCase().contains(query) ||
-              note.description.toLowerCase().contains(query) ||
-              category.toLowerCase().contains(query);
-            if (!matches) continue;
             categories.putIfAbsent(category, () => []).add(note);
-            categoryArt[category] = category;
           }
 
           if (_selectedCategory != null &&
@@ -392,7 +414,7 @@ class _NotesLibraryShelfState extends State<_NotesLibraryShelf> {
               Row(children: [
                 const Expanded(child: Text('Browse your library', style: TextStyle(
                   color: AtlasColors.navy, fontSize: 17, fontWeight: FontWeight.w900))),
-                Text('${allNotes.length} notes', style: const TextStyle(
+                Text('${searchableNotes.length} of ${allNotes.length} chapters', style: const TextStyle(
                   color: AtlasColors.secondaryText, fontSize: 11,
                   fontWeight: FontWeight.w700)),
               ]),
@@ -411,6 +433,40 @@ class _NotesLibraryShelfState extends State<_NotesLibraryShelf> {
                 }),
                 showSelectedIcon: false,
               ),
+              const SizedBox(height: 12),
+              Wrap(spacing: 8, runSpacing: 8, children: [
+                for (final filter in ['All', 'Free', 'Premium'])
+                  ChoiceChip(
+                    label: Text(filter == 'All' ? 'All chapters' : filter),
+                    selected: _accessFilter == filter,
+                    onSelected: (_) => setState(() {
+                      _accessFilter = filter;
+                      _selectedCategory = null;
+                    }),
+                    selectedColor: const Color(0xFFDCEBFA),
+                    labelStyle: TextStyle(
+                      color: _accessFilter == filter
+                        ? AtlasColors.royalBlue : AtlasColors.secondaryText,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                const SizedBox(width: 4),
+                DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _sortMode,
+                    borderRadius: BorderRadius.circular(12),
+                    items: const [
+                      DropdownMenuItem(value: 'Newest', child: Text('Newest')),
+                      DropdownMenuItem(value: 'Recently updated', child: Text('Recently updated')),
+                      DropdownMenuItem(value: 'Oldest', child: Text('Oldest')),
+                      DropdownMenuItem(value: 'Title A–Z', child: Text('Title A–Z')),
+                    ],
+                    onChanged: (value) => setState(() {
+                      if (value != null) _sortMode = value;
+                    }),
+                  ),
+                ),
+              ]),
               const SizedBox(height: 15),
               if (sorted.isEmpty)
                 _emptyCategoryState()
@@ -437,9 +493,9 @@ class _NotesLibraryShelfState extends State<_NotesLibraryShelf> {
                   },
                 ),
                 const SizedBox(height: 16),
-                _sectionLabel('Recently published'),
+                _sectionLabel(_sortMode == 'Newest' ? 'Recently published' : 'Matching chapters'),
                 const SizedBox(height: 8),
-                ...allNotes.take(5).map((note) => _NoteListTile(
+                ...searchableNotes.take(5).map((note) => _NoteListTile(
                   note: note,
                   category: _browseMode == 'Subjects'
                     ? (subjectData[note.subjectId]?['name'] ?? 'General Notes').toString()
