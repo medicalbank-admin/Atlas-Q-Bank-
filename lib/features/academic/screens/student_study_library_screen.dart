@@ -847,20 +847,87 @@ class _NoteListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-    margin: const EdgeInsets.only(bottom: 10),
-    decoration: BoxDecoration(color: Colors.white,
-      borderRadius: BorderRadius.circular(16),
-      border: Border.all(color: const Color(0xFFE0E9F2))),
-    child: ListTile(
-      onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
-      leading: MedicalCategoryArtwork(category: category, size: 48),
-      title: Text(note.title, maxLines: 2, overflow: TextOverflow.ellipsis,
-        style: const TextStyle(color: AtlasColors.navy, fontWeight: FontWeight.w900)),
-      subtitle: Text(note.description.isEmpty ? category : note.description,
-        maxLines: 2, overflow: TextOverflow.ellipsis,
-        style: const TextStyle(color: AtlasColors.secondaryText, fontSize: 11)),
-      trailing: const Icon(Icons.chevron_right_rounded, color: AtlasColors.royalBlue),
+    margin: const EdgeInsets.only(bottom: 13),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(19),
+      border: Border.all(color: const Color(0xFFDCE7F1)),
+      boxShadow: const [
+        BoxShadow(color: Color(0x08102B49), blurRadius: 13, offset: Offset(0, 5)),
+      ],
+    ),
+    child: Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(19),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(19),
+        child: Padding(
+          padding: const EdgeInsets.all(11),
+          child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: SizedBox(
+                width: 82,
+                height: 96,
+                child: note.thumbnailUrl != null && note.thumbnailUrl!.trim().isNotEmpty
+                  ? Image.network(
+                      note.thumbnailUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                        color: const Color(0xFFEAF2FC),
+                        child: MedicalCategoryArtwork(category: category, size: 62)),
+                    )
+                  : Container(
+                      color: const Color(0xFFEAF2FC),
+                      child: MedicalCategoryArtwork(category: category, size: 62)),
+              ),
+            ),
+            const SizedBox(width: 13),
+            Expanded(child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEAF2FC),
+                    borderRadius: BorderRadius.circular(20)),
+                  child: Text(category.toUpperCase(),
+                    maxLines: 1, overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: AtlasColors.royalBlue, fontSize: 8,
+                      letterSpacing: .55, fontWeight: FontWeight.w900)),
+                ),
+                const SizedBox(height: 7),
+                Text(note.title, maxLines: 2, overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AtlasColors.navy, fontSize: 13,
+                    height: 1.25, fontWeight: FontWeight.w900)),
+                if (note.description.trim().isNotEmpty) ...[
+                  const SizedBox(height: 5),
+                  Text(note.description, maxLines: 2, overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: AtlasColors.secondaryText, fontSize: 10, height: 1.35)),
+                ],
+                const SizedBox(height: 8),
+                Row(children: [
+                  const Icon(Icons.menu_book_rounded,
+                    color: AtlasColors.royalBlue, size: 13),
+                  const SizedBox(width: 4),
+                  Text(note.readingMinutes > 0
+                      ? '${note.readingMinutes} min read' : 'Study chapter',
+                    style: const TextStyle(
+                      color: AtlasColors.secondaryText, fontSize: 9,
+                      fontWeight: FontWeight.w700)),
+                  const Spacer(),
+                  const Icon(Icons.arrow_forward_rounded,
+                    color: AtlasColors.royalBlue, size: 16),
+                ]),
+              ],
+            )),
+          ]),
+        ),
+      ),
     ),
   );
 }
