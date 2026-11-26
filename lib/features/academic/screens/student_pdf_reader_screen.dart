@@ -39,6 +39,7 @@ class _StudentPdfReaderScreenState extends State<StudentPdfReaderScreen> {
   double _downloadProgress = 0;
   Uint8List? _offlineBytes;
   bool _isOfflineSaved = false;
+  bool _isOfflineOutdated = false;
   List<int> _bookmarkedPages = [];
 
   static const List<Color> _highlightColors = [
@@ -57,8 +58,19 @@ class _StudentPdfReaderScreenState extends State<StudentPdfReaderScreen> {
   Future<void> _loadOfflinePdf() async {
     try {
       final bytes = await readOfflinePdf(widget.resource.id);
+      final records = await listOfflinePdfs();
+      final matches = records.where((item) => item['id'] == widget.resource.id);
+      final saved = matches.isEmpty ? null : matches.first;
+      final savedVersion = (saved?['versionNumber'] as num?)?.toInt() ?? 0;
+      final savedUpdated = DateTime.tryParse((saved?['updatedAt'] ?? '').toString());
+      final outdated = savedVersion != widget.resource.versionNumber ||
+        (savedUpdated != null && widget.resource.updatedAt.isAfter(savedUpdated.add(const Duration(seconds: 2))));
       if (!mounted) return;
-      if (bytes != null) setState(() { _offlineBytes = bytes; _isOfflineSaved = true; });
+      if (bytes != null) setState(() {
+        _offlineBytes = bytes;
+        _isOfflineSaved = true;
+        _isOfflineOutdated = outdated;
+      });
     } catch (_) {}
   }
 
@@ -175,8 +187,8 @@ class _StudentPdfReaderScreenState extends State<StudentPdfReaderScreen> {
   }
 
   Future<void> _downloadPdf() async {
-    if (_isOfflineSaved) {
-      _showMessage('This PDF is already available offline.');
+    if (_isOfflineSaved && !_isOfflineOutdated) {
+      _showMessage('This PDF is already available offline and up to date.');
       return;
     }
     setState(() { _downloadingPdf = true; _downloadProgress = 0; });
@@ -185,7 +197,11 @@ class _StudentPdfReaderScreenState extends State<StudentPdfReaderScreen> {
         if (mounted) setState(() => _downloadProgress = total > 0 ? received / total : 0);
       });
       final bytes = await readOfflinePdf(widget.resource.id);
-      if (mounted) setState(() { _offlineBytes = bytes; _isOfflineSaved = bytes != null; });
+      if (mounted) setState(() {
+        _offlineBytes = bytes;
+        _isOfflineSaved = bytes != null;
+        _isOfflineOutdated = false;
+      });
       _showMessage('PDF downloaded. It is now available offline.');
     } catch (error) { _showMessage('Download failed: $error'); }
     finally { if (mounted) setState(() => _downloadingPdf = false); }
@@ -336,10 +352,12 @@ class _StudentPdfReaderScreenState extends State<StudentPdfReaderScreen> {
         IconButton(tooltip: _bookmarkedPages.contains(_currentPage) ? 'Remove bookmark' : 'Bookmark page',
           onPressed: _toggleBookmark,
           icon: Icon(_bookmarkedPages.contains(_currentPage) ? Icons.bookmark_rounded : Icons.bookmark_add_outlined)),
-        IconButton(tooltip: 'Download PDF for offline use', onPressed: (_downloadingPdf || _isOfflineSaved) ? null : _downloadPdf,
+        IconButton(tooltip: _isOfflineOutdated ? 'Update offline PDF' : 'Download PDF for offline use',
+          onPressed: (_downloadingPdf || (_isOfflineSaved && !_isOfflineOutdated)) ? null : _downloadPdf,
           icon: _downloadingPdf ? const SizedBox(width: 20, height: 20,
             child: CircularProgressIndicator(strokeWidth: 2))
-            : Icon(_isOfflineSaved ? Icons.offline_pin_rounded : Icons.download_for_offline_outlined)),
+            : Icon(_isOfflineOutdated ? Icons.system_update_alt_rounded :
+              _isOfflineSaved ? Icons.offline_pin_rounded : Icons.download_for_offline_outlined)),
         IconButton(tooltip: 'Search PDF', onPressed: _searchPdf,
           icon: const Icon(Icons.search_rounded)),
         TextButton(
@@ -351,6 +369,19 @@ class _StudentPdfReaderScreenState extends State<StudentPdfReaderScreen> {
     ),
     body: Column(children: [
       if (_downloadingPdf) LinearProgressIndicator(value: _downloadProgress > 0 ? _downloadProgress : null),
+      if (_isOfflineOutdated)
+        Material(
+          color: const Color(0xFFFFF4D8),
+          child: ListTile(
+            dense: true,
+            leading: const Icon(Icons.system_update_alt_rounded, color: Color(0xFF946200)),
+            title: const Text('A newer PDF revision is available.',
+              style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF684900))),
+            subtitle: const Text('Update your offline copy to study the latest version.'),
+            trailing: TextButton(onPressed: _downloadingPdf ? null : _downloadPdf,
+              child: const Text('UPDATE')),
+          ),
+        ),
       Expanded(
         child: _offlineBytes != null
           ? SfPdfViewer.memory(
