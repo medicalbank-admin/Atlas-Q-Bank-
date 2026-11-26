@@ -521,6 +521,8 @@ class _NoteReaderState extends State<_NoteReader> {
   late LearningResourceModel _shown;
   bool _bookmarked = false;
   bool _offlineSaved = false;
+  bool _offlineOutdated = false;
+  double _downloadProgress = 0;
   bool _busy = false;
   bool _dark = false;
   double _fontScale = 1.0;
@@ -552,12 +554,18 @@ class _NoteReaderState extends State<_NoteReader> {
     if (offline != null && mounted) {
       final blocks = (offline['contentBlocks'] as List?)
           ?.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList() ?? [];
+      final savedRevision = DateTime.tryParse((offline['updatedAt'] ?? '').toString());
+      final outdated = savedRevision != null &&
+          savedRevision.isBefore(widget.resource.updatedAt);
       setState(() {
         _offlineSaved = true;
-        _shown = widget.resource.copyWith(
-          contentBlocks: blocks,
-          textContent: offline['textContent']?.toString() ?? widget.resource.textContent,
-        );
+        _offlineOutdated = outdated;
+        if (!outdated) {
+          _shown = widget.resource.copyWith(
+            contentBlocks: blocks,
+            textContent: offline['textContent']?.toString() ?? widget.resource.textContent,
+          );
+        }
       });
     }
     final uid = _uid;
@@ -637,13 +645,18 @@ class _NoteReaderState extends State<_NoteReader> {
         await LearningResourceOfflineService.remove(widget.resource.id);
         if (mounted) setState(() => _offlineSaved = false);
       } else {
-        await LearningResourceOfflineService.download(widget.resource);
+        await LearningResourceOfflineService.download(widget.resource,
+          onProgress: (done, total) {
+            if (mounted) setState(() => _downloadProgress = total == 0
+                ? 1 : done / total);
+          });
         final saved = await LearningResourceOfflineService.read(widget.resource.id);
         if (saved != null) {
           final blocks = (saved['contentBlocks'] as List?)
               ?.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList() ?? [];
           if (mounted) setState(() {
             _offlineSaved = true;
+            _offlineOutdated = false;
             _shown = widget.resource.copyWith(contentBlocks: blocks);
           });
         }
@@ -656,7 +669,7 @@ class _NoteReaderState extends State<_NoteReader> {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Offline save failed: $e')));
     } finally {
-      if (mounted) setState(() => _busy = false);
+      if (mounted) setState(() { _busy = false; _downloadProgress = 0; });
     }
   }
 
@@ -750,6 +763,7 @@ class _NoteReaderState extends State<_NoteReader> {
             onPressed: _toggleOffline,
             icon: _busy ? const SizedBox(width: 20, height: 20,
               child: CircularProgressIndicator(strokeWidth: 2))
+              : _busy ? CircularProgressIndicator(value: _downloadProgress, strokeWidth: 2)
               : Icon(_offlineSaved ? Icons.offline_pin_rounded : Icons.download_for_offline_rounded)),
         ],
       ),
@@ -782,11 +796,11 @@ class _NoteReaderState extends State<_NoteReader> {
                   if (_shown.readingMinutes > 0)
                     Text('${_shown.readingMinutes} min read',
                       style: const TextStyle(color: Color(0xFFD5E7F5), fontSize: 11)),
-                  if (_offlineSaved) const Padding(padding: EdgeInsets.only(top: 8),
+                  if (_offlineSaved) Padding(padding: const EdgeInsets.only(top: 8),
                     child: Row(children: [
                       Icon(Icons.offline_pin_rounded, color: Color(0xFFB9E8D0), size: 16),
                       SizedBox(width: 5),
-                      Text('AVAILABLE OFFLINE', style: TextStyle(
+                      Text(_offlineOutdated ? 'OFFLINE COPY NEEDS UPDATE' : 'AVAILABLE OFFLINE', style: TextStyle(
                         color: Color(0xFFB9E8D0), fontSize: 10, fontWeight: FontWeight.w900)),
                     ])),
                 ]),
