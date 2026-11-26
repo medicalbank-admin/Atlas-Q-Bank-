@@ -349,7 +349,7 @@ class _StudentLearningProgressScreenState extends State<StudentLearningProgressS
               color: isComplete ? const Color(0xFF25845D) : AtlasColors.royalBlue,
               size: 19),
           ),
-          title: Text((r['resourceTitle'] ?? resourceId.isNotEmpty ? r['resourceTitle'] ?? resourceId : 'Chapter').toString(),
+          title: Text(((r['resourceTitle'] ?? '').toString().trim().isNotEmpty ? r['resourceTitle'].toString() : (resourceId.isNotEmpty ? resourceId : 'Chapter')),
             maxLines: 1, overflow: TextOverflow.ellipsis,
             style: const TextStyle(color: AtlasColors.navy, fontWeight: FontWeight.w800)),
           subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
