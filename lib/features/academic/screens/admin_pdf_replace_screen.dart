@@ -51,7 +51,7 @@ class _AdminPdfReplaceScreenState extends State<AdminPdfReplaceScreen> {
       }
       final oldVersion = (current['versionNumber'] as num?)?.toInt() ?? 0;
       final nextVersion = oldVersion + 1;
-      final archiveVersion = oldVersion > 0 ? oldVersion : 1;
+      final archiveVersion = oldVersion;
       final archived = Map<String, dynamic>.from(current)
         ..remove('createdAt')..remove('updatedAt');
       await ref.collection('versions').doc('v$archiveVersion').set({
