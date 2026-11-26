@@ -479,6 +479,35 @@ service cloud.firestore {
     }
 
     // ==================================================
+    // STUDENT PDF HIGHLIGHTS
+    // Each student owns their saved PDF text selections and page geometry.
+    // ==================================================
+    match /student_pdf_highlights/{highlightId} {
+      allow read: if signedIn() && resource.data.userId == request.auth.uid;
+      allow create: if signedIn() &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.resourceId is string &&
+        request.resource.data.resourceTitle is string &&
+        request.resource.data.resourceUrl is string &&
+        request.resource.data.selectedText is string &&
+        request.resource.data.selectedText.size() > 0 &&
+        request.resource.data.selectedText.size() <= 5000 &&
+        request.resource.data.pageNumber is int &&
+        request.resource.data.lines is list &&
+        request.resource.data.lines.size() > 0 &&
+        request.resource.data.lines.size() <= 100 &&
+        request.resource.data.colorValue is int;
+      allow update: if signedIn() &&
+        resource.data.userId == request.auth.uid &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['colorValue', 'updatedAt']) &&
+        request.resource.data.colorValue is int;
+      allow delete: if signedIn() &&
+        resource.data.userId == request.auth.uid;
+    }
+
+    // ==================================================
     // MCQ PUBLIC QUESTION DATA
     // ==================================================
 
