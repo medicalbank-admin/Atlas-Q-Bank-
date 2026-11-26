@@ -26,20 +26,45 @@ class _StudentPdfDownloadsScreenState extends State<StudentPdfDownloadsScreen> {
   @override
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: const Color(0xFFF4F7FB),
-    appBar: AppBar(title: const Text('My PDF Downloads'),
+    appBar: AppBar(title: const Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+      Text('My Downloads', style: TextStyle(fontWeight: FontWeight.w900)),
+      Text('OFFLINE PDF LIBRARY', style: TextStyle(fontSize: 9, letterSpacing: 1,
+        color: AtlasColors.secondaryText, fontWeight: FontWeight.w800)),
+    ]),
       backgroundColor: Colors.white, foregroundColor: AtlasColors.navy,
       actions: [IconButton(onPressed: _load, icon: const Icon(Icons.refresh_rounded))]),
     body: _loading ? const Center(child: CircularProgressIndicator())
-      : _items.isEmpty ? const Center(child: Text('No PDFs downloaded yet.'))
-      : ListView.builder(padding: const EdgeInsets.all(14), itemCount: _items.length,
+      : _items.isEmpty ? Center(child: Padding(padding: const EdgeInsets.all(28),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Container(width: 76, height: 76, decoration: BoxDecoration(
+            color: const Color(0xFFE8F1FC), borderRadius: BorderRadius.circular(23)),
+            child: const Icon(Icons.download_for_offline_rounded,
+              size: 38, color: AtlasColors.royalBlue)),
+          const SizedBox(height: 14),
+          const Text('Your offline library is empty', style: TextStyle(
+            color: AtlasColors.navy, fontSize: 16, fontWeight: FontWeight.w900)),
+          const SizedBox(height: 6),
+          const Text('Download a PDF from the reader to access it without an internet connection.',
+            textAlign: TextAlign.center, style: TextStyle(
+              color: AtlasColors.secondaryText, height: 1.45)),
+        ])))
+      : ListView.builder(padding: const EdgeInsets.fromLTRB(15, 12, 15, 24), itemCount: _items.length,
         itemBuilder: (context, index) {
           final item = _items[index]; final id = (item['id'] ?? '').toString();
-          return Card(color: Colors.white, child: ListTile(
+          return Card(elevation: 0, color: Colors.white,
+            margin: const EdgeInsets.only(bottom: 10),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(17),
+              side: const BorderSide(color: Color(0xFFE1EAF3))),
+            child: ListTile(
             leading: const CircleAvatar(backgroundColor: Color(0xFFE5F1FF),
               child: Icon(Icons.picture_as_pdf_rounded, color: AtlasColors.royalBlue)),
             title: Text((item['title'] ?? 'PDF document').toString(),
               style: const TextStyle(fontWeight: FontWeight.w800, color: AtlasColors.navy)),
-            subtitle: Text('${_size(item['sizeBytes'])} • Offline available'),
+            subtitle: Padding(padding: const EdgeInsets.only(top: 4), child: Text([
+              if ((item['subjectName'] ?? '').toString().isNotEmpty) item['subjectName'].toString(),
+              if ((item['systemName'] ?? '').toString().isNotEmpty) item['systemName'].toString(),
+              _size(item['sizeBytes']), 'Available offline',
+            ].join(' • '), maxLines: 2, overflow: TextOverflow.ellipsis)),
             onTap: () {
               final resource = LearningResourceModel(
                 id: id, yearId: '', subjectId: '', topicId: '',
