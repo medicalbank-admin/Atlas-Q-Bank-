@@ -337,15 +337,54 @@ class _StudentLearningProgressScreenState extends State<StudentLearningProgressS
         side: const BorderSide(color: Color(0xFFE2EAF3))),
       child: Column(children: active.map((r) {
         final percent = ((r['progressPercent'] as num?)?.toDouble() ?? 0).clamp(0, 100);
+        final resourceId = (r['resourceId'] ?? '').toString();
+        final subject = (r['subjectName'] ?? r['systemName'] ?? '').toString();
+        final isComplete = r['completed'] == true || percent >= 99.5;
         return ListTile(
           dense: true,
-          leading: const Icon(Icons.history_rounded, color: AtlasColors.royalBlue),
-          title: Text((r['resourceTitle'] ?? r['resourceId'] ?? 'Chapter').toString(),
+          leading: CircleAvatar(
+            radius: 18,
+            backgroundColor: const Color(0xFFE8F1FC),
+            child: Icon(isComplete ? Icons.task_alt_rounded : Icons.history_rounded,
+              color: isComplete ? const Color(0xFF25845D) : AtlasColors.royalBlue,
+              size: 19),
+          ),
+          title: Text((r['resourceTitle'] ?? resourceId.isNotEmpty ? r['resourceTitle'] ?? resourceId : 'Chapter').toString(),
             maxLines: 1, overflow: TextOverflow.ellipsis,
             style: const TextStyle(color: AtlasColors.navy, fontWeight: FontWeight.w800)),
-          subtitle: Padding(padding: const EdgeInsets.only(top: 5),
-            child: LinearProgressIndicator(value: percent / 100, minHeight: 5)),
-          trailing: Text('${percent.toStringAsFixed(0)}%'),
+          subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            if (subject.isNotEmpty) Padding(
+              padding: const EdgeInsets.only(top: 2, bottom: 5),
+              child: Text(subject, maxLines: 1, overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: AtlasColors.secondaryText, fontSize: 10))),
+            LinearProgressIndicator(value: percent / 100, minHeight: 5),
+          ]),
+          trailing: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+            Text('${percent.toStringAsFixed(0)}%',
+              style: const TextStyle(color: AtlasColors.navy, fontWeight: FontWeight.w800)),
+            const Icon(Icons.chevron_right_rounded, size: 16, color: AtlasColors.secondaryText),
+          ]),
+          onTap: resourceId.isEmpty ? null : () async {
+            try {
+              final doc = await FirebaseFirestore.instance
+                  .collection('learning_resources').doc(resourceId).get();
+              if (!doc.exists || doc.data()?['isPublished'] != true) {
+                if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('This chapter is no longer published.')));
+                return;
+              }
+              final resource = LearningResourceModel.fromFirestore(doc);
+              if (resource.type != LearningResourceType.text) {
+                if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('This item is not a textbook chapter.')));
+                return;
+              }
+              widget.onOpen(resource);
+            } catch (_) {
+              if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Unable to reopen this chapter. Please try again.')));
+            }
+          },
         );
       }).toList()),
     );
