@@ -138,6 +138,25 @@ class PushNotificationService {
     return Map<String, dynamic>.from(decoded);
   }
 
+  Future<Map<String, dynamic>> sendChapterPublishedEvent({required String resourceId}) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) throw Exception('Please sign in again.');
+    final token = await user.getIdToken();
+    if (token == null || token.isEmpty) throw Exception('Administrator session could not be verified.');
+    final endpoint = _apiUrl.endsWith('/') ? '${_apiUrl}event' : '$_apiUrl/event';
+    final response = await http.post(Uri.parse(endpoint),
+      headers: {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'},
+      body: jsonEncode({'type': 'chapter_published', 'resourceId': resourceId}),
+    ).timeout(const Duration(seconds: 60));
+    final dynamic decoded = jsonDecode(response.body);
+    if (response.statusCode < 200 || response.statusCode >= 300 ||
+        decoded is! Map || decoded['success'] != true) {
+      throw Exception(decoded is Map ? (decoded['message'] ?? 'Chapter update notification failed.').toString()
+        : 'Invalid chapter notification response.');
+    }
+    return Map<String, dynamic>.from(decoded);
+  }
+
   Future<void> sendForumReplyEvent({required String postId}) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
