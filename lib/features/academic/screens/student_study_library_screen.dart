@@ -144,7 +144,8 @@ class _StudentStudyLibraryScreenState extends State<StudentStudyLibraryScreen>
                 builder: (_) => StudentPdfHighlightsScreen(onOpen: _openHighlighted)))),
             _quickAccess('Quick Revision', Icons.bolt_rounded, const Color(0xFFF1EAFE),
               const Color(0xFF8252D5), () => Navigator.of(context).push(MaterialPageRoute(
-                builder: (_) => StudentPdfHighlightsScreen(onOpen: _openHighlighted))),
+                builder: (_) => StudentPdfHighlightsScreen(
+                  onOpen: _openHighlighted, initialTab: 1))),
               badge: 'REVISE'),
             _quickAccess('My Downloads', Icons.download_rounded, const Color(0xFFE5F5EF),
               const Color(0xFF21956A), () => Navigator.of(context).push(MaterialPageRoute(
