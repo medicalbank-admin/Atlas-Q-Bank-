@@ -721,7 +721,7 @@ class _NoteReaderState extends State<_NoteReader> {
           setState(() {
             _bookmarked = data['isBookmarked'] == true;
             _progress = ((data['progressPercent'] as num?)?.toDouble() ?? 0)
-                .clamp(0, 100);
+                .clamp(0, 100).toDouble();
           });
           if (_progress > 0) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -904,9 +904,9 @@ class _NoteReaderState extends State<_NoteReader> {
               color: _bookmarked ? Colors.amber : null)),
           IconButton(tooltip: _offlineSaved ? 'Remove offline copy' : 'Download for offline',
             onPressed: _toggleOffline,
-            icon: _busy ? const SizedBox(width: 20, height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2))
-              : _busy ? CircularProgressIndicator(value: _downloadProgress, strokeWidth: 2)
+            icon: _busy ? SizedBox(width: 20, height: 20,
+              child: CircularProgressIndicator(value: _downloadProgress,
+                strokeWidth: 2))
               : Icon(_offlineSaved ? Icons.offline_pin_rounded : Icons.download_for_offline_rounded)),
         ],
       ),
