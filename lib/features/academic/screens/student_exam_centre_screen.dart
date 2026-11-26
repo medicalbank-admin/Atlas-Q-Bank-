@@ -214,28 +214,7 @@ class StudentExamCentreScreen extends StatelessWidget {
     );
   }
 
-  IconData _folderIcon(String name, String section) {
-    final value = name.toLowerCase();
-    if (section == 'mocks') {
-      if (value.contains('grand')) return Icons.workspace_premium_rounded;
-      if (value.contains('system')) return Icons.account_tree_rounded;
-      return Icons.assignment_rounded;
-    }
-    if (value.contains('cardio') || value.contains('heart')) return Icons.favorite_rounded;
-    if (value.contains('respir')) return Icons.air_rounded;
-    if (value.contains('neuro') || value.contains('brain')) return Icons.psychology_rounded;
-    if (value.contains('anatom')) return Icons.accessibility_new_rounded;
-    if (value.contains('surg')) return Icons.medical_services_rounded;
-    if (value.contains('path')) return Icons.biotech_rounded;
-    if (value.contains('physio')) return Icons.monitor_heart_rounded;
-    if (value.contains('medicine')) return Icons.health_and_safety_rounded;
-    if (value.contains('renal') || value.contains('urinary')) return Icons.water_drop_rounded;
-    if (value.contains('gastro') || value.contains('digest')) return Icons.restaurant_rounded;
-    if (value.contains('endocr')) return Icons.bubble_chart_rounded;
-    return section == 'system_exam'
-        ? Icons.account_tree_rounded
-        : Icons.menu_book_rounded;
-  }
+
 }
 
 class _ExamFolderScreen extends StatelessWidget {
