@@ -802,10 +802,13 @@ class _NoteReader extends StatefulWidget {
   State<_NoteReader> createState() => _NoteReaderState();
 }
 
-class _NoteReaderState extends State<_NoteReader> {
+class _NoteReaderState extends State<_NoteReader> with WidgetsBindingObserver {
   final ScrollController _scroll = ScrollController();
   final Map<int, GlobalKey> _headingKeys = {};
   Timer? _progressTimer;
+  Timer? _readingCheckpoint;
+  final Stopwatch _readingWatch = Stopwatch();
+  int _savedReadingSeconds = 0;
   late LearningResourceModel _shown;
   bool _bookmarked = false;
   bool _offlineSaved = false;
@@ -823,6 +826,9 @@ class _NoteReaderState extends State<_NoteReader> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _readingWatch.start();
+    _readingCheckpoint = Timer.periodic(const Duration(seconds: 30), (_) => _flushReadingTime());
     _shown = widget.resource;
     _scroll.addListener(_onScroll);
     _loadReaderState();
@@ -831,10 +837,52 @@ class _NoteReaderState extends State<_NoteReader> {
   @override
   void dispose() {
     _progressTimer?.cancel();
+    _readingCheckpoint?.cancel();
+    _readingWatch.stop();
+    _flushReadingTime();
+    WidgetsBinding.instance.removeObserver(this);
     _saveProgress();
     _scroll.removeListener(_onScroll);
     _scroll.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      if (!_readingWatch.isRunning) _readingWatch.start();
+    } else {
+      _readingWatch.stop();
+      _flushReadingTime();
+    }
+  }
+
+  Future<void> _flushReadingTime() async {
+    final uid = _uid;
+    if (uid == null) return;
+    final elapsed = _readingWatch.elapsed.inSeconds;
+    final delta = elapsed - _savedReadingSeconds;
+    if (delta <= 0) return;
+    _savedReadingSeconds = elapsed;
+    final now = DateTime.now();
+    final day = '${now.year.toString().padLeft(4, '0')}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    final ref = FirebaseFirestore.instance.collection('student_resource_progress').doc(_progressId);
+    try {
+      await ref.set({
+        'userId': uid,
+        'resourceId': widget.resource.id,
+        'resourceTitle': widget.resource.title,
+        'subjectId': widget.resource.subjectId,
+        'systemName': widget.resource.systemName,
+      }, SetOptions(merge: true));
+      await ref.update({
+        'dailyReadingSeconds.$day': FieldValue.increment(delta),
+        'totalReadingSeconds': FieldValue.increment(delta),
+        'lastReadAt': FieldValue.serverTimestamp(),
+      });
+    } catch (_) {
+      _savedReadingSeconds -= delta;
+    }
   }
 
   Future<void> _loadReaderState() async {
