@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../app/atlas_academy_app.dart';
 import '../../mcqs/screens/student_mcq_practice_screen.dart';
+import '../../../shared/widgets/medical_category_artwork.dart';
 
 class StudentExamCentreScreen extends StatelessWidget {
   final String section;
@@ -129,7 +130,7 @@ class StudentExamCentreScreen extends StatelessWidget {
                           return _FolderCard(
                             title: entry.key,
                             count: entry.value.length,
-                            icon: _folderIcon(entry.key, section),
+                            category: entry.key,
                             onTap: () => Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -266,12 +267,7 @@ class _ExamFolderScreen extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(18, 12, 18, 18),
               child: Row(
                 children: [
-                  const _GlossyMedicalIcon(
-                    icon: Icons.assignment_rounded,
-                    size: 48,
-                    light: Color(0xFF9CCCF2),
-                    dark: Color(0xFF2469A4),
-                  ),
+                  MedicalCategoryArtwork(category: title, size: 58),
                   const SizedBox(width: 13),
                   Expanded(
                     child: Column(
@@ -319,13 +315,13 @@ class _ExamFolderScreen extends StatelessWidget {
 class _FolderCard extends StatelessWidget {
   final String title;
   final int count;
-  final IconData icon;
+  final String category;
   final VoidCallback onTap;
 
   const _FolderCard({
     required this.title,
     required this.count,
-    required this.icon,
+    required this.category,
     required this.onTap,
   });
 
@@ -349,12 +345,7 @@ class _FolderCard extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _GlossyMedicalIcon(
-                icon: icon,
-                size: 58,
-                light: const Color(0xFF9BCDF2),
-                dark: const Color(0xFF2469A4),
-              ),
+              MedicalCategoryArtwork(category: category, size: 66),
               const SizedBox(height: 10),
               Text(title,
                   maxLines: 2,
@@ -429,11 +420,9 @@ class _ExamCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const _GlossyMedicalIcon(
-                    icon: Icons.assignment_turned_in_rounded,
-                    size: 42,
-                    light: Color(0xFF9BCDF2),
-                    dark: Color(0xFF2469A4),
+                  MedicalCategoryArtwork(
+                    category: (data['categoryName'] ?? data['subjectName'] ?? data['name'] ?? '').toString(),
+                    size: 46,
                   ),
                   const Spacer(),
                   const Icon(Icons.arrow_outward_rounded,
