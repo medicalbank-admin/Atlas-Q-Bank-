@@ -28,3 +28,17 @@ Future<bool> hasOfflineChapter(String id) async {
   final file = await _chapterFile(id);
   return file.exists();
 }
+
+Future<List<String>> listOfflineChapterIds() async {
+  final directory = await getApplicationSupportDirectory();
+  final folder = Directory('${directory.path}/atlas_offline_chapters');
+  if (!await folder.exists()) return [];
+  final ids = <String>[];
+  await for (final entity in folder.list()) {
+    if (entity is File && entity.path.endsWith('.json')) {
+      ids.add(entity.uri.pathSegments.last.substring(
+        0, entity.uri.pathSegments.last.length - 5));
+    }
+  }
+  return ids;
+}
