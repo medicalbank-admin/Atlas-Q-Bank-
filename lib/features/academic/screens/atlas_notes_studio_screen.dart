@@ -27,7 +27,6 @@ class _AtlasNotesStudioScreenState extends State<AtlasNotesStudioScreen> {
   String? _selectedSystem;
   bool _free = false;
   bool _saving = false;
-  bool _published = false;
   String? _editingId;
 
   @override
@@ -136,7 +135,6 @@ class _AtlasNotesStudioScreenState extends State<AtlasNotesStudioScreen> {
     }
     setState(() {
       _saving = true;
-      _published = publish;
     });
     try {
       final blocks = <Map<String, dynamic>>[];
@@ -574,12 +572,6 @@ class _NoteBlock {
       caption = TextEditingController(),
       imageUrl = '',
       pendingName = 'medical_image.jpg';
-
-  _NoteBlock._({
-    required this.type, required this.id, required this.text,
-    required this.caption, required this.imageUrl,
-    required this.pendingName,
-  });
 
   _NoteBlock copy() {
     final result = _NoteBlock(type: type);
