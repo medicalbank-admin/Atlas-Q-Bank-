@@ -35,96 +35,188 @@ class _StudentStudyLibraryScreenState extends State<StudentStudyLibraryScreen>
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: const Color(0xFFF4F7FB),
     appBar: AppBar(
-      title: const Text('Learning Resources'),
-      backgroundColor: const Color(0xFFF4F7FB),
+      backgroundColor: Colors.white,
       foregroundColor: AtlasColors.navy,
       elevation: 0,
+      titleSpacing: 16,
+      title: Row(children: [
+        Container(
+          width: 34, height: 34,
+          decoration: BoxDecoration(
+            color: const Color(0xFFEAF2FC),
+            borderRadius: BorderRadius.circular(11),
+          ),
+          child: const Icon(Icons.health_and_safety_rounded,
+            color: AtlasColors.royalBlue, size: 22),
+        ),
+        const SizedBox(width: 10),
+        const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('The Atlas Academy', style: TextStyle(
+            color: AtlasColors.navy, fontSize: 15, fontWeight: FontWeight.w900)),
+          Text('LEARNING RESOURCES', style: TextStyle(
+            color: AtlasColors.secondaryText, fontSize: 9,
+            letterSpacing: 1.15, fontWeight: FontWeight.w800)),
+        ]),
+      ]),
       actions: [
-        IconButton(tooltip: 'My learning progress', icon: const Icon(Icons.insights_rounded),
+        IconButton(tooltip: 'My learning progress',
+          icon: const Icon(Icons.insights_rounded),
           onPressed: () => Navigator.of(context).push(MaterialPageRoute(
             builder: (_) => StudentLearningProgressScreen(onOpen: _open)))),
-        IconButton(tooltip: 'My PDF downloads',
-          icon: const Icon(Icons.download_for_offline_rounded),
-          onPressed: () => Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => const StudentPdfDownloadsScreen()))),
-        IconButton(tooltip: 'My PDF highlights',
-          icon: const Icon(Icons.highlight_rounded),
-          onPressed: () => Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => StudentPdfHighlightsScreen(
-              onOpen: _openHighlighted)))),
-        IconButton(tooltip: 'Bookmarked chapters',
-          icon: const Icon(Icons.bookmarks_outlined),
-          onPressed: () => Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => _StudentSavedChaptersScreen(
-              offlineOnly: false, onOpen: _open)))),
-        IconButton(tooltip: 'Offline chapters',
-          icon: const Icon(Icons.offline_pin_outlined),
-          onPressed: () => Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => _StudentSavedChaptersScreen(
-              offlineOnly: true, onOpen: _open)))),
+        IconButton(tooltip: 'Notifications', icon: const Icon(Icons.notifications_none_rounded),
+          onPressed: () => _message('Your learning notifications are available in the notification centre.')),
       ],
-      bottom: TabBar(
-        controller: _tabs,
-        labelColor: AtlasColors.royalBlue,
-        unselectedLabelColor: AtlasColors.secondaryText,
-        indicatorColor: AtlasColors.royalBlue,
-        indicatorWeight: 3,
-        tabs: const [
-          Tab(icon: Icon(Icons.menu_book_rounded), text: 'Notes'),
-          Tab(icon: Icon(Icons.picture_as_pdf_rounded), text: 'PDF Library'),
-          Tab(icon: Icon(Icons.play_circle_rounded), text: 'Video Lessons'),
-        ],
-      ),
     ),
     body: Column(children: [
       Container(
-        margin: const EdgeInsets.fromLTRB(16, 14, 16, 12),
-        padding: const EdgeInsets.all(19),
+        margin: const EdgeInsets.fromLTRB(15, 13, 15, 12),
+        padding: const EdgeInsets.fromLTRB(18, 17, 14, 17),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF102B49), Color(0xFF1C5B8D)],
+            begin: Alignment.topLeft, end: Alignment.bottomRight,
+            colors: [Color(0xFF09264A), Color(0xFF15558B), Color(0xFF2877A7)],
           ),
-          borderRadius: BorderRadius.circular(22),
-          boxShadow: const [
-            BoxShadow(color: Color(0x24102B49), blurRadius: 18, offset: Offset(0, 8)),
-          ],
+          borderRadius: BorderRadius.circular(23),
+          boxShadow: const [BoxShadow(
+            color: Color(0x24102B49), blurRadius: 18, offset: Offset(0, 8))],
         ),
         child: Row(children: [
-          Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: .13),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white.withValues(alpha: .2)),
-            ),
-            child: const Icon(Icons.auto_stories_rounded, color: Colors.white, size: 28),
-          ),
-          const SizedBox(width: 14),
-          const Expanded(child: Column(
+          Expanded(child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('ATLAS MEDICAL LIBRARY', style: TextStyle(
-                color: Color(0xFFB9DDF7), fontSize: 10, letterSpacing: 1.5,
-                fontWeight: FontWeight.w900)),
-              SizedBox(height: 5),
-              Text('Learn. Understand. Excel.', style: TextStyle(
-                color: Colors.white, fontSize: 19, fontWeight: FontWeight.w900)),
-              SizedBox(height: 4),
-              Text('Your organized medical study collection.',
-                style: TextStyle(color: Color(0xFFD8E8F5), fontSize: 12, height: 1.35)),
+              const Text('YOUR MEDICAL LEARNING COMPANION',
+                style: TextStyle(color: Color(0xFFB9DDF7), fontSize: 9,
+                  letterSpacing: 1.15, fontWeight: FontWeight.w900)),
+              const SizedBox(height: 7),
+              const Text('Study smarter.\nExcel further.',
+                style: TextStyle(color: Colors.white, fontSize: 22,
+                  height: 1.12, fontWeight: FontWeight.w900)),
+              const SizedBox(height: 7),
+              const Text('Explore structured notes, trusted PDFs and video lessons.',
+                style: TextStyle(color: Color(0xFFE0EFFA), fontSize: 11, height: 1.4)),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
+                decoration: BoxDecoration(color: const Color(0xFFFFD45A),
+                  borderRadius: BorderRadius.circular(22)),
+                child: const Row(mainAxisSize: MainAxisSize.min, children: [
+                  Text('Start learning', style: TextStyle(
+                    color: Color(0xFF09264A), fontSize: 11, fontWeight: FontWeight.w900)),
+                  SizedBox(width: 6),
+                  Icon(Icons.arrow_forward_rounded, size: 15, color: Color(0xFF09264A)),
+                ]),
+              ),
             ],
           )),
+          const SizedBox(width: 5),
+          Container(
+            width: 92, height: 112,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: .10),
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: Colors.white.withValues(alpha: .15)),
+            ),
+            child: const Icon(Icons.monitor_heart_rounded,
+              color: Color(0xFFFFD1C5), size: 66),
+          ),
         ]),
       ),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 9),
+        child: Row(children: [
+          const Expanded(child: Text('Quick access', style: TextStyle(
+            color: AtlasColors.navy, fontSize: 16, fontWeight: FontWeight.w900))),
+          TextButton(
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => StudentPdfHighlightsScreen(onOpen: _openHighlighted))),
+            child: const Text('View all', style: TextStyle(fontWeight: FontWeight.w800)),
+          ),
+        ]),
+      ),
+      SizedBox(
+        height: 76,
+        child: ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 13),
+          scrollDirection: Axis.horizontal,
+          children: [
+            _quickAccess('My Highlights', Icons.star_rounded, const Color(0xFFFFF1D7),
+              const Color(0xFFE99A24), () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => StudentPdfHighlightsScreen(onOpen: _openHighlighted)))),
+            _quickAccess('Quick Revision', Icons.bolt_rounded, const Color(0xFFF1EAFE),
+              const Color(0xFF8252D5), () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => StudentPdfHighlightsScreen(onOpen: _openHighlighted))),
+              badge: 'REVISE'),
+            _quickAccess('My Downloads', Icons.download_rounded, const Color(0xFFE5F5EF),
+              const Color(0xFF21956A), () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => const StudentPdfDownloadsScreen()))),
+            _quickAccess('Bookmarks', Icons.bookmark_rounded, const Color(0xFFE7F0FF),
+              AtlasColors.royalBlue, () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => _StudentSavedChaptersScreen(
+                  offlineOnly: false, onOpen: _open)))),
+            _quickAccess('Offline Notes', Icons.offline_pin_rounded, const Color(0xFFEAF4F4),
+              const Color(0xFF278A87), () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => _StudentSavedChaptersScreen(
+                  offlineOnly: true, onOpen: _open)))),
+          ],
+        ),
+      ),
+      const SizedBox(height: 10),
+      Container(
+        margin: const EdgeInsets.symmetric(horizontal: 15),
+        decoration: BoxDecoration(color: Colors.white,
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: const Color(0xFFE1EAF3))),
+        child: TabBar(
+          controller: _tabs,
+          labelColor: AtlasColors.royalBlue,
+          unselectedLabelColor: AtlasColors.secondaryText,
+          indicatorColor: AtlasColors.royalBlue,
+          indicatorWeight: 3,
+          dividerColor: Colors.transparent,
+          labelStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900),
+          tabs: const [
+            Tab(icon: Icon(Icons.menu_book_rounded, size: 19), text: 'Notes'),
+            Tab(icon: Icon(Icons.picture_as_pdf_rounded, size: 19), text: 'PDF Library'),
+            Tab(icon: Icon(Icons.play_circle_rounded, size: 19), text: 'Videos'),
+          ],
+        ),
+      ),
+      const SizedBox(height: 4),
       Expanded(child: TabBarView(controller: _tabs, children: [
         _NotesLibraryShelf(onOpen: _open),
         _ResourceShelf(type: LearningResourceType.pdf, onOpen: _open),
         _ResourceShelf(type: LearningResourceType.video, onOpen: _open),
       ])),
     ]),
+  );
+
+  Widget _quickAccess(String title, IconData icon, Color background,
+      Color foreground, VoidCallback onTap, {String? badge}) => Container(
+    width: 91,
+    margin: const EdgeInsets.only(right: 9),
+    child: Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFE3EAF2))),
+          child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+            Container(width: 31, height: 31,
+              decoration: BoxDecoration(color: background, borderRadius: BorderRadius.circular(10)),
+              child: Icon(icon, color: foreground, size: 19)),
+            const SizedBox(height: 5),
+            Text(title, maxLines: 1, overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: AtlasColors.navy,
+                fontSize: 9, fontWeight: FontWeight.w800)),
+          ]),
+        ),
+      ),
+    ),
   );
 
   Future<void> _open(LearningResourceModel resource) async {
