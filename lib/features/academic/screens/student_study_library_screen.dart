@@ -771,88 +771,195 @@ class _NoteListTile extends StatelessWidget {
   );
 }
 
-class _ResourceShelf extends StatelessWidget {
+class _ResourceShelf extends StatefulWidget {
   final LearningResourceType type;
   final ValueChanged<LearningResourceModel> onOpen;
   const _ResourceShelf({required this.type, required this.onOpen});
 
   @override
+  State<_ResourceShelf> createState() => _ResourceShelfState();
+}
+
+class _ResourceShelfState extends State<_ResourceShelf> {
+  final TextEditingController _search = TextEditingController();
+  String _subject = 'All subjects';
+  String _system = 'All systems';
+  String _sort = 'Newest';
+
+  @override
+  void dispose() { _search.dispose(); super.dispose(); }
+
+  @override
   Widget build(BuildContext context) =>
-      StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-    stream: FirebaseFirestore.instance.collection('learning_resources')
-      .where('isPublished', isEqualTo: true).snapshots(),
-    builder: (context, snapshot) {
-      if (snapshot.hasError) return const Center(child: Text(
-        'Unable to load content. Please check your connection or access.'));
-      if (!snapshot.hasData) return const Center(
-        child: CircularProgressIndicator());
-      final items = snapshot.data!.docs.map(LearningResourceModel.fromFirestore)
-        .where((item) => item.type == type).toList()
-        ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-      if (items.isEmpty) {
-        final label = type == LearningResourceType.pdf ? 'PDF documents' : 'video lessons';
-        return Center(child: Padding(padding: const EdgeInsets.all(28),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Icon(type == LearningResourceType.pdf
-              ? Icons.picture_as_pdf_rounded : Icons.play_circle_outline_rounded,
-              size: 46, color: AtlasColors.royalBlue),
-            const SizedBox(height: 12),
-            Text('No $label published yet', style: const TextStyle(
-              color: AtlasColors.navy, fontWeight: FontWeight.w800)),
-            const SizedBox(height: 5),
-            const Text('Please check back later.',
-              style: TextStyle(color: AtlasColors.secondaryText)),
-          ])));
-      }
-      return ListView.builder(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 22),
-        itemCount: items.length,
-        itemBuilder: (context, index) {
-          final item = items[index];
-          return Container(
-            margin: const EdgeInsets.only(bottom: 11),
-            decoration: BoxDecoration(color: Colors.white,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: const Color(0xFFE0EAF5))),
-            child: ListTile(
-              onTap: () => onOpen(item),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-              leading: ClipRRect(
-                borderRadius: BorderRadius.circular(14),
-                child: SizedBox(width: 52, height: 52,
-                  child: (item.thumbnailUrl ?? '').isNotEmpty
-                    ? Image.network(item.thumbnailUrl!, fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(
-                          color: const Color(0xFFE5F1FF),
-                          child: Icon(type == LearningResourceType.pdf
-                            ? Icons.picture_as_pdf_rounded : Icons.play_circle_fill_rounded,
-                            color: AtlasColors.royalBlue)))
-                    : Container(color: const Color(0xFFE5F1FF),
-                        child: Icon(type == LearningResourceType.pdf
-                          ? Icons.picture_as_pdf_rounded : Icons.play_circle_fill_rounded,
-                          color: AtlasColors.royalBlue)),
-                ),
+    StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance.collection('learning_resources')
+        .where('isPublished', isEqualTo: true).snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) return const Center(child: Text(
+          'Unable to load content. Please check your connection or access.'));
+        if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+
+        final all = snapshot.data!.docs.map(LearningResourceModel.fromFirestore)
+          .where((item) => item.type == widget.type).toList();
+        final subjects = <String>{'All subjects'};
+        final systems = <String>{'All systems'};
+        for (final item in all) {
+          if (item.subjectName.trim().isNotEmpty) subjects.add(item.subjectName.trim());
+          if (item.systemName.trim().isNotEmpty) systems.add(item.systemName.trim());
+        }
+        if (!subjects.contains(_subject)) _subject = 'All subjects';
+        if (!systems.contains(_system)) _system = 'All systems';
+
+        final query = _search.text.trim().toLowerCase();
+        final items = all.where((item) {
+          final subjectMatch = _subject == 'All subjects' || item.subjectName.trim() == _subject;
+          final systemMatch = _system == 'All systems' || item.systemName.trim() == _system;
+          final searchMatch = query.isEmpty || [
+            item.title, item.description, item.subjectName, item.systemName, item.topicName,
+          ].any((value) => value.toLowerCase().contains(query));
+          return subjectMatch && systemMatch && searchMatch;
+        }).toList()..sort((a,b) {
+          switch (_sort) {
+            case 'Title A–Z': return a.title.toLowerCase().compareTo(b.title.toLowerCase());
+            case 'Oldest': return a.createdAt.compareTo(b.createdAt);
+            case 'Recently updated': return b.updatedAt.compareTo(a.updatedAt);
+            default: return b.createdAt.compareTo(a.createdAt);
+          }
+        });
+
+        final isPdf = widget.type == LearningResourceType.pdf;
+        final label = isPdf ? 'PDF documents' : 'video lessons';
+        return Column(children: [
+          Padding(padding: const EdgeInsets.fromLTRB(16, 8, 16, 4), child: Column(children: [
+            TextField(
+              controller: _search,
+              onChanged: (_) => setState(() {}),
+              decoration: InputDecoration(
+                hintText: isPdf ? 'Search PDFs, subjects, systems or topics...' :
+                  'Search videos, subjects, systems or topics...',
+                prefixIcon: const Icon(Icons.search_rounded),
+                suffixIcon: _search.text.isEmpty ? null : IconButton(
+                  onPressed: () { _search.clear(); setState(() {}); },
+                  icon: const Icon(Icons.close_rounded)),
+                filled: true, fillColor: Colors.white,
+                contentPadding: const EdgeInsets.symmetric(vertical: 13),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(color: Color(0xFFE0EAF5))),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(color: Color(0xFFE0EAF5))),
               ),
-              title: Text(item.title, style: const TextStyle(
-                color: AtlasColors.navy, fontWeight: FontWeight.w900)),
-              subtitle: Text([
-                if (item.subjectName.isNotEmpty) item.subjectName,
-                if (item.systemName.isNotEmpty) item.systemName,
-                if (item.topicName.isNotEmpty) item.topicName,
-                if (item.description.isNotEmpty) item.description,
-                if (item.subjectName.isEmpty && item.systemName.isEmpty && item.topicName.isEmpty && item.description.isEmpty)
-                  (type == LearningResourceType.pdf ? 'PDF document' : 'Video lesson'),
-              ].join(' • '),
-                maxLines: 2, overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: AtlasColors.secondaryText)),
-              trailing: const Icon(Icons.arrow_forward_rounded,
-                color: AtlasColors.royalBlue),
             ),
-          );
-        },
-      );
-    },
+            const SizedBox(height: 9),
+            Row(children: [
+              Expanded(child: _filterDropdown('Subject', _subject, subjects.toList(),
+                (value) => setState(() => _subject = value))),
+              const SizedBox(width: 8),
+              Expanded(child: _filterDropdown('System', _system, systems.toList(),
+                (value) => setState(() => _system = value))),
+            ]),
+            const SizedBox(height: 8),
+            Row(children: [
+              const Text('Sort by', style: TextStyle(color: AtlasColors.secondaryText,
+                fontSize: 12, fontWeight: FontWeight.w700)),
+              const SizedBox(width: 10),
+              Expanded(child: Align(alignment: Alignment.centerRight,
+                child: DropdownButton<String>(
+                  value: _sort, isDense: true,
+                  underline: const SizedBox.shrink(),
+                  items: const [
+                    DropdownMenuItem(value: 'Newest', child: Text('Newest')),
+                    DropdownMenuItem(value: 'Recently updated', child: Text('Recently updated')),
+                    DropdownMenuItem(value: 'Oldest', child: Text('Oldest')),
+                    DropdownMenuItem(value: 'Title A–Z', child: Text('Title A–Z')),
+                  ],
+                  onChanged: (value) { if (value != null) setState(() => _sort = value); },
+                ))),
+            ]),
+            if (_subject != 'All subjects' || _system != 'All systems' || query.isNotEmpty)
+              Align(alignment: Alignment.centerRight, child: TextButton.icon(
+                onPressed: () => setState(() {
+                  _search.clear(); _subject = 'All subjects'; _system = 'All systems';
+                }),
+                icon: const Icon(Icons.filter_alt_off_rounded, size: 16),
+                label: const Text('Clear filters'))),
+          ])),
+          Expanded(child: items.isEmpty
+            ? Center(child: Padding(padding: const EdgeInsets.all(28),
+                child: Column(mainAxisSize: MainAxisSize.min, children: [
+                  Icon(isPdf ? Icons.picture_as_pdf_rounded : Icons.play_circle_outline_rounded,
+                    size: 46, color: AtlasColors.royalBlue),
+                  const SizedBox(height: 12),
+                  Text(all.isEmpty ? 'No $label published yet' : 'No matching content found',
+                    style: const TextStyle(color: AtlasColors.navy, fontWeight: FontWeight.w800)),
+                  const SizedBox(height: 5),
+                  Text(all.isEmpty ? 'Please check back later.' :
+                    'Try another search or clear your filters.',
+                    style: const TextStyle(color: AtlasColors.secondaryText)),
+                ])))
+            : ListView.builder(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 22),
+                itemCount: items.length,
+                itemBuilder: (context, index) {
+                  final item = items[index];
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 11),
+                    decoration: BoxDecoration(color: Colors.white,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: const Color(0xFFE0EAF5))),
+                    child: ListTile(
+                      onTap: () => widget.onOpen(item),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+                      leading: ClipRRect(
+                        borderRadius: BorderRadius.circular(14),
+                        child: SizedBox(width: 52, height: 52,
+                          child: (item.thumbnailUrl ?? '').isNotEmpty
+                            ? Image.network(item.thumbnailUrl!, fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => _resourceFallback(isPdf))
+                            : _resourceFallback(isPdf))),
+                      title: Text(item.title, style: const TextStyle(
+                        color: AtlasColors.navy, fontWeight: FontWeight.w900)),
+                      subtitle: Text([
+                        if (item.subjectName.isNotEmpty) item.subjectName,
+                        if (item.systemName.isNotEmpty) item.systemName,
+                        if (item.topicName.isNotEmpty) item.topicName,
+                        if (item.description.isNotEmpty) item.description,
+                        if (item.subjectName.isEmpty && item.systemName.isEmpty &&
+                            item.topicName.isEmpty && item.description.isEmpty)
+                          (isPdf ? 'PDF document' : 'Video lesson'),
+                      ].join(' • '), maxLines: 2, overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(color: AtlasColors.secondaryText)),
+                      trailing: const Icon(Icons.arrow_forward_rounded,
+                        color: AtlasColors.royalBlue),
+                    ),
+                  );
+                })),
+        ]);
+      },
+    );
+
+  Widget _filterDropdown(String label, String value, List<String> values,
+      ValueChanged<String> onChanged) => DropdownButtonFormField<String>(
+    value: value, isExpanded: true, isDense: true,
+    decoration: InputDecoration(
+      labelText: label, filled: true, fillColor: Colors.white,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFFE0EAF5))),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFFE0EAF5))),
+    ),
+    items: values.toSet().toList()..sort((a,b) {
+      if (a.startsWith('All ')) return -1;
+      if (b.startsWith('All ')) return 1;
+      return a.toLowerCase().compareTo(b.toLowerCase());
+    }),
+    onChanged: (next) { if (next != null) onChanged(next); },
   );
+
+  Widget _resourceFallback(bool isPdf) => Container(
+    color: const Color(0xFFE5F1FF),
+    child: Icon(isPdf ? Icons.picture_as_pdf_rounded : Icons.play_circle_fill_rounded,
+      color: AtlasColors.royalBlue));
 }
 
 class _NoteReader extends StatefulWidget {
