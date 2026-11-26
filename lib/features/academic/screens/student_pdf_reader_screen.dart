@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -6,6 +7,8 @@ import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import '../../../app/atlas_academy_app.dart';
 import '../models/learning_resource_model.dart';
 import '../services/pdf_highlight_service.dart';
+import '../services/pdf_offline_service.dart';
+import '../services/pdf_offline_store.dart';
 
 class StudentPdfReaderScreen extends StatefulWidget {
   final LearningResourceModel resource;
@@ -32,6 +35,11 @@ class _StudentPdfReaderScreenState extends State<StudentPdfReaderScreen> {
   bool _restoring = false;
   bool _restored = false;
   bool _savingHighlight = false;
+  bool _downloadingPdf = false;
+  double _downloadProgress = 0;
+  Uint8List? _offlineBytes;
+  bool _isOfflineSaved = false;
+  List<int> _bookmarkedPages = [];
 
   static const List<Color> _highlightColors = [
     Color(0xFFFFE082),
@@ -39,6 +47,20 @@ class _StudentPdfReaderScreenState extends State<StudentPdfReaderScreen> {
     Color(0xFF90CAF9),
     Color(0xFFF48FB1),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadOfflinePdf();
+  }
+
+  Future<void> _loadOfflinePdf() async {
+    try {
+      final bytes = await readOfflinePdf(widget.resource.id);
+      if (!mounted) return;
+      if (bytes != null) setState(() { _offlineBytes = bytes; _isOfflineSaved = true; });
+    } catch (_) {}
+  }
 
   @override
   void dispose() {
@@ -87,6 +109,7 @@ class _StudentPdfReaderScreenState extends State<StudentPdfReaderScreen> {
     if (!mounted) return;
     setState(() => _pageCount = details.document.pages.count);
     await _restoreHighlights();
+    await _loadBookmarks();
     if (!mounted) return;
     var target = widget.initialPage;
     if (target <= 0) {
@@ -103,6 +126,69 @@ class _StudentPdfReaderScreenState extends State<StudentPdfReaderScreen> {
     if (target > 0 && target <= _pageCount) {
       _controller.jumpToPage(target);
     }
+  }
+
+  Future<void> _loadBookmarks() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+    try {
+      final snap = await FirebaseFirestore.instance.collection('student_resource_progress')
+        .doc('${uid}_${widget.resource.id}').get();
+      final raw = snap.data()?['pdfBookmarks'];
+      if (mounted) setState(() => _bookmarkedPages = raw is List
+        ? raw.whereType<num>().map((v) => v.toInt()).toSet().toList()..sort()
+        : <int>[]);
+    } catch (_) {}
+  }
+
+  Future<void> _toggleBookmark() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+    final pages = List<int>.from(_bookmarkedPages);
+    final wasSaved = pages.contains(_currentPage);
+    if (wasSaved) { pages.remove(_currentPage); } else { pages.add(_currentPage); pages.sort(); }
+    try {
+      await FirebaseFirestore.instance.collection('student_resource_progress')
+        .doc('${uid}_${widget.resource.id}').set({
+          'userId': uid, 'resourceId': widget.resource.id, 'completed': false,
+          'pdfBookmarks': pages, 'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+      if (mounted) setState(() => _bookmarkedPages = pages);
+      _showMessage(wasSaved ? 'Page bookmark removed.' : 'Page bookmarked.');
+    } catch (error) { _showMessage('Could not save bookmark: $error'); }
+  }
+
+  void _showBookmarks() {
+    showModalBottomSheet<void>(context: context, showDragHandle: true,
+      builder: (sheetContext) => SafeArea(child: SizedBox(height: 360,
+        child: Column(children: [
+          const Padding(padding: EdgeInsets.all(14), child: Text('Bookmarked pages',
+            style: TextStyle(fontWeight: FontWeight.w900, fontSize: 17))),
+          Expanded(child: _bookmarkedPages.isEmpty
+            ? const Center(child: Text('No bookmarked pages yet.'))
+            : ListView(children: _bookmarkedPages.map((page) => ListTile(
+              leading: const Icon(Icons.bookmark_rounded, color: AtlasColors.royalBlue),
+              title: Text('Page $page'),
+              onTap: () { Navigator.pop(sheetContext); _controller.jumpToPage(page); },
+            )).toList())),
+        ]))));
+  }
+
+  Future<void> _downloadPdf() async {
+    if (_isOfflineSaved) {
+      _showMessage('This PDF is already available offline.');
+      return;
+    }
+    setState(() { _downloadingPdf = true; _downloadProgress = 0; });
+    try {
+      await PdfOfflineService.download(widget.resource, onProgress: (received, total) {
+        if (mounted) setState(() => _downloadProgress = total > 0 ? received / total : 0);
+      });
+      final bytes = await readOfflinePdf(widget.resource.id);
+      if (mounted) setState(() { _offlineBytes = bytes; _isOfflineSaved = bytes != null; });
+      _showMessage('PDF downloaded. It is now available offline.');
+    } catch (error) { _showMessage('Download failed: $error'); }
+    finally { if (mounted) setState(() => _downloadingPdf = false); }
   }
 
   void _onPageChanged(PdfPageChangedDetails details) {
@@ -245,6 +331,15 @@ class _StudentPdfReaderScreenState extends State<StudentPdfReaderScreen> {
       backgroundColor: Colors.white,
       foregroundColor: AtlasColors.navy,
       actions: [
+        IconButton(tooltip: 'Bookmarked pages', onPressed: _showBookmarks,
+          icon: const Icon(Icons.bookmarks_outlined)),
+        IconButton(tooltip: _bookmarkedPages.contains(_currentPage) ? 'Remove bookmark' : 'Bookmark page',
+          onPressed: _toggleBookmark,
+          icon: Icon(_bookmarkedPages.contains(_currentPage) ? Icons.bookmark_rounded : Icons.bookmark_add_outlined)),
+        IconButton(tooltip: 'Download PDF for offline use', onPressed: (_downloadingPdf || _isOfflineSaved) ? null : _downloadPdf,
+          icon: _downloadingPdf ? const SizedBox(width: 20, height: 20,
+            child: CircularProgressIndicator(strokeWidth: 2))
+            : Icon(_isOfflineSaved ? Icons.offline_pin_rounded : Icons.download_for_offline_outlined)),
         IconButton(tooltip: 'Search PDF', onPressed: _searchPdf,
           icon: const Icon(Icons.search_rounded)),
         TextButton(
@@ -255,21 +350,31 @@ class _StudentPdfReaderScreenState extends State<StudentPdfReaderScreen> {
       ],
     ),
     body: Column(children: [
+      if (_downloadingPdf) LinearProgressIndicator(value: _downloadProgress > 0 ? _downloadProgress : null),
       Expanded(
-        child: SfPdfViewer.network(
-          widget.resource.resourceUrl,
-          key: _viewerKey,
-          controller: _controller,
-          canShowTextSelectionMenu: false,
-          onDocumentLoaded: _onDocumentLoaded,
-          onPageChanged: _onPageChanged,
-          onTextSelectionChanged: (details) {
-            if (!mounted) return;
-            setState(() => _selectedText = details.selectedText);
-          },
-          onDocumentLoadFailed: (details) =>
-            _showMessage('Unable to open PDF: ${details.description}'),
-        ),
+        child: _offlineBytes != null
+          ? SfPdfViewer.memory(
+              _offlineBytes!, key: _viewerKey, controller: _controller,
+              canShowTextSelectionMenu: false,
+              onDocumentLoaded: _onDocumentLoaded,
+              onPageChanged: _onPageChanged,
+              onTextSelectionChanged: (details) {
+                if (!mounted) return;
+                setState(() => _selectedText = details.selectedText);
+              },
+              onDocumentLoadFailed: (details) => _showMessage('Unable to open offline PDF: ${details.description}'),
+            )
+          : SfPdfViewer.network(
+              widget.resource.resourceUrl, key: _viewerKey, controller: _controller,
+              canShowTextSelectionMenu: false,
+              onDocumentLoaded: _onDocumentLoaded,
+              onPageChanged: _onPageChanged,
+              onTextSelectionChanged: (details) {
+                if (!mounted) return;
+                setState(() => _selectedText = details.selectedText);
+              },
+              onDocumentLoadFailed: (details) => _showMessage('Unable to open PDF: ${details.description}'),
+            ),
       ),
       if (_selectedText != null && _selectedText!.trim().isNotEmpty)
         Material(
