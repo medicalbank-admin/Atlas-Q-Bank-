@@ -23,6 +23,7 @@ class _AtlasNotesStudioScreenState extends State<AtlasNotesStudioScreen> {
   final List<_NoteBlock> _blocks = [];
   String? _subjectId;
   String? _subjectName;
+  String? _selectedSystem;
   bool _free = false;
   bool _saving = false;
   bool _published = false;
@@ -259,14 +260,36 @@ class _AtlasNotesStudioScreenState extends State<AtlasNotesStudioScreen> {
               },
             ),
             const SizedBox(height: 12),
-            TextFormField(
-              controller: _system,
+            DropdownButtonFormField<String>(
+              value: _selectedSystem,
+              isExpanded: true,
               decoration: const InputDecoration(
-                labelText: 'Organ system',
-                hintText: 'e.g. Cardiovascular System',
-                helperText: 'Used for system browsing and the matching medical illustration.',
+                labelText: 'Organ system *',
+                helperText: 'Choose the system used to organize this chapter and its medical artwork.',
                 border: OutlineInputBorder(),
               ),
+              items: const [
+                'Cardiovascular System',
+                'Respiratory System',
+                'Nervous System',
+                'Gastrointestinal System',
+                'Renal and Urinary System',
+                'Musculoskeletal System',
+                'Endocrine System',
+                'Reproductive System',
+                'Hematology',
+                'Integumentary System',
+                'Immune and Lymphatic System',
+                'General Medicine',
+                'General Anatomy',
+                'Other / Multisystem',
+              ].map((name) => DropdownMenuItem(value: name, child: Text(name))).toList(),
+              onChanged: _saving ? null : (value) => setState(() {
+                _selectedSystem = value;
+                _system.text = value ?? '';
+              }),
+              validator: (value) => value == null || value.isEmpty
+                ? 'Select an organ system.' : null,
             ),
             const SizedBox(height: 12),
             TextFormField(
