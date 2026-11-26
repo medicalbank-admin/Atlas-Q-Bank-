@@ -16,7 +16,11 @@ class StudentPdfHighlightsScreen extends StatelessWidget {
     child: Scaffold(
       backgroundColor: const Color(0xFFF4F7FB),
       appBar: AppBar(
-        title: const Text('My PDF Highlights'),
+        title: const Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+          Text('My Highlights', style: TextStyle(fontWeight: FontWeight.w900)),
+          Text('YOUR SAVED STUDY PASSAGES', style: TextStyle(fontSize: 9,
+            letterSpacing: 1, color: AtlasColors.secondaryText, fontWeight: FontWeight.w800)),
+        ]),
         backgroundColor: Colors.white,
         foregroundColor: AtlasColors.navy,
         bottom: const TabBar(
@@ -28,7 +32,24 @@ class StudentPdfHighlightsScreen extends StatelessWidget {
           ],
         ),
       ),
-      body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      body: Column(children: [
+        Container(margin: const EdgeInsets.fromLTRB(15, 12, 15, 4),
+          padding: const EdgeInsets.all(15),
+          decoration: BoxDecoration(gradient: const LinearGradient(
+            colors: [Color(0xFF102B49), Color(0xFF1C5B8D)]),
+            borderRadius: BorderRadius.circular(18)),
+          child: const Row(children: [
+            Icon(Icons.auto_awesome_rounded, color: Color(0xFFFFD979), size: 27),
+            SizedBox(width: 11),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('Your personal revision collection', style: TextStyle(
+                color: Colors.white, fontWeight: FontWeight.w900, fontSize: 14)),
+              SizedBox(height: 3),
+              Text('Every saved passage, ready whenever you are.', style: TextStyle(
+                color: Color(0xFFD8E8F5), fontSize: 11)),
+            ])),
+          ])),
+        Expanded(child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: PdfHighlightService.watchMine(),
         builder: (context, snapshot) {
           if (snapshot.hasError) return const Center(
@@ -64,7 +85,8 @@ class StudentPdfHighlightsScreen extends StatelessWidget {
             _HighlightsList(docs: docs, onOpen: onOpen, quick: true),
           ]);
         },
-      ),
+      )),
+      ]),
     ),
   );
 }
