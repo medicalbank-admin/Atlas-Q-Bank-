@@ -641,9 +641,9 @@ class _NoteReaderState extends State<_NoteReader> {
     if (_busy) return;
     setState(() => _busy = true);
     try {
-      if (_offlineSaved) {
+      if (_offlineSaved && !_offlineOutdated) {
         await LearningResourceOfflineService.remove(widget.resource.id);
-        if (mounted) setState(() => _offlineSaved = false);
+        if (mounted) setState(() { _offlineSaved = false; _offlineOutdated = false; });
       } else {
         await LearningResourceOfflineService.download(widget.resource,
           onProgress: (done, total) {
