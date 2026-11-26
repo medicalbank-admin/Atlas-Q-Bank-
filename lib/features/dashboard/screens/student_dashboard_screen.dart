@@ -30,6 +30,7 @@ class StudentDashboardScreen extends StatefulWidget {
 class _StudentDashboardScreenState extends State<StudentDashboardScreen>{
  int selected=0;
  bool _notificationsOpened=false;
+ bool _isSigningOut=false;
  final PushNotificationService pushService=PushNotificationService();
  @override void initState(){super.initState();pushService.registerDevice(context,onNotificationTap:_handleNotificationTap);}
  Future<void> _handleNotificationTap(RemoteMessage message) async {
@@ -66,7 +67,46 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen>{
       )),
   ]);
  }
- Future<void> signOut()async{try{await pushService.unregisterCurrentDevice();await StudentAuthService().signOut();if(mounted)Navigator.of(context).popUntil((r)=>r.isFirst);}catch(_){if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Unable to sign out.')));}}
+ Future<void> signOut() async {
+  if (_isSigningOut || FirebaseAuth.instance.currentUser == null) return;
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: const Text('Sign out?'),
+      content: const Text('Are you sure you want to sign out of The Atlas Academy?'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(dialogContext, false),
+          child: const Text('Cancel'),
+        ),
+        FilledButton.icon(
+          onPressed: () => Navigator.pop(dialogContext, true),
+          icon: const Icon(Icons.logout_rounded),
+          label: const Text('Sign Out'),
+        ),
+      ],
+    ),
+  );
+  if (confirmed != true || !mounted) return;
+  setState(() => _isSigningOut = true);
+  try {
+    // Device-token cleanup is best-effort; it must never block account logout.
+    try {
+      await pushService.unregisterCurrentDevice();
+    } catch (_) {}
+    await StudentAuthService().signOut();
+    if (!mounted) return;
+    Navigator.of(context).popUntil((route) => route.isFirst);
+  } catch (_) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Sign out failed. Please check your connection and try again.')),
+      );
+    }
+  } finally {
+    if (mounted) setState(() => _isSigningOut = false);
+  }
+ }
  Future<void> openFeature(String key)async{
   final u=FirebaseAuth.instance.currentUser;if(u==null)return;
   if(key=='profile'){await Navigator.push(context,MaterialPageRoute(builder:(_)=>const ProfileScreen()));return;}
