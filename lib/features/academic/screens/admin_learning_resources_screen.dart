@@ -176,6 +176,38 @@ class _AdminLearningResourcesScreenState extends State<AdminLearningResourcesScr
               _ContentMetric(label: 'PDFs', value: pdfCount, icon: Icons.picture_as_pdf_rounded),
               _ContentMetric(label: 'Videos', value: videoCount, icon: Icons.play_circle_rounded),
             ]),
+            const SizedBox(height: 10),
+            StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+              stream: FirebaseFirestore.instance.collection('student_resource_progress').snapshots(),
+              builder: (context, progressSnapshot) {
+                if (!progressSnapshot.hasData || progressSnapshot.hasError) {
+                  return const SizedBox.shrink();
+                }
+                final records = progressSnapshot.data!.docs;
+                final learners = records.map((doc) =>
+                  (doc.data()['userId'] ?? '').toString())
+                  .where((id) => id.isNotEmpty).toSet().length;
+                final completed = records.where((doc) =>
+                  ((doc.data()['progressPercent'] as num?)?.toDouble() ?? 0) >= 100).length;
+                final reading = records.where((doc) {
+                  final percent = (doc.data()['progressPercent'] as num?)?.toDouble() ?? 0;
+                  return percent > 0 && percent < 100;
+                }).length;
+                final bookmarks = records.where((doc) =>
+                  doc.data()['isBookmarked'] == true).length;
+                return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  const Padding(padding: EdgeInsets.only(bottom: 9),
+                    child: Text('Student engagement', style: TextStyle(
+                      color: AtlasColors.navy, fontSize: 14, fontWeight: FontWeight.w900))),
+                  Wrap(spacing: 9, runSpacing: 9, children: [
+                    _ContentMetric(label: 'Learners', value: learners, icon: Icons.people_alt_rounded),
+                    _ContentMetric(label: 'Reading', value: reading, icon: Icons.menu_book_rounded),
+                    _ContentMetric(label: 'Completed', value: completed, icon: Icons.task_alt_rounded),
+                    _ContentMetric(label: 'Bookmarks', value: bookmarks, icon: Icons.bookmark_rounded),
+                  ]),
+                ]);
+              },
+            ),
             const SizedBox(height: 16),
             TextField(
               controller: _search,
