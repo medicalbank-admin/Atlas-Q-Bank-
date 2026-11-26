@@ -22,8 +22,12 @@ class _LearningResourceUploadDialogState extends State<LearningResourceUploadDia
   final _title = TextEditingController();
   final _description = TextEditingController();
   final _text = TextEditingController();
+  final _subjectName = TextEditingController();
+  final _systemName = TextEditingController();
+  final _topicName = TextEditingController();
   LearningResourceType _type = LearningResourceType.pdf;
   PlatformFile? _file;
+  PlatformFile? _coverFile;
   bool _free = false;
   bool _saving = false;
   double _progress = 0;
@@ -31,6 +35,7 @@ class _LearningResourceUploadDialogState extends State<LearningResourceUploadDia
   @override
   void dispose() {
     _title.dispose(); _description.dispose(); _text.dispose();
+    _subjectName.dispose(); _systemName.dispose(); _topicName.dispose();
     super.dispose();
   }
 
@@ -54,6 +59,18 @@ class _LearningResourceUploadDialogState extends State<LearningResourceUploadDia
     setState(() => _file = file);
   }
 
+  Future<void> _chooseCover() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom, allowedExtensions: ['jpg', 'jpeg', 'png', 'webp'], withData: true);
+    if (result == null || result.files.isEmpty) return;
+    final file = result.files.single;
+    if (file.bytes == null || file.bytes!.isEmpty || file.size > 8 * 1024 * 1024) {
+      _message('Choose a readable cover image smaller than 8 MB.');
+      return;
+    }
+    setState(() => _coverFile = file);
+  }
+
   void _message(String value) {
     if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(value)));
   }
@@ -75,6 +92,7 @@ class _LearningResourceUploadDialogState extends State<LearningResourceUploadDia
     setState(() { _saving = true; _progress = 0; });
     try {
       var downloadUrl = '';
+      var thumbnailUrl = '';
       var textContent = _text.text.trim();
       if (_type != LearningResourceType.text) {
         final file = _file!;
@@ -98,15 +116,28 @@ class _LearningResourceUploadDialogState extends State<LearningResourceUploadDia
         await task;
         downloadUrl = await storageRef.getDownloadURL();
       }
+      if (_coverFile != null) {
+        final cover = _coverFile!;
+        final ext = cover.extension?.toLowerCase() ?? 'jpg';
+        final coverRef = FirebaseStorage.instance.ref().child(
+          'learning_resources/covers/${DateTime.now().millisecondsSinceEpoch}_cover.$ext');
+        final mime = ext == 'png' ? 'image/png' : ext == 'webp' ? 'image/webp' : 'image/jpeg';
+        await coverRef.putData(cover.bytes!, SettableMetadata(contentType: mime));
+        thumbnailUrl = await coverRef.getDownloadURL();
+      }
       await LearningResourceService.createResource(
         yearId: widget.yearId,
         subjectId: widget.subjectId,
         topicId: widget.topicId,
+        subjectName: _subjectName.text.trim(),
+        topicName: _topicName.text.trim(),
+        systemName: _systemName.text.trim(),
         title: _title.text.trim(),
         description: _description.text.trim(),
         type: _type,
         resourceUrl: downloadUrl,
         textContent: textContent,
+        thumbnailUrl: thumbnailUrl.isEmpty ? null : thumbnailUrl,
         isFree: _free,
       );
       if (!mounted) return;
@@ -138,6 +169,15 @@ class _LearningResourceUploadDialogState extends State<LearningResourceUploadDia
               decoration: const InputDecoration(labelText: 'Description (optional)'),
             ),
             const SizedBox(height: 12),
+            TextFormField(controller: _subjectName,
+              decoration: const InputDecoration(labelText: 'Subject (e.g. Anatomy)'),),
+            const SizedBox(height: 10),
+            TextFormField(controller: _systemName,
+              decoration: const InputDecoration(labelText: 'Organ system (e.g. Cardiovascular)'),),
+            const SizedBox(height: 10),
+            TextFormField(controller: _topicName,
+              decoration: const InputDecoration(labelText: 'Topic (optional)'),),
+            const SizedBox(height: 12),
             DropdownButtonFormField<LearningResourceType>(
               value: _type,
               decoration: const InputDecoration(labelText: 'Material type'),
@@ -166,6 +206,12 @@ class _LearningResourceUploadDialogState extends State<LearningResourceUploadDia
                 icon: const Icon(Icons.upload_file_rounded),
                 label: Text(_file == null ? (_type == LearningResourceType.pdf ? 'Choose PDF file' : 'Choose video file') : _file!.name),
               ),
+            const SizedBox(height: 10),
+            OutlinedButton.icon(
+              onPressed: _saving ? null : _chooseCover,
+              icon: const Icon(Icons.image_outlined),
+              label: Text(_coverFile == null ? 'Add cover / thumbnail (optional)' : _coverFile!.name),
+            ),
             if (_saving && _type != LearningResourceType.text) ...[
               const SizedBox(height: 12),
               LinearProgressIndicator(value: _progress > 0 ? _progress : null),
