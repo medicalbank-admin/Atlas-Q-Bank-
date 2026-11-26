@@ -12,3 +12,5 @@ Future<void> removeOfflineChapter(String id) =>
 
 Future<bool> hasOfflineChapter(String id) =>
     platform.hasOfflineChapter(id);
+
+Future<List<String>> listOfflineChapterIds() => platform.listOfflineChapterIds();
