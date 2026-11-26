@@ -341,11 +341,17 @@ class _StudentPdfReaderScreenState extends State<StudentPdfReaderScreen> {
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: const Color(0xFFF4F7FB),
     appBar: AppBar(
-      title: Text(widget.resource.title, maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+      title: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+        Text(widget.resource.title, maxLines: 1, overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900)),
+        Text([widget.resource.subjectName, widget.resource.systemName, 'PDF READER']
+          .where((v) => v.trim().isNotEmpty).join(' • '), maxLines: 1,
+          overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 9,
+            color: AtlasColors.secondaryText, fontWeight: FontWeight.w700)),
+      ]),
       backgroundColor: Colors.white,
       foregroundColor: AtlasColors.navy,
+      elevation: 0,
       actions: [
         IconButton(tooltip: 'Bookmarked pages', onPressed: _showBookmarks,
           icon: const Icon(Icons.bookmarks_outlined)),
@@ -368,6 +374,10 @@ class _StudentPdfReaderScreenState extends State<StudentPdfReaderScreen> {
       ],
     ),
     body: Column(children: [
+      Container(height: 3, color: const Color(0xFFE3EAF2),
+        child: Align(alignment: Alignment.centerLeft, child: FractionallySizedBox(
+          widthFactor: _pageCount == 0 ? 0 : (_currentPage / _pageCount).clamp(0.0, 1.0),
+          child: Container(color: AtlasColors.royalBlue)))),
       if (_downloadingPdf) LinearProgressIndicator(value: _downloadProgress > 0 ? _downloadProgress : null),
       if (_isOfflineOutdated)
         Material(
