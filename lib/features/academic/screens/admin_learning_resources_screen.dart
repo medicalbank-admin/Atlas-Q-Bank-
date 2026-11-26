@@ -3,16 +3,54 @@ import 'package:flutter/material.dart';
 import '../../../app/atlas_academy_app.dart';
 import '../models/learning_resource_model.dart';
 import 'learning_resource_upload_dialog.dart';
+import 'atlas_notes_studio_screen.dart';
 
 class AdminLearningResourcesScreen extends StatelessWidget {
   const AdminLearningResourcesScreen({super.key});
 
   Future<void> _publish(BuildContext context) async {
-    final result = await showDialog<bool>(
-      context: context, builder: (_) => const LearningResourceUploadDialog());
-    if (result == true && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Content published for students.')));
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(18, 8, 18, 22),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            const Text('Create learning content', style: TextStyle(
+              color: AtlasColors.navy, fontSize: 18, fontWeight: FontWeight.w900)),
+            const SizedBox(height: 14),
+            ListTile(
+              leading: const CircleAvatar(backgroundColor: Color(0xFFE6F1FC),
+                child: Icon(Icons.auto_stories_rounded, color: AtlasColors.royalBlue)),
+              title: const Text('Create textbook chapter', style: TextStyle(fontWeight: FontWeight.w800)),
+              subtitle: const Text('Atlas Notes Studio • Rich content blocks'),
+              onTap: () => Navigator.pop(sheetContext, 'chapter'),
+            ),
+            ListTile(
+              leading: const CircleAvatar(backgroundColor: Color(0xFFE6F1FC),
+                child: Icon(Icons.cloud_upload_rounded, color: AtlasColors.royalBlue)),
+              title: const Text('Upload PDF or video', style: TextStyle(fontWeight: FontWeight.w800)),
+              subtitle: const Text('Continue with the existing file publishing workflow'),
+              onTap: () => Navigator.pop(sheetContext, 'file'),
+            ),
+          ]),
+        ),
+      ),
+    );
+    if (choice == 'chapter' && context.mounted) {
+      final result = await Navigator.of(context).push<bool>(MaterialPageRoute(
+        builder: (_) => const AtlasNotesStudioScreen()));
+      if (result == true && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Atlas chapter saved.')));
+      }
+    } else if (choice == 'file' && context.mounted) {
+      final result = await showDialog<bool>(context: context,
+        builder: (_) => const LearningResourceUploadDialog());
+      if (result == true && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Content published for students.')));
+      }
     }
   }
 
@@ -53,7 +91,7 @@ class AdminLearningResourcesScreen extends StatelessWidget {
     floatingActionButton: FloatingActionButton.extended(
       onPressed: () => _publish(context), backgroundColor: AtlasColors.royalBlue,
       foregroundColor: Colors.white, icon: const Icon(Icons.publish_rounded),
-      label: const Text('Publish Content')),
+      label: const Text('Create Content')),
     body: ListView(padding: const EdgeInsets.fromLTRB(16, 14, 16, 100), children: [
       Container(
         padding: const EdgeInsets.all(20),
@@ -63,10 +101,10 @@ class AdminLearningResourcesScreen extends StatelessWidget {
         child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Icon(Icons.library_books_rounded, color: Colors.white, size: 30),
           SizedBox(height: 12),
-          Text('One simple publishing centre', style: TextStyle(
+          Text('Atlas Notes Studio + Resource Library', style: TextStyle(
             color: Colors.white, fontSize: 21, fontWeight: FontWeight.w900)),
           SizedBox(height: 6),
-          Text('Choose Text, PDF or Video. Complete only the relevant fields and publish. '
+          Text('Create rich textbook chapters with headings, medical illustrations and clinical learning blocks, or continue uploading PDFs and videos.'
             'Students see it in Notes, PDFs or Videos.',
             style: TextStyle(color: Colors.white70, height: 1.5)),
         ]),
