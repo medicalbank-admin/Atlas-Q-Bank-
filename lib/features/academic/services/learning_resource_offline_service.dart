@@ -59,8 +59,6 @@ class LearningResourceOfflineService {
 
   static Future<void> remove(String id) => removeOfflineChapter(id);
   static Future<bool> isSaved(String id) => hasOfflineChapter(id);
-}
-
   static Future<List<Map<String, dynamic>>> listSaved() async {
     final ids = await listOfflineChapterIds();
     final chapters = <Map<String, dynamic>>[];
@@ -68,7 +66,8 @@ class LearningResourceOfflineService {
       final chapter = await read(id);
       if (chapter != null) chapters.add(chapter);
     }
-    chapters.sort((a, b) => (b['title'] ?? '').toString()
-        .compareTo((a['title'] ?? '').toString()));
+    chapters.sort((a, b) => (a['title'] ?? '').toString()
+        .compareTo((b['title'] ?? '').toString()));
     return chapters;
   }
+}
