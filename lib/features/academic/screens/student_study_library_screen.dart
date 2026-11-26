@@ -948,11 +948,12 @@ class _ResourceShelfState extends State<_ResourceShelf> {
       enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(color: Color(0xFFE0EAF5))),
     ),
-    items: values.toSet().toList()..sort((a,b) {
+    items: (values.toSet().toList()..sort((a,b) {
       if (a.startsWith('All ')) return -1;
       if (b.startsWith('All ')) return 1;
       return a.toLowerCase().compareTo(b.toLowerCase());
-    }),
+    })).map((entry) => DropdownMenuItem<String>(
+      value: entry, child: Text(entry, overflow: TextOverflow.ellipsis))).toList(),
     onChanged: (next) { if (next != null) onChanged(next); },
   );
 
