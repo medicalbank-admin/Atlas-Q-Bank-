@@ -279,9 +279,9 @@ class _NotesLibraryShelfState extends State<_NotesLibraryShelf> {
                   itemBuilder: (context, index) {
                     final name = sorted[index];
                     final count = categories[name]!.length;
-                    final subject = subjectData.entries.where(
-                      (entry) => (entry.value['name'] ?? '').toString() == name)
-                      .firstOrNull?.value;
+                    final matchingSubjects = subjectData.values.where(
+                      (value) => (value['name'] ?? '').toString() == name).toList();
+                    final subject = matchingSubjects.isEmpty ? null : matchingSubjects.first;
                     return _MedicalCategoryCard(
                       title: name,
                       count: count,
