@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import '../../admin/services/admin_access_service.dart';
+import '../services/learning_resource_file_service.dart';
 
 class AdminPdfReplaceScreen extends StatefulWidget {
   final String resourceId;
@@ -22,8 +22,8 @@ class _AdminPdfReplaceScreenState extends State<AdminPdfReplaceScreen> {
       type: FileType.custom, allowedExtensions: ['pdf'], withData: true);
     if (result == null || result.files.isEmpty) return;
     final file = result.files.single;
-    if (file.bytes == null || file.bytes!.isEmpty || file.size > 200 * 1024 * 1024) {
-      _message('Choose a readable PDF smaller than 200 MB.'); return;
+    if (file.bytes == null || file.bytes!.isEmpty || file.size > 100 * 1024 * 1024) {
+      _message('Choose a readable PDF smaller than 100 MB.'); return;
     }
     if (String.fromCharCodes(file.bytes!.take(5)) != '%PDF-') {
       _message('The selected file is not a valid PDF.'); return;
@@ -51,37 +51,38 @@ class _AdminPdfReplaceScreenState extends State<AdminPdfReplaceScreen> {
       }
       final oldVersion = (current['versionNumber'] as num?)?.toInt() ?? 0;
       final nextVersion = oldVersion + 1;
-      final archiveVersion = oldVersion;
-      final archived = Map<String, dynamic>.from(current)
-        ..remove('createdAt')..remove('updatedAt');
-      await ref.collection('versions').doc('v$archiveVersion').set({
-        ...archived,
-        'versionNumber': archiveVersion,
-        'savedAt': FieldValue.serverTimestamp(),
-        'changeNote': oldVersion > 0 ? 'Archived before PDF replacement' : 'Original PDF archived',
-      });
-
       final selected = _file!;
-      final safeName = selected.name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
-      final storageRef = FirebaseStorage.instance.ref().child(
-        'learning_resources/pdf_revisions/${widget.resourceId}/v${nextVersion}_${DateTime.now().millisecondsSinceEpoch}_$safeName');
-      final task = storageRef.putData(selected.bytes!,
-        SettableMetadata(contentType: 'application/pdf',
-          customMetadata: {'originalName': selected.name, 'resourceId': widget.resourceId,
-            'versionNumber': '$nextVersion'}));
-      task.snapshotEvents.listen((snapshot) {
-        if (mounted && snapshot.totalBytes > 0) {
-          setState(() => _progress = snapshot.bytesTransferred / snapshot.totalBytes);
-        }
-      });
-      await task;
-      final url = await storageRef.getDownloadURL();
-      await ref.update({
+
+      // Revised chapters use the same signed Cloudinary upload as new PDFs.
+      // This avoids Firebase Storage and works on the Firebase Spark plan.
+      final url = await LearningResourceFileService.upload(
+        bytes: selected.bytes!,
+        fileName: selected.name,
+        resourceType: 'raw',
+        onProgress: (value) {
+          if (mounted) setState(() => _progress = value);
+        },
+      );
+
+      final batch = db.batch();
+      if (oldVersion > 0) {
+        final archived = Map<String, dynamic>.from(current)
+          ..remove('createdAt')
+          ..remove('updatedAt');
+        batch.set(ref.collection('versions').doc('v$oldVersion'), {
+          ...archived,
+          'versionNumber': oldVersion,
+          'savedAt': FieldValue.serverTimestamp(),
+          'changeNote': 'Archived before PDF replacement',
+        });
+      }
+      batch.update(ref, {
         'resourceUrl': url,
         'versionNumber': nextVersion,
         'updatedAt': FieldValue.serverTimestamp(),
         'lastRevisionNote': 'PDF file replaced',
       });
+      await batch.commit();
       if (!mounted) return;
       _message('PDF replaced successfully. Version $nextVersion is now published.');
       Navigator.of(context).pop(true);
@@ -116,7 +117,7 @@ class _AdminPdfReplaceScreenState extends State<AdminPdfReplaceScreen> {
         const SizedBox(height: 14),
         LinearProgressIndicator(value: _progress > 0 ? _progress : null),
         const SizedBox(height: 6),
-        Text('Uploading PDF • ${(_progress * 100).round()}%'),
+        Text('Uploading securely • ${(_progress * 100).round()}%'),
       ],
       const SizedBox(height: 18),
       FilledButton.icon(onPressed: _saving || _file == null ? null : _replace,
