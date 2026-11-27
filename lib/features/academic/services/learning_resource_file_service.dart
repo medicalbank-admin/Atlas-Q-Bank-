@@ -135,9 +135,13 @@ class LearningResourceFileService {
 
       final uploadedId = result['public_id']?.toString() ?? '';
       final secureUrl = result['secure_url']?.toString() ?? '';
+      final returnedType = result['resource_type']?.toString() ?? '';
       final expectedPrefix = 'https://res.cloudinary.com/$cloudName/$endpoint/upload/';
       if (uploadedId != publicId && uploadedId != '$folder/$publicId') {
         throw Exception('Cloudinary returned an unexpected learning file reference.');
+      }
+      if (returnedType != resourceType) {
+        throw Exception('Cloudinary stored this file as an unexpected media type.');
       }
       if (!secureUrl.startsWith(expectedPrefix)) {
         throw Exception('Cloudinary returned an invalid secure file address.');
