@@ -217,6 +217,12 @@ service cloud.firestore {
         );
 
       allow create, update, delete: if isAdmin();
+
+      // Chapter revision snapshots are a nested collection. Parent-document
+      // permissions do not automatically apply to subcollections.
+      match /versions/{versionId} {
+        allow read, create, update, delete: if isAdmin();
+      }
     }
 
     // ==================================================
