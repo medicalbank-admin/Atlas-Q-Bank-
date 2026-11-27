@@ -450,7 +450,7 @@ class _StudentPdfReaderScreenState extends State<StudentPdfReaderScreen> {
       Expanded(
         child: _offlineBytes != null || _remoteBytes != null
           ? SfPdfViewer.memory(
-              (_offlineBytes ?? _remoteBytes)!, key: _viewerKey,
+              (_offlineBytes ?? _remoteBytes)!, key: _viewerKey, controller: _controller,
               canShowTextSelectionMenu: false,
               onDocumentLoaded: _onDocumentLoaded,
               onPageChanged: _onPageChanged,
