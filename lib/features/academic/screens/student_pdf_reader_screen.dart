@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import '../../../app/atlas_academy_app.dart';
@@ -38,6 +39,9 @@ class _StudentPdfReaderScreenState extends State<StudentPdfReaderScreen> {
   bool _downloadingPdf = false;
   double _downloadProgress = 0;
   Uint8List? _offlineBytes;
+  Uint8List? _remoteBytes;
+  String? _remoteLoadError;
+  bool _loadingRemotePdf = true;
   bool _isOfflineSaved = false;
   bool _isOfflineOutdated = false;
   List<int> _bookmarkedPages = [];
@@ -66,12 +70,63 @@ class _StudentPdfReaderScreenState extends State<StudentPdfReaderScreen> {
       final outdated = savedVersion != widget.resource.versionNumber ||
         (savedUpdated != null && widget.resource.updatedAt.isAfter(savedUpdated.add(const Duration(seconds: 2))));
       if (!mounted) return;
-      if (bytes != null) setState(() {
-        _offlineBytes = bytes;
-        _isOfflineSaved = true;
-        _isOfflineOutdated = outdated;
-      });
+      if (bytes != null) {
+        if (!mounted) return;
+        setState(() {
+          _offlineBytes = bytes;
+          _isOfflineSaved = true;
+          _isOfflineOutdated = outdated;
+          _loadingRemotePdf = false;
+        });
+        return;
+      }
     } catch (_) {}
+    await _loadRemotePdf();
+  }
+
+  /// Fetch and validate the PDF before handing bytes to the viewer.
+  Future<void> _loadRemotePdf() async {
+    if (!mounted) return;
+    setState(() {
+      _loadingRemotePdf = true;
+      _remoteLoadError = null;
+    });
+    final uri = Uri.tryParse(widget.resource.resourceUrl);
+    if (uri == null || !uri.hasScheme ||
+        !['http', 'https'].contains(uri.scheme)) {
+      if (mounted) setState(() {
+        _loadingRemotePdf = false;
+        _remoteLoadError = 'This PDF has an invalid download address.';
+      });
+      return;
+    }
+    final client = http.Client();
+    try {
+      final response = await client.get(uri).timeout(const Duration(minutes: 2));
+      if (response.statusCode != 200) {
+        throw Exception('The file server returned HTTP ${response.statusCode}.');
+      }
+      final bytes = response.bodyBytes;
+      if (bytes.length < 5 ||
+          String.fromCharCodes(bytes.take(5)) != '%PDF-') {
+        final contentType = response.headers['content-type'] ?? 'unknown';
+        throw Exception('The saved link did not return a PDF (content type: $contentType). Please ask the administrator to re-upload this chapter.');
+      }
+      if (!mounted) return;
+      setState(() {
+        _remoteBytes = bytes;
+        _loadingRemotePdf = false;
+        _remoteLoadError = null;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _loadingRemotePdf = false;
+        _remoteLoadError = error.toString().replaceFirst('Exception: ', '');
+      });
+    } finally {
+      client.close();
+    }
   }
 
   @override
@@ -393,9 +448,9 @@ class _StudentPdfReaderScreenState extends State<StudentPdfReaderScreen> {
           ),
         ),
       Expanded(
-        child: _offlineBytes != null
+        child: _offlineBytes != null || _remoteBytes != null
           ? SfPdfViewer.memory(
-              _offlineBytes!, key: _viewerKey, controller: _controller,
+              (_offlineBytes ?? _remoteBytes)!, key: _viewerKey,
               canShowTextSelectionMenu: false,
               onDocumentLoaded: _onDocumentLoaded,
               onPageChanged: _onPageChanged,
@@ -405,17 +460,29 @@ class _StudentPdfReaderScreenState extends State<StudentPdfReaderScreen> {
               },
               onDocumentLoadFailed: (details) => _showMessage('Unable to open offline PDF: ${details.description}'),
             )
-          : SfPdfViewer.network(
-              widget.resource.resourceUrl, key: _viewerKey, controller: _controller,
-              canShowTextSelectionMenu: false,
-              onDocumentLoaded: _onDocumentLoaded,
-              onPageChanged: _onPageChanged,
-              onTextSelectionChanged: (details) {
-                if (!mounted) return;
-                setState(() => _selectedText = details.selectedText);
-              },
-              onDocumentLoadFailed: (details) => _showMessage('Unable to open PDF: ${details.description}'),
-            ),
+          : _loadingRemotePdf
+            ? const Center(child: CircularProgressIndicator())
+            : Center(child: Padding(
+                padding: const EdgeInsets.all(28),
+                child: Column(mainAxisSize: MainAxisSize.min, children: [
+                  const Icon(Icons.picture_as_pdf_outlined,
+                    size: 48, color: AtlasColors.royalBlue),
+                  const SizedBox(height: 12),
+                  const Text('Unable to load this PDF',
+                    style: TextStyle(fontWeight: FontWeight.w900,
+                      color: AtlasColors.navy, fontSize: 17)),
+                  const SizedBox(height: 8),
+                  Text(_remoteLoadError ?? 'The document could not be downloaded.',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: AtlasColors.secondaryText)),
+                  const SizedBox(height: 14),
+                  FilledButton.icon(
+                    onPressed: _loadRemotePdf,
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: const Text('Try again'),
+                  ),
+                ]),
+              )),
       ),
       if (_selectedText != null && _selectedText!.trim().isNotEmpty)
         Material(
